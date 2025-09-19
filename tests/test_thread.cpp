@@ -1,12 +1,13 @@
 #include "thread.hpp"
 #include "log.hpp"
-#include "rwlock.hpp"
+#include "lock.hpp"
 #include <vector>
 
 auto g_logger = SYLAR_LOG_ROOT();
 
 int count = 0;
-sylar::RWMutex rw_mutex;
+//sylar::RWMutex rw_mutex;
+sylar::Mutex mutex;
 void func1()
 {
     SYLAR_LOG_INFO(g_logger) << "name: " << sylar::Thread::GetName()
@@ -14,10 +15,11 @@ void func1()
                              << " id: " << sylar::GetThreadId()
                              << " this.id: " << sylar::Thread::GetThis()->getId();
     // std::this_thread::sleep_for(std::chrono::seconds(360));
-    for (int i = 0; i < 100000000; ++i)
+    for (int i = 0; i < 1000000; ++i)
     {
         // 获取写锁
-        sylar::RWMutex::WriteLock lock(rw_mutex);
+        //sylar::RWMutex::WriteLock lock(rw_mutex);
+        sylar::Mutex::Lock lock(mutex);
         count++;
     }
 }

@@ -17,7 +17,7 @@ set(LIB_SRC
     src/config/config.cpp
     src/thread/thread.cpp
     src/thread/semaphore.cpp
-    src/thread/rwlock.cpp
+    src/thread/lock.cpp
     src/util.cpp)
 
 # 生成动态库（.so）
