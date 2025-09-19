@@ -1,0 +1,87 @@
+#include "config.hpp"
+
+namespace sylar
+{
+    /**
+     * @brief 递归遍历YAML节点，将所有配置项的名称和节点存入输出列表
+     * @param prefix 配置项名称前缀
+     * @param node 当前处理的YAML节点
+     * @param output 用于存储配置项名称和对应节点的输出列表
+     *
+     * 该函数首先检查配置项名称是否合法，然后将当前节点加入输出列表。
+     * 如果当前节点是Map类型，则递归处理其所有子节点。
+     * 配置项名称只能包含字母、数字、下划线和点号。
+     */
+    static void ListAllMember(const std::string &prefix, const YAML::Node &node,
+                              std::list<std::pair<std::string, const YAML::Node>> &output)
+    {
+        // 检查配置项名称是否合法，只能包含字母、数字、下划线和点号
+        if (prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789._") != std::string::npos)
+        {
+            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Config invalid name " << prefix << " : " << node;
+            return;
+        }
+        // 将当前节点添加到输出列表
+        output.push_back(std::make_pair(prefix, node));
+        // 如果当前节点是Map类型，则递归处理其子节点
+        if (node.IsMap())
+        {
+            for (auto it = node.begin(); it != node.end(); ++it)
+            {
+                // 根据是否有前缀，构建子节点的完整名称并递归处理
+                ListAllMember(prefix.empty() ? it->first.Scalar() : prefix + "." + it->first.Scalar(), it->second, output);
+            }
+        }
+    }
+
+    /**
+     * @brief 从YAML节点加载配置项
+     * @param root YAML根节点
+     *
+     * 该函数递归遍历YAML节点树，将所有配置项的名称和值存入配置管理器中。
+     * 配置项名称会被转换为小写，并通过lookupBase查找已存在的配置项，
+     * 然后使用fromString方法更新配置项的值。
+     */
+    void Config::LoadFromYaml(const YAML::Node &root)
+    {
+        std::list<std::pair<std::string, const YAML::Node>> all_nodes;
+        // 递归遍历YAML节点树，将所有配置项的名称和值存入列表
+        ListAllMember("", root, all_nodes);
+
+        for (auto &i : all_nodes)
+        {
+            std::string key = i.first;
+            if (key.empty())
+            {
+                continue;
+            }
+
+            // 将配置项名称转换为小写
+            std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+            // 查找已存在的配置项
+            ConfigVarBase::ptr var = LookupBase(key);
+
+            if (var) // 如果找到了对应的配置变量
+            {
+                if (i.second.IsScalar()) // 如果YAML节点是标量类型（基本数据类型）
+                {
+                    var->fromString(i.second.Scalar()); // 直接获取标量值并转换
+                }
+                else // 如果是复杂类型（如Map或Sequence）
+                {
+                    std::stringstream ss;
+                    ss << i.second;            // 将整个节点输出到字符串流
+                    var->fromString(ss.str()); // 转换为字符串后赋值给配置变量
+                }
+            }
+
+            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << loggerMgr::getInstance()->toYamlString();
+        }
+    }
+
+    ConfigVarBase::ptr Config::LookupBase(const std::string &name)
+    {
+        auto it = GetDatas().find(name);
+        return it == GetDatas().end() ? nullptr : it->second;
+    }
+}
