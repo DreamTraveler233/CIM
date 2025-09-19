@@ -1,9 +1,12 @@
 #include "thread.hpp"
 #include "log.hpp"
+#include "rwlock.hpp"
 #include <vector>
 
 auto g_logger = SYLAR_LOG_ROOT();
 
+int count = 0;
+sylar::RWMutex rw_mutex;
 void func1()
 {
     SYLAR_LOG_INFO(g_logger) << "name: " << sylar::Thread::GetName()
@@ -11,6 +14,12 @@ void func1()
                              << " id: " << sylar::GetThreadId()
                              << " this.id: " << sylar::Thread::GetThis()->getId();
     // std::this_thread::sleep_for(std::chrono::seconds(360));
+    for (int i = 0; i < 100000000; ++i)
+    {
+        // 获取写锁
+        sylar::RWMutex::WriteLock lock(rw_mutex);
+        count++;
+    }
 }
 
 void func2()
@@ -32,5 +41,6 @@ int main(int argc, char **argv)
         thrs[i]->join();
     }
     SYLAR_LOG_INFO(g_logger) << "thread test begin";
+    SYLAR_LOG_INFO(g_logger) << "count = " << count;
     return 0;
 }
