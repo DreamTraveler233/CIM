@@ -21,7 +21,7 @@ namespace sylar
 
     public:
         using ptr = std::shared_ptr<Logger>;
-        using MutexType = NullMutex;
+        using MutexType = Mutex;
 
         Logger(const std::string &name = "root");
 

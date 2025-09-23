@@ -12,7 +12,7 @@ namespace sylar
     {
     public:
         using ptr = std::shared_ptr<LogAppender>;
-        using MutexType = NullMutex;
+        using MutexType = Mutex;
 
         virtual ~LogAppender();
 
@@ -27,7 +27,7 @@ namespace sylar
     protected:
         LogLevel::Level m_level = LogLevel::Level::DEBUG; // 日志级别
         LogFormatter::ptr m_formatter;                    // 日志格式器
-        MutexType m_mutex;                                    // 互斥锁
+        MutexType m_mutex;                                // 互斥锁
     };
 
     class StdoutLogAppender : public LogAppender
