@@ -5,6 +5,7 @@ logs:
     appenders:
       - type: FileLogAppender
         file: /home/szy/code/sylar/bin/log/root.log
+        formatter: "%d%T%t%T%m%n"
       - type: StdoutLogAppender
         formatter: "%d%T<%f:%l>%m%n"
         

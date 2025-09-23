@@ -186,6 +186,32 @@ namespace sylar
         pthread_rwlock_t m_mutex;
     };
 
+    class NullMutex : public noncopyable
+    {
+    public:
+        using Lock = ScopedLockImpl<NullMutex>;
+
+        NullMutex() {}
+        ~NullMutex() {}
+
+        void lock() {}
+        void unlock() {}
+    };
+
+    class NullRWMutex : public noncopyable
+    {
+    public:
+        using ReadLock = ReadScopedLockImpl<NullRWMutex>;
+        using WriteLock = WriteScopedLockImpl<NullRWMutex>;
+
+        NullRWMutex() {}
+        ~NullRWMutex() {}
+
+        void rdlock() {}
+        void wrlock() {}
+        void unlock() {}
+    };
+
     /**
      * 互斥锁的应用场景：
      *      完全互斥的访问：当多个线程都需要对同一资源进行读写操作时，使用互斥锁确保任何时刻只有一个线程能访问该资源。

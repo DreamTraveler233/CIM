@@ -6,22 +6,22 @@ namespace sylar
     LogAppender::~LogAppender() {}
     void LogAppender::setFormatter(LogFormatter::ptr formatter)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
     }
     LogFormatter::ptr LogAppender::getFormatter() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
     void LogAppender::setLevel(LogLevel::Level level)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_level = level;
     }
     LogLevel::Level LogAppender::getLevel() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_level;
     }
 
@@ -29,7 +29,7 @@ namespace sylar
     {
         if (event->getLevel() >= m_level)
         {
-            Mutex::Lock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             // 将日志事件（event）格式化后输出到标准输出（cout）
             std::cout << m_formatter->format(event);
         }
@@ -37,7 +37,7 @@ namespace sylar
 
     std::string StdoutLogAppender::toYamlString()
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["type"] = "StdoutLogAppender";
         node["level"] = LogLevel::ToString(m_level);
@@ -68,7 +68,7 @@ namespace sylar
     {
         if (event->getLevel() >= m_level)
         {
-            Mutex::Lock lock(m_mutex);
+            MutexType::Lock lock(m_mutex);
             // 将日志事件（event）格式化后输出到文件流
             m_fileStream << m_formatter->format(event);
         }
@@ -76,7 +76,7 @@ namespace sylar
 
     std::string FileLogAppender::toYamlString()
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["type"] = "FileLogAppender";
         node["file"] = m_fileName;
@@ -92,7 +92,7 @@ namespace sylar
 
     bool FileLogAppender::reopen()
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         if (m_fileStream.is_open())
         {
             m_fileStream.close();

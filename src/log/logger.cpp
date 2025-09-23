@@ -26,7 +26,7 @@ namespace sylar
             Logger::ptr root;
             {
                 // 采取锁分离，仅在需要时获取锁，然后立即释放，防止死锁的可能
-                Mutex::Lock lock(m_mutex);
+                MutexType::Lock lock(m_mutex);
                 appenders = m_appenders;
                 formatter = m_formatter;
                 root = m_root;
@@ -70,7 +70,7 @@ namespace sylar
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         // 当appender没有自己的formatter时，则使用logger的formatter
         if (!appender->getFormatter())
         {
@@ -81,7 +81,7 @@ namespace sylar
 
     void Logger::delAppender(LogAppender::ptr appender)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
         {
             if (*it == appender)
@@ -94,27 +94,27 @@ namespace sylar
 
     void Logger::clearAppender()
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
     LogLevel::Level Logger::getLevel() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_level;
     }
     void Logger::setLevel(LogLevel::Level level)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_level = level;
     }
     const std::string &Logger::getName() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_name;
     }
     void Logger::setFormatter(LogFormatter::ptr val)
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         m_formatter = val;
     }
     /**
@@ -137,17 +137,17 @@ namespace sylar
     }
     LogFormatter::ptr Logger::getFormatter() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
     Logger::ptr Logger::getRoot() const
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         return m_root;
     }
     std::string Logger::toYamlString()
     {
-        Mutex::Lock lock(m_mutex);
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["name"] = m_name;
         node["level"] = LogLevel::ToString(m_level);

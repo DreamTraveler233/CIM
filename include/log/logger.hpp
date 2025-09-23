@@ -21,6 +21,7 @@ namespace sylar
 
     public:
         using ptr = std::shared_ptr<Logger>;
+        using MutexType = NullMutex;
 
         Logger(const std::string &name = "root");
 
@@ -51,6 +52,6 @@ namespace sylar
         std::list<LogAppender::ptr> m_appenders; // 日志附加器列表
         LogFormatter::ptr m_formatter;           // 日志格式器
         Logger::ptr m_root;                      // 根日志器
-        mutable Mutex m_mutex;                           // 互斥锁
+        MutexType m_mutex;                           // 互斥锁
     };
 }

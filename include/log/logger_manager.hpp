@@ -15,6 +15,8 @@ namespace sylar
     class LoggerManager
     {
     public:
+        using MutexType = NullRWMutex;
+
         LoggerManager();
         std::shared_ptr<Logger> getLogger(const std::string &name);
         std::shared_ptr<Logger> getRoot() const;
@@ -24,7 +26,7 @@ namespace sylar
         std::map<std::string, std::shared_ptr<Logger>> m_loggers;
         std::shared_ptr<Logger> m_root;
         Mutex m_mutex;
-        RWMutex m_rwMutex;
+        MutexType m_rwMutex;
     };
 
     using loggerMgr = sylar::Singleton<LoggerManager>;
