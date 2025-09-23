@@ -1,1 +1,5 @@
 build/
+bin/log/
+bin/test_*
+.vscode/
+lib/*.so

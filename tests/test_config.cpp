@@ -121,8 +121,7 @@ void test_config_callback()
     int new_value = 0;
 
     // 添加回调函数
-    config_int->addListener(1,
-                            [&callback_count, &old_value, &new_value](const int &old_val, const int &new_val)
+    config_int->addListener([&callback_count, &old_value, &new_value](const int &old_val, const int &new_val)
                             {
                                 callback_count++;
                                 old_value = old_val;

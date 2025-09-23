@@ -29,17 +29,25 @@ include_directories(${PROJECT_SOURCE_DIR}/include/log)
 include_directories(${PROJECT_SOURCE_DIR}/include/config)
 include_directories(${PROJECT_SOURCE_DIR}/include/thread)
 
-add_executable(test_log tests/test_log.cpp)     # 生成可执行文件test
-add_dependencies(test_log sylar)                # 指定test依赖 sylar库，先编译库再编译可执行文件
-target_link_libraries(test_log sylar yaml-cpp)  # 链接sylar库到test可执行文件
+add_executable(test_log_basic tests/test_log_basic.cpp)     # 生成可执行文件test
+add_dependencies(test_log_basic sylar)                      # 指定test依赖 sylar库，先编译库再编译可执行文件
+target_link_libraries(test_log_basic sylar yaml-cpp)        # 链接sylar库到test可执行文件
 
 add_executable(test_config tests/test_config.cpp)
 add_dependencies(test_config sylar)
 target_link_libraries(test_config sylar yaml-cpp)
 
-add_executable(test_thread tests/test_thread.cpp)
-add_dependencies(test_thread sylar)
-target_link_libraries(test_thread sylar yaml-cpp)
+add_executable(test_log_thread_safe tests/test_log_thread_safe.cpp)
+add_dependencies(test_log_thread_safe sylar)
+target_link_libraries(test_log_thread_safe sylar yaml-cpp)
+
+add_executable(test_log_performance tests/test_log_performance.cpp)
+add_dependencies(test_log_performance sylar)
+target_link_libraries(test_log_performance sylar yaml-cpp)
+
+add_executable(test_config_thread_sefa tests/test_config_thread_sefa.cpp)
+add_dependencies(test_config_thread_sefa sylar)
+target_link_libraries(test_config_thread_sefa sylar yaml-cpp)
 
 # 指定可执行文件输出目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

@@ -13,11 +13,9 @@ namespace sylar
         // 注册配置变更时的回调函数
         LogIniter()
         {
-            g_log_defines->addListener(
-                0xF1E231,
-                [](const std::set<LogDefine> &old_val,
-                   const std::set<LogDefine> &new_val)
-                {
+            g_log_defines->addListener([](const std::set<LogDefine> &old_val,
+                                          const std::set<LogDefine> &new_val)
+                                       {
                     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "on_logger_conf_changed";
                     for (auto &i : new_val)
                     {
@@ -81,8 +79,7 @@ namespace sylar
                             logger->setLevel((LogLevel::Level)100); // 设置日志级别为100，表示关闭日志
                             logger->clearAppender();                // 清空所有appender
                         }
-                    }
-                });
+                    } });
         }
     };
 

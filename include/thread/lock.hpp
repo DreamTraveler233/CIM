@@ -2,6 +2,7 @@
 
 #include "noncopyable.hpp"
 #include <pthread.h>
+#include <atomic>
 
 namespace sylar
 {
@@ -10,14 +11,12 @@ namespace sylar
     struct ScopedLockImpl : public noncopyable
     {
     public:
-        // 构造的时候加锁
         ScopedLockImpl(T &mutex)
             : m_mutex(mutex)
         {
             m_mutex.lock();
             m_locked = true;
         }
-
         // 构造的时候加锁，用于const上下文(const 函数)
         ScopedLockImpl(const T &mutex)
             : m_mutex(const_cast<T &>(mutex))
@@ -25,13 +24,11 @@ namespace sylar
             m_mutex.lock();
             m_locked = true;
         }
-
-        // 析构的时候解锁
         ~ScopedLockImpl()
         {
             unlock();
         }
-        // 上锁（读锁/写锁）
+        // 手动上锁（读锁/写锁）
         void lock()
         {
             if (!m_locked)
@@ -60,14 +57,12 @@ namespace sylar
     struct ReadScopedLockImpl : public noncopyable
     {
     public:
-        // 构造的时候加锁
         ReadScopedLockImpl(T &mutex)
             : m_mutex(mutex)
         {
             m_mutex.rdlock();
             m_locked = true;
         }
-
         // 构造的时候加锁，用于const上下文
         ReadScopedLockImpl(const T &mutex)
             : m_mutex(const_cast<T &>(mutex))
@@ -75,13 +70,10 @@ namespace sylar
             m_mutex.rdlock();
             m_locked = true;
         }
-
-        // 析构的时候解锁
         ~ReadScopedLockImpl()
         {
             unlock();
         }
-        // 主动加锁
         void lock()
         {
             if (!m_locked)
@@ -184,6 +176,37 @@ namespace sylar
 
     private:
         pthread_rwlock_t m_mutex;
+    };
+
+    // 自旋锁
+    class SpinLock : public noncopyable
+    {
+    public:
+        using Lock = ScopedLockImpl<SpinLock>;
+
+        SpinLock();
+        ~SpinLock();
+
+        void lock();
+        void unlock();
+
+    private:
+        pthread_spinlock_t m_mutex;
+    };
+
+    class CASLock : public noncopyable
+    {
+    public:
+        using Lock = ScopedLockImpl<CASLock>;
+        
+        CASLock();
+        ~CASLock();
+
+        void lock();
+        void unlock();
+
+    private:
+        volatile std::atomic_flag m_mutex;
     };
 
     class NullMutex : public noncopyable

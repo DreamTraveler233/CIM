@@ -18,6 +18,7 @@ namespace sylar
     {
         pthread_mutex_unlock(&m_mutex);
     }
+    
     RWMutex::RWMutex()
     {
         pthread_rwlock_init(&m_mutex, nullptr);
@@ -37,5 +38,38 @@ namespace sylar
     void RWMutex::unlock()
     {
         pthread_rwlock_unlock(&m_mutex);
+    }
+
+    SpinLock::SpinLock()
+    {
+        pthread_spin_init(&m_mutex, 0);
+    }
+    SpinLock::~SpinLock()
+    {
+        pthread_spin_destroy(&m_mutex);
+    }
+    void SpinLock::lock()
+    {
+        pthread_spin_lock(&m_mutex);
+    }
+    void SpinLock::unlock()
+    {
+        pthread_spin_unlock(&m_mutex);
+    }
+
+    CASLock::CASLock()
+    {
+        m_mutex.clear();
+    }
+    CASLock::~CASLock()
+    {
+    }
+    void CASLock::lock()
+    {
+        while(std::atomic_flag_test_and_set_explicit(&m_mutex, std::memory_order_acquire));
+    }
+    void CASLock::unlock()
+    {
+        std::atomic_flag_clear_explicit(&m_mutex, std::memory_order_release);
     }
 }

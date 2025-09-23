@@ -97,7 +97,8 @@ namespace sylar
         {
             m_fileStream.close();
         }
-        m_fileStream.open(m_fileName, std::ios::app);
+        // m_fileStream.open(m_fileName, std::ios::app);
+        m_fileStream.open(m_fileName);
 
         return m_fileStream.is_open();
     }

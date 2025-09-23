@@ -4,6 +4,7 @@
 #include "config_var_base.hpp"
 #include "config_var.hpp"
 #include "log.hpp"
+#include "lock.hpp"
 
 namespace sylar
 {
@@ -12,6 +13,7 @@ namespace sylar
     {
     public:
         using ConfigVarMap = std::map<std::string, ConfigVarBase::ptr>;
+        using RWMutexType = RWMutex;
 
         /**
          * @brief 查找或创建配置项
@@ -32,6 +34,7 @@ namespace sylar
                                                  const T &default_value,
                                                  const std::string &description = "")
         {
+            RWMutexType::WriteLock lock(GetMutex());
             // 根据配置项名称在存储容器中查找
             auto it = GetDatas().find(name);
             // 如果找到了同名配置项
@@ -80,6 +83,7 @@ namespace sylar
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
+            RWMutexType::ReadLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if (it == GetDatas().end())
             {
@@ -101,6 +105,7 @@ namespace sylar
          * @param root YAML配置文件的根节点
          */
         static void LoadFromYaml(const YAML::Node &root);
+        static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
 
     private:
         /**
@@ -111,6 +116,11 @@ namespace sylar
         {
             static ConfigVarMap m_datas; // 配置项存储
             return m_datas;
+        }
+        static RWMutexType &GetMutex()
+        {
+            static RWMutexType m_mutex; // 读写锁
+            return m_mutex;
         }
     };
 }

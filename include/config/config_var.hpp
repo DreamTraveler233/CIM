@@ -2,6 +2,7 @@
 
 #include "lexical_cast.hpp"
 #include "log.hpp"
+#include "lock.hpp"
 
 namespace sylar
 {
@@ -14,6 +15,7 @@ namespace sylar
     public:
         using ptr = std::shared_ptr<ConfigVar>;
         using ConfigChangeCb = std::function<void(const T &old_value, const T &new_value)>;
+        using RWMutexType = RWMutex;
 
         ConfigVar(const std::string &name, const T &default_value, const std::string &description)
             : ConfigVarBase(name, description),
@@ -33,6 +35,7 @@ namespace sylar
         {
             try
             {
+                RWMutexType::ReadLock lock(m_mutex);
                 return toStr()(m_val);
             }
             catch (std::exception &e)
@@ -78,31 +81,45 @@ namespace sylar
 
         void setValue(const T &v)
         {
-            if (v == m_val)
+            T old_value;
+            std::map<uint64_t, ConfigChangeCb> cbs;
             {
-                return;
-            }
-            // 配置发生改变
-            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Changing config variable: " << getName()
-            //                                  << " from: " << toStr()(m_val)
-            //                                  << " to: " << toStr()(v);
-            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Changing config :" << loggerMgr::getInstance()->toYamlString();
-            for (auto &i : m_cbs)
-            {
-                i.second(m_val, v);
-            }
-            m_val = v;
-        }
-        T getValue() const { return m_val; }
+                RWMutexType::WriteLock lock(m_mutex);
 
-        void addListener(uint64_t key, const ConfigChangeCb &cb)
+                if (v == m_val) // 值没有改变
+                {
+                    return;
+                }
+                old_value = m_val;
+                m_val = v;
+                cbs = m_cbs;
+            }
+
+            // 执行回调函数时不持有锁，防止回调函数中可能的死锁
+            for (auto &i : cbs)
+            {
+                i.second(old_value, v);
+            }
+        }
+        T getValue() const
         {
+            RWMutexType::ReadLock lock(m_mutex);
+            return m_val;
+        }
+
+        uint64_t addListener(const ConfigChangeCb &cb)
+        {
+            static uint64_t func_id = 0;
+            RWMutexType::WriteLock lock(m_mutex);
+            ++func_id;
+            m_cbs[func_id] = cb;
             SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Adding listener for config variable: "
-                                             << getName() << " with key: " << key;
-            m_cbs[key] = cb;
+                                             << getName() << " with key: " << func_id;
+            return func_id;
         }
         void delListener(uint64_t key)
         {
+            RWMutexType::WriteLock lock(m_mutex);
             if (m_cbs.find(key) != m_cbs.end())
             {
                 SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Removing listener for config variable: "
@@ -117,17 +134,19 @@ namespace sylar
         }
         void clearListener()
         {
+            RWMutexType::WriteLock lock(m_mutex);
             m_cbs.clear();
         }
         ConfigChangeCb getListener(uint64_t key)
         {
+            RWMutexType::ReadLock lock(m_mutex);
             auto it = m_cbs.find(key);
             return it == m_cbs.end() ? nullptr : it->second;
         }
 
     private:
-        T m_val; // 配置值
-        // 变更回调函数组，uint64_t key，要求唯一，一般可用hash
-        std::map<uint64_t, ConfigChangeCb> m_cbs;
+        T m_val;                                  // 配置值
+        std::map<uint64_t, ConfigChangeCb> m_cbs; // 配置改变时的回调函数
+        RWMutexType m_mutex;                      // 读写锁
     };
 }

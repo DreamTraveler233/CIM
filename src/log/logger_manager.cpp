@@ -17,7 +17,7 @@ namespace sylar
 
     std::shared_ptr<Logger> LoggerManager::getLogger(const std::string &name)
     {
-        MutexType::Lock lock(m_mutex); // 读多写少，采用读锁提高效率
+        MutexType::Lock lock(m_mutex);
         auto it = m_loggers.find(name); // 查找指定名称的日志器
         if (it != m_loggers.end())
         {
