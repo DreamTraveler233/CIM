@@ -71,6 +71,10 @@
         "codecvt": "cpp",
         "stdfloat": "cpp",
         "valarray": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "chrono": "cpp",
+        "format": "cpp",
+        "future": "cpp",
+        "span": "cpp"
     }
 }

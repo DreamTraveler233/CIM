@@ -42,7 +42,7 @@ namespace sylar
             size_t sylar_pos = file_name.find("sylar/");
             if (sylar_pos != std::string::npos)
             {
-                return file_name.substr(sylar_pos+6);
+                return file_name.substr(sylar_pos + 6);
             }
             // 如果没有找到 "sylar/"，则返回文件名部分
             return file_name.substr(pos + 1);

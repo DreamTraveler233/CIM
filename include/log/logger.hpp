@@ -5,6 +5,7 @@
 #include "log_appender.hpp"
 #include "log_formatter.hpp"
 #include "log.hpp"
+#include "lock.hpp"
 #include <string>
 #include <list>
 #include <memory>
@@ -41,15 +42,15 @@ namespace sylar
         void setFormatter(const std::string &val);
         LogFormatter::ptr getFormatter() const;
         Logger::ptr getRoot() const;
-        
+
         std::string toYamlString();
 
     private:
-        std::string m_name;
-        LogLevel::Level m_level;
-        std::list<LogAppender::ptr> m_appenders;
-        LogFormatter::ptr m_formatter;
-        Logger::ptr m_root;
+        std::string m_name;                      // 日志器名称
+        LogLevel::Level m_level;                 // 日志级别
+        std::list<LogAppender::ptr> m_appenders; // 日志附加器列表
+        LogFormatter::ptr m_formatter;           // 日志格式器
+        Logger::ptr m_root;                      // 根日志器
+        mutable Mutex m_mutex;                           // 互斥锁
     };
-
 }

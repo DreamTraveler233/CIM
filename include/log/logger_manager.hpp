@@ -2,6 +2,7 @@
 
 #include "singleton.hpp"
 #include "log_level.hpp"
+#include "lock.hpp"
 #include <map>
 #include <string>
 #include <memory>
@@ -22,6 +23,8 @@ namespace sylar
     private:
         std::map<std::string, std::shared_ptr<Logger>> m_loggers;
         std::shared_ptr<Logger> m_root;
+        Mutex m_mutex;
+        RWMutex m_rwMutex;
     };
 
     using loggerMgr = sylar::Singleton<LoggerManager>;
@@ -30,7 +33,7 @@ namespace sylar
     struct LogAppenderDefine
     {
         int type = 0; // 1: FileLogAppender, 2: StdoutLogAppender
-        LogLevel::Level level = LogLevel::Level::UNKNOW;
+        LogLevel::Level level = LogLevel::Level::UNKNOWN;
         std::string formatter;
         std::string file;
 
@@ -46,7 +49,7 @@ namespace sylar
     struct LogDefine
     {
         std::string name;
-        LogLevel::Level level = LogLevel::Level::UNKNOW;
+        LogLevel::Level level = LogLevel::Level::UNKNOWN;
         std::string formatter;
         std::vector<LogAppenderDefine> appenders;
 

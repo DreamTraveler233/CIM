@@ -4,7 +4,7 @@
 namespace sylar
 {
     static thread_local Thread *t_thread = nullptr;           // 指向当前线程的Thread对象
-    static thread_local std::string t_thread_name = "UNKNOW"; // 当前线程的名称
+    static thread_local std::string t_thread_name = "UNKNOWN"; // 当前线程的名称
 
     static auto g_logger = SYLAR_LOG_NAME("system");
 
@@ -14,7 +14,7 @@ namespace sylar
     {
         if (name.empty())
         {
-            m_name = "UNKNOW";
+            m_name = "UNKNOWN";
         }
         /**
          * pthread_create API 详解：

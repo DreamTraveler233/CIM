@@ -48,7 +48,7 @@ namespace sylar
                             }
 
                             // 如果appender配置中有level，则使用它，否则使用logger的level
-                            if (j.level != LogLevel::Level::UNKNOW)
+                            if (j.level != LogLevel::Level::UNKNOWN)
                             {
                                 ap->setLevel(j.level);
                             }

@@ -2,6 +2,7 @@
 
 #include "log_event.hpp"
 #include "log_formatter.hpp"
+#include "lock.hpp"
 #include <fstream>
 #include <string>
 
@@ -23,8 +24,9 @@ namespace sylar
         LogLevel::Level getLevel() const;
 
     protected:
-        LogLevel::Level m_level = LogLevel::Level::DEBUG;
-        LogFormatter::ptr m_formatter;
+        LogLevel::Level m_level = LogLevel::Level::DEBUG; // 日志级别
+        LogFormatter::ptr m_formatter;                    // 日志格式器
+        Mutex m_mutex;                                    // 互斥锁
     };
 
     class StdoutLogAppender : public LogAppender
@@ -46,11 +48,11 @@ namespace sylar
 
         virtual void log(LogEvent::ptr event) override;
         virtual std::string toYamlString() override;
-        
+
         bool reopen();
 
     private:
-        std::string m_fileName;
-        std::ofstream m_fileStream;
+        std::string m_fileName;     // 文件名
+        std::ofstream m_fileStream; // 文件流
     };
 }

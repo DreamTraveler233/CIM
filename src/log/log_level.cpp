@@ -19,9 +19,8 @@ namespace sylar
 // 取消宏定义
 #undef XX
         default:
-            return "UNKNOW";
+            return "UNKNOWN";
         }
-        return "UNKNOW";
     }
 
     LogLevel::Level LogLevel::FromString(const std::string &str)
@@ -41,6 +40,6 @@ namespace sylar
         XX(ERROR, ERROR);
         XX(FATAL, FATAL);
 #undef XX
-        return LogLevel::Level::UNKNOW;
+        return LogLevel::Level::UNKNOWN;
     }
 }

@@ -17,6 +17,15 @@ namespace sylar
             m_mutex.lock();
             m_locked = true;
         }
+
+        // 构造的时候加锁，用于const上下文(const 函数)
+        ScopedLockImpl(const T &mutex)
+            : m_mutex(const_cast<T &>(mutex))
+        {
+            m_mutex.lock();
+            m_locked = true;
+        }
+
         // 析构的时候解锁
         ~ScopedLockImpl()
         {
@@ -58,6 +67,15 @@ namespace sylar
             m_mutex.rdlock();
             m_locked = true;
         }
+
+        // 构造的时候加锁，用于const上下文
+        ReadScopedLockImpl(const T &mutex)
+            : m_mutex(const_cast<T &>(mutex))
+        {
+            m_mutex.rdlock();
+            m_locked = true;
+        }
+
         // 析构的时候解锁
         ~ReadScopedLockImpl()
         {
@@ -98,6 +116,15 @@ namespace sylar
             m_mutex.wrlock();
             m_locked = true;
         }
+
+        // 构造的时候加锁，用于const上下文
+        WriteScopedLockImpl(const T &mutex)
+            : m_mutex(const_cast<T &>(mutex))
+        {
+            m_mutex.wrlock();
+            m_locked = true;
+        }
+
         // 析构的时候解锁
         ~WriteScopedLockImpl()
         {
@@ -133,7 +160,7 @@ namespace sylar
 
         Mutex();
         ~Mutex();
-        
+
         void lock();
         void unlock();
 
@@ -158,4 +185,19 @@ namespace sylar
     private:
         pthread_rwlock_t m_mutex;
     };
+
+    /**
+     * 互斥锁的应用场景：
+     *      完全互斥的访问：当多个线程都需要对同一资源进行读写操作时，使用互斥锁确保任何时刻只有一个线程能访问该资源。
+     *      写多读少的场景：如果对资源的访问大部分是写操作，读写比例接近1:1，使用互斥锁更为合适。
+     *      简单的同步需求：对于简单的临界区保护，互斥锁是最佳选择，因为它实现简单，开销较小。
+     * 独写锁的应用场景：
+     *      读多写少的场景：当对资源的访问以读操作为主（读写比例远大于1:1），使用读写锁可以大大提高并发性能。
+     *      可并发读取的资源：允许多个线程同时读取资源，但写操作需要独占访问。
+     *      提高读操作并发性：在读操作不会改变资源状态的情况下，多个读操作可以同时进行。
+     * 在哪些地方需要加锁：
+     *      保护共享资源的访问：当多个线程需要访问和修改同一个全局变量或共享资源时，需要使用锁来保护。
+     *      临界区保护：在执行原子操作或需要保证一系列操作不被其他线程中断时，需要使用锁。
+     *      容器操作：当多个线程同时读写STL容器或其他非线程安全的数据结构时。
+     */
 }
