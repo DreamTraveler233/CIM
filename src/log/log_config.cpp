@@ -1,6 +1,6 @@
 #include "config.hpp"
 #include "logger_manager.hpp"
-#include "log.hpp"
+#include "macro.hpp"
 
 namespace sylar
 {

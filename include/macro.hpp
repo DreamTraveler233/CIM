@@ -3,6 +3,10 @@
 #include "logger.hpp"
 #include "logger_manager.hpp"
 #include "util.hpp"
+#include "util.hpp"
+
+#include <string.h>
+#include <assert.h>
 
 #define SYLAR_LOG(logger, level)                                                      \
     if (level >= logger->getLevel())                                                  \
@@ -35,3 +39,23 @@
 
 #define SYLAR_LOG_ROOT() sylar::loggerMgr::getInstance()->getRoot()
 #define SYLAR_LOG_NAME(name) sylar::loggerMgr::getInstance()->getLogger(name)
+
+#define SYLAR_ASSERT(X)                                                                \
+    if (!(X))                                                                          \
+    {                                                                                  \
+        SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
+                                          << "\nbacktrace:\n"                          \
+                                          << sylar::BacktraceToString(100, 2, "    "); \
+        assert(X);                                                                     \
+    }
+
+#define SYLAR_ASSERT2(X, W)                                                            \
+    if (!(X))                                                                          \
+    {                                                                                  \
+        SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
+                                          << "\n"                                      \
+                                          << W                                         \
+                                          << "\nbacktrace:\n"                          \
+                                          << sylar::BacktraceToString(100, 2, "    "); \
+        assert(X);                                                                     \
+    }

@@ -1,4 +1,4 @@
-#include "log.hpp"
+#include "macro.hpp"
 #include "logger.hpp"
 #include "log_appender.hpp"
 #include <chrono>

@@ -125,8 +125,7 @@ void test_config_callback()
                             {
                                 callback_count++;
                                 old_value = old_val;
-                                new_value = new_val;
-                            });
+                                new_value = new_val; });
 
     // 修改配置值
     int original_value = config_int->getValue();

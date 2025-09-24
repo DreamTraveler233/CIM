@@ -3,7 +3,7 @@
 #include "yaml-cpp/yaml.h"
 #include "config_var_base.hpp"
 #include "config_var.hpp"
-#include "log.hpp"
+#include "macro.hpp"
 #include "lock.hpp"
 
 namespace sylar

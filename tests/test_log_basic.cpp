@@ -91,82 +91,82 @@ void test_log_formatter()
 void test_log_appender()
 {
     std::cout << "=================== 测试日志附加器 ===================" << std::endl;
-    
+
     auto test_logger = SYLAR_LOG_NAME("appender_test");
-    
+
     // 创建并添加文件附加器
     auto file_appender = std::make_shared<sylar::FileLogAppender>("test_log.txt");
     test_logger->addAppender(file_appender);
-    
+
     // 测试日志输出到文件
     SYLAR_LOG_INFO(test_logger) << "测试文件附加器";
-    
+
     // 创建并添加控制台附加器
     auto stdout_appender = std::make_shared<sylar::StdoutLogAppender>();
     test_logger->addAppender(stdout_appender);
-    
+
     SYLAR_LOG_DEBUG(test_logger) << "测试多个附加器";
-    
+
     // 测试删除附加器
     test_logger->delAppender(file_appender);
     SYLAR_LOG_WARN(test_logger) << "测试删除附加器后";
-    
+
     // 清空附加器
     test_logger->clearAppender();
-    
+
     std::cout << "日志附加器测试通过" << std::endl;
 }
 
 void test_log_level()
 {
     std::cout << "=================== 测试日志级别控制 ===================" << std::endl;
-    
+
     auto test_logger = SYLAR_LOG_NAME("level_test");
-    
+
     // 设置日志级别为ERROR
     test_logger->setLevel(sylar::LogLevel::Level::ERROR);
-    
+
     // DEBUG和INFO级别应该不输出（因为我们无法直接验证输出，但可以通过其他方式验证）
     assert(test_logger->getLevel() == sylar::LogLevel::Level::ERROR);
-    
+
     // 测试不同级别的日志事件创建
     auto event_debug = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::DEBUG,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0));
     auto event_error = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::ERROR,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0));
-    
+
     event_debug->getSS() << "这是一条DEBUG消息";
     event_error->getSS() << "这是一条ERROR消息";
-    
+
     // 调用日志方法
     test_logger->debug(event_debug);
     test_logger->error(event_error);
-    
+
     std::cout << "日志级别控制测试通过" << std::endl;
 }
 
 void test_log_event()
 {
     std::cout << "=================== 测试日志事件 ===================" << std::endl;
-    
+
     auto test_logger = SYLAR_LOG_NAME("event_test");
-    
+
     // 创建日志事件
     auto event = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::INFO,
                                                    "test_file.cpp", 123, 1000, 12345, 1, time(0));
-    
+
     // 测试格式化功能
     event->format("这是一个格式化消息，参数1: %d, 参数2: %s", 42, "test");
-    
+
     // 测试获取事件属性
     assert(std::string(event->getFileName()) == "test_file.cpp");
     assert(event->getLine() == 123);
     assert(event->getThreadId() == 12345);
     assert(event->getFiberId() == 1);
-    
+
     // 输出日志
     test_logger->info(event);
-    
+
     std::cout << "日志事件测试通过" << std::endl;
 }
 

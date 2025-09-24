@@ -37,6 +37,7 @@ set(TEST_EXECUTABLES
     test_log_thread_safe
     test_log_performance
     test_config_thread_sefa
+    test_util
 )
 
 # 循环创建测试可执行文件

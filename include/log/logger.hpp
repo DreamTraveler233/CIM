@@ -4,7 +4,7 @@
 #include "log_event.hpp"
 #include "log_appender.hpp"
 #include "log_formatter.hpp"
-#include "log.hpp"
+#include "macro.hpp"
 #include "lock.hpp"
 #include <string>
 #include <list>

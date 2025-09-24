@@ -1,5 +1,5 @@
 #include "thread.hpp"
-#include "log.hpp"
+#include "macro.hpp"
 
 namespace sylar
 {

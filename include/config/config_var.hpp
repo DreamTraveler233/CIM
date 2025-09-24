@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexical_cast.hpp"
-#include "log.hpp"
+#include "macro.hpp"
 #include "lock.hpp"
 
 namespace sylar
