@@ -3,3 +3,4 @@ bin/log/
 bin/test_*
 .vscode/
 lib/*.so
+autobulid.sh

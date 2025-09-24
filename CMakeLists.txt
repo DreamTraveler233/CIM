@@ -29,25 +29,22 @@ include_directories(${PROJECT_SOURCE_DIR}/include/log)
 include_directories(${PROJECT_SOURCE_DIR}/include/config)
 include_directories(${PROJECT_SOURCE_DIR}/include/thread)
 
-add_executable(test_log_basic tests/test_log_basic.cpp)     # 生成可执行文件test
-add_dependencies(test_log_basic sylar)                      # 指定test依赖 sylar库，先编译库再编译可执行文件
-target_link_libraries(test_log_basic sylar yaml-cpp)        # 链接sylar库到test可执行文件
 
-add_executable(test_config tests/test_config.cpp)
-add_dependencies(test_config sylar)
-target_link_libraries(test_config sylar yaml-cpp)
+# 定义测试可执行文件列表
+set(TEST_EXECUTABLES
+    test_log_basic
+    test_config
+    test_log_thread_safe
+    test_log_performance
+    test_config_thread_sefa
+)
 
-add_executable(test_log_thread_safe tests/test_log_thread_safe.cpp)
-add_dependencies(test_log_thread_safe sylar)
-target_link_libraries(test_log_thread_safe sylar yaml-cpp)
-
-add_executable(test_log_performance tests/test_log_performance.cpp)
-add_dependencies(test_log_performance sylar)
-target_link_libraries(test_log_performance sylar yaml-cpp)
-
-add_executable(test_config_thread_sefa tests/test_config_thread_sefa.cpp)
-add_dependencies(test_config_thread_sefa sylar)
-target_link_libraries(test_config_thread_sefa sylar yaml-cpp)
+# 循环创建测试可执行文件
+foreach(TEST_EXECUTABLE ${TEST_EXECUTABLES})
+    add_executable(${TEST_EXECUTABLE} tests/${TEST_EXECUTABLE}.cpp) # 生成可执行文件
+    #add_dependencies(${TEST_EXECUTABLE} sylar)                     # 指定test依赖 sylar库，先编译库再编译可执行文件
+    target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)        # 链接库到可执行文件
+endforeach()
 
 # 指定可执行文件输出目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
