@@ -118,17 +118,18 @@ namespace sylar
     {                                                                            \
         #str, [](const std::string &fmt) { return FormatItem::ptr(new C(fmt)); } \
     }
-            XX(m, MessageFormatItem),  // %m -- 消息体
-            XX(p, LevelFormatItem),    // %p -- level
-            XX(r, ElapseFormatItem),   // %r -- 启动后的时间
-            XX(c, NameFormatItem),     // %c -- 日志名称
-            XX(t, ThreadIdFormatItem), // %t -- 线程id
-            XX(n, NewLineFormatItem),  // %n -- 回车换行
-            XX(d, DateTimeFormatItem), // %d -- 时间
-            XX(f, FileNameFormatItem), // %f -- 文件名
-            XX(l, LineFormatItem),     // %l -- 行号
-            XX(T, TabFormatItem),      // %T -- Tab
-            XX(F, FiberIdFormatItem),  // %F -- 协程号
+            XX(m, MessageFormatItem),    // %m -- 消息体
+            XX(p, LevelFormatItem),      // %p -- level
+            XX(r, ElapseFormatItem),     // %r -- 启动后的时间
+            XX(c, NameFormatItem),       // %c -- 日志名称
+            XX(t, ThreadIdFormatItem),   // %t -- 线程id
+            XX(N, ThreadNameFormatItem), // %N -- 线程名称
+            XX(n, NewLineFormatItem),    // %n -- 回车换行
+            XX(d, DateTimeFormatItem),   // %d -- 时间
+            XX(f, FileNameFormatItem),   // %f -- 文件名
+            XX(l, LineFormatItem),       // %l -- 行号
+            XX(T, TabFormatItem),        // %T -- Tab
+            XX(F, FiberIdFormatItem),    // %F -- 协程号
 #undef XX
         };
 
@@ -262,5 +263,13 @@ namespace sylar
     void StringFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << m_string;
+    }
+    ThreadNameFormatItem::ThreadNameFormatItem(const std::string &fmt)
+        : FormatItem(fmt)
+    {
+    }
+    void ThreadNameFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
+    {
+        os << event->getThreadName();
     }
 }

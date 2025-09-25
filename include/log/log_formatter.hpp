@@ -73,6 +73,13 @@ namespace sylar
         virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
+    class ThreadNameFormatItem : public LogFormatter::FormatItem
+    {
+    public:
+        ThreadNameFormatItem(const std::string &fmt = "");
+        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+    };
+
     class DateTimeFormatItem : public LogFormatter::FormatItem
     {
     public:

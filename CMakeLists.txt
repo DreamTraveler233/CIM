@@ -18,6 +18,7 @@ set(LIB_SRC
     src/thread/thread.cpp
     src/thread/semaphore.cpp
     src/thread/lock.cpp
+    src/coroutine/coroutine.cpp
     src/util.cpp)
 
 # 生成动态库（.so）
@@ -28,6 +29,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include/log)
 include_directories(${PROJECT_SOURCE_DIR}/include/config)
 include_directories(${PROJECT_SOURCE_DIR}/include/thread)
+include_directories(${PROJECT_SOURCE_DIR}/include/coroutine)
 
 
 # 定义测试可执行文件列表
@@ -38,6 +40,7 @@ set(TEST_EXECUTABLES
     test_log_performance
     test_config_thread_sefa
     test_util
+    test_coroutine
 )
 
 # 循环创建测试可执行文件

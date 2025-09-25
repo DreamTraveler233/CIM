@@ -1,19 +1,20 @@
 #include "util.hpp"
 #include "macro.hpp"
+#include "coroutine.hpp"
 #include <execinfo.h>
 
 namespace sylar
 {
-    auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = SYLAR_LOG_NAME("system");
 
     pid_t GetThreadId()
     {
         return syscall(SYS_gettid);
     }
 
-    uint32_t GetFiberId()
+    uint64_t GetCoroutineId()
     {
-        return 0;
+        return Coroutine::GetCoroutineId();
     }
 
     /**

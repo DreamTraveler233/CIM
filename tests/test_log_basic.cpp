@@ -131,9 +131,9 @@ void test_log_level()
 
     // 测试不同级别的日志事件创建
     auto event_debug = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::DEBUG,
-                                                         __FILE__, __LINE__, 0, 0, 0, time(0));
+                                                         __FILE__, __LINE__, 0, 0, 0, time(0), "main");
     auto event_error = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::ERROR,
-                                                         __FILE__, __LINE__, 0, 0, 0, time(0));
+                                                         __FILE__, __LINE__, 0, 0, 0, time(0), "main");
 
     event_debug->getSS() << "这是一条DEBUG消息";
     event_error->getSS() << "这是一条ERROR消息";
@@ -153,10 +153,10 @@ void test_log_event()
 
     // 创建日志事件
     auto event = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::INFO,
-                                                   "test_file.cpp", 123, 1000, 12345, 1, time(0));
+                                                   "test_file.cpp", 123, 1000, 12345, 1, time(0), "main");
 
     // 测试格式化功能
-    event->format("这是一个格式化消息，参数1: %d, 参数2: %s", 42, "test");
+    event->format("这是一个格式化消息, 参数1: %d, 参数2: %s", 42, "test");
 
     // 测试获取事件属性
     assert(std::string(event->getFileName()) == "test_file.cpp");

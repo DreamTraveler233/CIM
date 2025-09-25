@@ -3,7 +3,7 @@
 
 namespace sylar
 {
-    static thread_local Thread *t_thread = nullptr;           // 指向当前线程的Thread对象
+    static thread_local Thread *t_thread = nullptr;            // 指向当前线程的Thread对象
     static thread_local std::string t_thread_name = "UNKNOWN"; // 当前线程的名称
 
     static auto g_logger = SYLAR_LOG_NAME("system");
@@ -16,18 +16,6 @@ namespace sylar
         {
             m_name = "UNKNOWN";
         }
-        /**
-         * pthread_create API 详解：
-         *      int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-         *              void *(*start_routine)(void *), void *arg);
-         *      thread：输出参数，返回新创建线程的ID
-         *      attr：线程属性，通常传NULL使用默认属性
-         *      start_routine：线程入口函数指针，线程创建后执行的函数
-         *      arg：传递给线程函数的参数
-         *
-         *      成功返回0
-         *      失败返回错误码
-         */
         /**
          * 这里将 this 传入线程函数的原因：
          *      1、线程函数Thread::run是静态函数，无法直接访问类的成员变量
@@ -103,6 +91,7 @@ namespace sylar
         // 设置线程局部存储变量t_thread为当前线程对象
         // 这样在任何地方都可以通过Thread::GetThis()获取当前线程对象
         t_thread = thread;
+        t_thread_name = thread->m_name;
         // 获取并设置当前线程的真实系统线程ID
         thread->m_id = sylar::GetThreadId();
         // 设置线程的名称，限制在15个字符以内

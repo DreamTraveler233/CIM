@@ -13,7 +13,7 @@ namespace sylar
 {
     pid_t GetThreadId();
 
-    uint32_t GetFiberId();
+    uint64_t GetCoroutineId();
 
     /**
      * @brief 获取函数调用堆栈信息

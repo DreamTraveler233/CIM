@@ -8,7 +8,7 @@ namespace sylar
           m_level(LogLevel::Level::DEBUG)
     {
         // 时间 线程号 协程号 [日志级别] 文件名 行号 日志信息 回车
-        m_formatter = std::make_shared<LogFormatter>("%d%T[%t]%T[%F]%T[%p]%T[%c]%T<%f:%l>%T%m%n");
+        m_formatter = std::make_shared<LogFormatter>("%d%T[%N-%t]%T[%F]%T[%p]%T[%c]%T<%f:%l>%T%m%n");
     }
 
     /**
