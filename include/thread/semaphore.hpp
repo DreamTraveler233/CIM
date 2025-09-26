@@ -6,7 +6,7 @@
 
 namespace sylar
 {
-    class Semaphore : public noncopyable
+    class Semaphore : public Noncopyable
     {
     public:
         Semaphore(uint32_t count = 0);

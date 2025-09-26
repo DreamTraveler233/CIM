@@ -1,5 +1,6 @@
 #pragma once
 
+#include "noncopyable.hpp"
 #include <ucontext.h>
 #include <functional>
 #include <memory>
@@ -13,12 +14,12 @@ namespace sylar
 
         enum State
         {
-            INIT,  // 初始化状态 - 协程刚创建或重置
-            HOLD,  // 暂停状态 - 协程被挂起
-            EXEC,  // 执行状态 - 协程正在执行
-            TERM,  // 终止状态 - 协程执行完毕
-            READY, // 就绪状态 - 协程准备执行
-            EXCEPT // 异常状态 - 协程执行出错
+            INIT,  // 初始化状态 - 表示协程刚创建或者是重置后，等待调度
+            HOLD,  // 暂停状态 - 表示协程被挂起，等待外部条件满足，继续执行
+            EXEC,  // 执行状态 - 表示协程正在执行中，当前拥有线程执行权
+            TERM,  // 终止状态 - 表示协程已执行完毕，生命周期结束
+            READY, // 就绪状态 - 表示协程主动让出执行权，但希望继续执行
+            EXCEPT // 异常状态 - 表示协程执行过程中发生异常，已终止
         };
 
     private:
@@ -31,6 +32,8 @@ namespace sylar
         void swapIn();
         void swapOut();
         uint64_t getId() const;
+        State getState() const;
+        void setState(State state);
 
     public:
         static void SetThis(Coroutine *f);
@@ -50,7 +53,7 @@ namespace sylar
         std::function<void()> m_cb;  // 协程要执行的回调函数
     };
 
-    class MallocStackAllocator
+    class MallocStackAllocator : public Noncopyable
     {
     public:
         static void *Alloc(size_t size);

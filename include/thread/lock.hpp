@@ -8,7 +8,7 @@ namespace sylar
 {
     // 通用锁管理模板，RAII风格
     template <class T>
-    struct ScopedLockImpl : public noncopyable
+    struct ScopedLockImpl : public Noncopyable
     {
     public:
         ScopedLockImpl(T &mutex)
@@ -54,7 +54,7 @@ namespace sylar
 
     // 读锁
     template <class T>
-    struct ReadScopedLockImpl : public noncopyable
+    struct ReadScopedLockImpl : public Noncopyable
     {
     public:
         ReadScopedLockImpl(T &mutex)
@@ -98,7 +98,7 @@ namespace sylar
 
     // 写锁
     template <class T>
-    struct WriteScopedLockImpl : public noncopyable
+    struct WriteScopedLockImpl : public Noncopyable
     {
     public:
         // 构造的时候加锁
@@ -145,7 +145,7 @@ namespace sylar
         bool m_locked;
     };
 
-    class Mutex : public noncopyable
+    class Mutex : public Noncopyable
     {
     public:
         using Lock = ScopedLockImpl<Mutex>;
@@ -161,7 +161,7 @@ namespace sylar
     };
 
     // 读共享、写独占
-    class RWMutex : public noncopyable
+    class RWMutex : public Noncopyable
     {
     public:
         using ReadLock = ReadScopedLockImpl<RWMutex>;
@@ -179,7 +179,7 @@ namespace sylar
     };
 
     // 自旋锁
-    class SpinLock : public noncopyable
+    class SpinLock : public Noncopyable
     {
     public:
         using Lock = ScopedLockImpl<SpinLock>;
@@ -194,7 +194,7 @@ namespace sylar
         pthread_spinlock_t m_mutex;
     };
 
-    class CASLock : public noncopyable
+    class CASLock : public Noncopyable
     {
     public:
         using Lock = ScopedLockImpl<CASLock>;
@@ -209,7 +209,7 @@ namespace sylar
         volatile std::atomic_flag m_mutex;
     };
 
-    class NullMutex : public noncopyable
+    class NullMutex : public Noncopyable
     {
     public:
         using Lock = ScopedLockImpl<NullMutex>;
@@ -221,7 +221,7 @@ namespace sylar
         void unlock() {}
     };
 
-    class NullRWMutex : public noncopyable
+    class NullRWMutex : public Noncopyable
     {
     public:
         using ReadLock = ReadScopedLockImpl<NullRWMutex>;

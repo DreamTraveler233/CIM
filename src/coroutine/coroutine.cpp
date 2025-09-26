@@ -195,6 +195,16 @@ namespace sylar
         return m_id;
     }
 
+    Coroutine::State Coroutine::getState() const
+    {
+        return m_state;
+    }
+
+    void Coroutine::setState(State state)
+    {
+        m_state = state;
+    }
+
     /**
      * @brief 设置当前协程
      * @param val 指向协程对象的指针
