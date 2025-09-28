@@ -1,6 +1,8 @@
 #include "coroutine.hpp"
 #include "config.hpp"
 #include "macro.hpp"
+#include "scheduler.hpp"
+#include "util.hpp"
 #include <atomic>
 
 namespace sylar
@@ -39,7 +41,7 @@ namespace sylar
 
         SetThis(this);
         ++s_coroutine_count;
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine()";
+        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine() id=" << m_id;
     }
 
     /**
@@ -48,7 +50,7 @@ namespace sylar
      * @param stack_size 协程栈大小，如果为0则使用配置的默认值
      * @details 初始化协程ID、状态和执行环境，为协程分配执行栈空间
      */
-    Coroutine::Coroutine(std::function<void()> cb, size_t stack_size)
+    Coroutine::Coroutine(std::function<void()> cb, size_t stack_size, bool use_caller)
         : m_id(++s_coroutine_id),
           m_state(State::INIT),
           m_cb(cb)
@@ -76,8 +78,14 @@ namespace sylar
                 SYLAR_ASSERT2(false, "getcontext");
             }
 
-            // 设置协程的入口函数
-            makecontext(&m_ctx, &MainFunc, 0);
+            if (use_caller)
+            { // 设置协程的入口函数
+                makecontext(&m_ctx, &CallerMainFunc, 0);
+            }
+            else
+            {
+                makecontext(&m_ctx, &MainFunc, 0);
+            }
         }
         catch (...)
         {
@@ -163,13 +171,11 @@ namespace sylar
     {
         // 把当前运行协程设置为该子协程
         SetThis(this);
-        SYLAR_ASSERT(m_state != State::EXEC &&
-                     m_state != State::TERM &&
-                     m_state != State::EXCEPT);
+        SYLAR_ASSERT(m_state != State::EXEC);
         m_state = State::EXEC;
 
         // 从主协程切换到当前线程（子协程）
-        if (swapcontext(&t_thread_coroutine->m_ctx, &m_ctx))
+        if (swapcontext(&Scheduler::GetMainCoroutine()->m_ctx, &m_ctx))
         {
             SYLAR_ASSERT2(false, "swapcontext");
         }
@@ -182,8 +188,31 @@ namespace sylar
      */
     void Coroutine::swapOut()
     {
-        SetThis(t_thread_coroutine.get());
         // 从当前线程（子协程）切换回主协程
+        SetThis(Scheduler::GetMainCoroutine());
+        if (swapcontext(&m_ctx, &Scheduler::GetMainCoroutine()->m_ctx))
+        {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
+    }
+
+    void Coroutine::call()
+    {
+        SetThis(this);
+        // SYLAR_ASSERT(m_state != State::EXEC &&
+        //              m_state != State::TERM &&
+        //              m_state != State::EXCEPT);
+        m_state = State::EXEC;
+        SYLAR_LOG_INFO(g_logger) << getId();
+        if (swapcontext(&t_thread_coroutine->m_ctx, &m_ctx))
+        {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
+    }
+
+    void Coroutine::back()
+    {
+        SetThis(t_thread_coroutine.get());
         if (swapcontext(&m_ctx, &t_thread_coroutine->m_ctx))
         {
             SYLAR_ASSERT2(false, "swapcontext");
@@ -268,8 +297,10 @@ namespace sylar
      */
     void Coroutine::MainFunc()
     {
+        // 获取当前正在运行的协程
         Coroutine::ptr cur = GetThis();
         SYLAR_ASSERT(cur);
+
         try
         {
             cur->m_cb(); // 执行协程的回调函数
@@ -279,7 +310,10 @@ namespace sylar
         catch (std::exception &ex)
         {
             cur->m_state = State::EXCEPT;
-            SYLAR_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what();
+            SYLAR_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
+                                      << " coroutine id: " << cur->getId()
+                                      << std::endl
+                                      << BacktraceToString();
         }
         catch (...)
         {
@@ -292,7 +326,41 @@ namespace sylar
         cur.reset();
         p->swapOut();
 
-        SYLAR_ASSERT2(false, "never reach here");
+        SYLAR_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
+    }
+
+    void Coroutine::CallerMainFunc()
+    {
+        // 获取当前正在运行的协程
+        Coroutine::ptr cur = GetThis();
+        SYLAR_ASSERT(cur);
+
+        try
+        {
+            cur->m_cb(); // 执行协程的回调函数
+            cur->m_cb = nullptr;
+            cur->m_state = State::TERM;
+        }
+        catch (std::exception &ex)
+        {
+            cur->m_state = State::EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
+                                      << " coroutine id: " << cur->getId()
+                                      << std::endl
+                                      << BacktraceToString();
+        }
+        catch (...)
+        {
+            cur->m_state = State::EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Coroutine exception";
+        }
+
+        // 协程执行完毕后，需要将控制权交还给主协程
+        auto p = cur.get();
+        cur.reset();
+        p->back();
+
+        SYLAR_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
     }
 
     /**

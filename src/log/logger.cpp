@@ -8,7 +8,7 @@ namespace sylar
           m_level(LogLevel::Level::DEBUG)
     {
         // 时间 线程号 协程号 [日志级别] 文件名 行号 日志信息 回车
-        m_formatter = std::make_shared<LogFormatter>("%d%T[%N-%t]%T[%F]%T[%p]%T[%c]%T<%f:%l>%T%m%n");
+        m_formatter = std::make_shared<LogFormatter>("%d%T%N%T[%t]%T[%F]%T[%p]%T[%c]%T<%f:%l>%T%m%n");
     }
 
     /**
@@ -22,27 +22,25 @@ namespace sylar
         if (level >= m_level)
         {
             std::list<LogAppender::ptr> appenders;
-            LogFormatter::ptr formatter;
             Logger::ptr root;
             {
                 // 采取锁分离，仅在需要时获取锁，然后立即释放，防止死锁的可能
                 MutexType::Lock lock(m_mutex);
                 appenders = m_appenders;
-                formatter = m_formatter;
                 root = m_root;
             }
             // 如果有附加器，则遍历所有附加器记录日志
-            if (!m_appenders.empty())
+            if (!appenders.empty())
             {
-                for (auto &i : m_appenders)
+                for (auto &i : appenders)
                 {
                     i->log(event);
                 }
             }
             // 如果没有附加器但有根日志器，则使用根日志器记录
-            else if (m_root)
+            else if (root)
             {
-                m_root->log(level, event);
+                root->log(level, event);
             }
         }
     }

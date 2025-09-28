@@ -26,11 +26,15 @@ namespace sylar
         Coroutine();
 
     public:
-        Coroutine(std::function<void()> cb, size_t stack_size = 0);
+        Coroutine(std::function<void()> cb, size_t stack_size = 0, bool use_caller = false);
         ~Coroutine();
         void reset(std::function<void()> cb);
         void swapIn();
         void swapOut();
+
+        void call();
+        void back();
+
         uint64_t getId() const;
         State getState() const;
         void setState(State state);
@@ -42,6 +46,7 @@ namespace sylar
         static void YieldToHold();
         static uint64_t TotalCoroutines();
         static void MainFunc();
+        static void CallerMainFunc();
         static uint64_t GetCoroutineId();
 
     private:

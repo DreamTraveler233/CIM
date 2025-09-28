@@ -5,6 +5,7 @@
 #include "thread.hpp"
 #include "noncopyable.hpp"
 #include <list>
+#include <vector>
 
 /*
 ==============================协程调度器模型==============================
@@ -17,7 +18,7 @@
 +----------+---------+     +----------+----------+     +----------+----------+
            |                           |                           |
            |                           |                           |
-协程层面:  |                           |                           |
+协程层面:   |                           |                           |
            |                           |                           |
 +----------v----------+     +----------v----------+     +----------v----------+
 |   主协程 (main)     |     |   主协程 (main)     |     |   主协程 (main)     |
@@ -57,39 +58,52 @@ namespace sylar
         const std::string &getName() const;
 
         static Scheduler *GetThis();
-        static Coroutine::ptr getMainCoroutine();
+        static Coroutine *GetMainCoroutine();
 
         void start();
         void stop();
 
+        /**
+         * @brief 用于调度单个协程或回调函数
+         *
+         * @param cb 要调度的协程或回调函数
+         * @param tid 指定执行该任务的线程ID，默认为-1表示任意线程都可以执行
+         */
         template <class CoroutineOrcb>
         void schedule(CoroutineOrcb cb, uint64_t tid = -1)
         {
-            bool need_tickle = false;
+            bool need_tickle = false; // 用于标记是否需要唤醒工作线程
             {
                 MutexType::Lock lock(m_mutex);
                 need_tickle = scheduleNolock(cb, tid);
             }
             if (need_tickle)
             {
-                tickle();
+                tickle(); // 唤醒工作线程
             }
         }
 
+        /**
+         * @brief 用于批量调度协程或回调函数
+         *
+         * @param begin 任务列表的起始迭代器
+         * @param end 任务列表的结束迭代器
+         */
         template <class InputIterator>
         void schedule(InputIterator begin, InputIterator end)
         {
-            bool need_tickle = false;
+            bool need_tickle = false; // 用于标记是否需要唤醒工作线程
             {
                 MutexType::Lock lock(m_mutex);
                 while (begin != end)
                 {
-                    need_tickle = scheduleNolock(&*begin) || need_tickle;
+                    // 将每个任务通过scheduleNolock添加到调度队列
+                    need_tickle = scheduleNolock(&*begin, -1) || need_tickle;
                 }
             }
             if (need_tickle)
             {
-                tickle();
+                tickle(); // 唤醒其他线程
             }
         }
 
@@ -102,9 +116,19 @@ namespace sylar
         void setThis();
 
     private:
+        /**
+         * @brief 用于在不加锁的情况下将协程或回调函数添加到调度队列中
+         *
+         * @param cb 要调度的协程或回调函数
+         * @param tid 指定执行该任务的线程ID，默认为-1表示任意线程都可以执行
+         * @return true 需要唤醒工作线程
+         * @return false 不需要唤醒工作线程
+         */
         template <class CoroutineOrcb>
-        void scheduleNolock(CoroutineOrcb cb, uint64_t tid)
+        bool scheduleNolock(CoroutineOrcb cb, uint64_t tid)
         {
+            // 如果队列不为空，说明有其他任务正在等待处理，工作线程应该已经在运行或即将运行
+            // 如果队列为空，工作线程可能处于空闲状态，需要主动唤醒以处理新任务
             bool need_tickle = m_coroutines.empty();
             CoroutineAndThread ct(cb, tid);
             if (ct.coroutine || ct.cb)
@@ -159,12 +183,12 @@ namespace sylar
         std::string m_name;                         // 协程调度器的名称
 
     protected:
-        std::vector<pid_t> m_threadIds;              // 线程ID列表，存储工作线程的ID
-        std::atomic<size_t> m_threadCount = 0;       // 工作线程数量
-        std::atomic<size_t> m_activeThreadCount = 0; // 活跃线程数量（正在执行协程的线程数）
-        size_t m_idleThreadCount = 0;                // 空闲线程数量（等待任务的线程数）
-        bool m_stopping = true;                      // 调度器是否正在停止
-        bool m_autoStop = false;                     // 是否自动停止（当没有任务时自动停止）
-        pid_t m_rootThread = 0;                      // 主线程ID（使用调用线程时的线程ID）
+        std::vector<pid_t> m_threadIds;                // 线程ID列表，存储工作线程的ID
+        size_t m_threadCount = 0;                      // 工作线程数量
+        std::atomic<size_t> m_activeThreadCount = {0}; // 活跃线程数量（正在执行协程的线程数）
+        std::atomic<size_t> m_idleThreadCount = {0};   // 空闲线程数量（等待任务的线程数）
+        bool m_stopping = true;                        // 调度器是否正在停止
+        bool m_autoStop = false;                       // 是否自动停止（当没有任务时自动停止）
+        pid_t m_rootThread = 0;                        // 主线程ID（使用调用线程时的线程ID）
     };
 }

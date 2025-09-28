@@ -31,9 +31,9 @@ namespace sylar
             t_scheduler = this;                 // 设置当前线程的调度器
 
             // 创建根协程并绑定到当前调度器的run方法
-            m_rootCoroutine.reset(new Coroutine(std::bind(&Scheduler::run, this)));
+            m_rootCoroutine.reset(new Coroutine(std::bind(&Scheduler::run, this), 0, true));
             Thread::SetName(m_name);
-            t_coroutine = m_rootCoroutine.get(); // 设置当前线程的协程为根协程
+            t_coroutine = m_rootCoroutine.get();
 
             m_rootThread = GetThreadId(); // 记录主线程ID
             m_threadIds.push_back(m_rootThread);
@@ -59,67 +59,146 @@ namespace sylar
     Scheduler *Scheduler::GetThis() { return t_scheduler; }
     void Scheduler::setThis() { t_scheduler = this; }
 
-    Coroutine::ptr Scheduler::getMainCoroutine() { return t_coroutine->GetThis(); }
+    Coroutine *Scheduler::GetMainCoroutine() { return t_coroutine; }
 
+    /**
+     * @brief 启动协程调度器
+     *
+     * 初始化并启动协程调度器，创建指定数量的工作线程来执行协程任务。
+     * 如果调度器已经在运行则直接返回。
+     *
+     * @note 该函数只能调用一次，重复调用无效
+     */
     void Scheduler::start()
     {
         MutexType::Lock lock(m_mutex);
+
+        // 如果调度器正在运行，则直接返回
         if (!m_stopping)
         {
             return;
         }
         m_stopping = false;
-        SYLAR_ASSERT(m_threads.empty());
 
-        m_threads.reserve(m_threadCount); // 提前分配内存
+        SYLAR_ASSERT(m_threads.empty());
+        m_threads.resize(m_threadCount); // 提前分配内存
         for (size_t i = 0; i < m_threadCount; ++i)
         {
-            m_threads[i] = (std::make_shared<Thread>(Thread(std::bind(&Scheduler::run, this), m_name + "_" + std::to_string(i))));
+            // 创建工作线程，绑定调度器的run方法作为线程执行函数
+            m_threads[i].reset(new Thread(std::bind(&Scheduler::run, this), m_name + "_" + std::to_string(i)));
             m_threadIds.push_back(m_threads[i]->getId());
         }
+
+        lock.unlock();
     }
 
     void Scheduler::stop()
     {
-        m_autoStop = true;
-        if (m_rootCoroutine &&
-            m_threadCount == 0 &&
+        m_autoStop = true; // 设置自动停止标志
+
+        // =================== 快速停止检查===================
+        /*
+        如果调度器只使用调用线程（没有额外的工作线程），
+        并且根协程已经完成或出现异常，
+        那么可以立即停止调度器，
+        而不需要执行完整的停止流程
+        */
+        if (m_threadCount == 0 &&
+            m_rootCoroutine &&
             (m_rootCoroutine->getState() == Coroutine::State::TERM ||
-             m_rootCoroutine->getState() == Coroutine::State::EXCEPT))
+             m_rootCoroutine->getState() == Coroutine::State::INIT))
         {
-            SYLAR_LOG_INFO(g_logger) << this << "stoped";
+            SYLAR_LOG_INFO(g_logger) << this << " stoped";
             m_stopping = true;
 
+            // 检查是否可以安全停止协程调度器
             if (stopping())
             {
                 return;
             }
         }
 
-        bool exit_on_this_coroutine = false;
+        // bool exit_on_this_coroutine = false;
+
         if (m_rootThread != -1)
         {
+            // 使用调用线程作为调度线程之一
             SYLAR_ASSERT(GetThis() == this);
         }
         else
         {
+            // 不使用调用线程作为调度线程
             SYLAR_ASSERT(GetThis() != this);
         }
 
+        // ===================触发停止流程===================
         m_stopping = true;
+
+        // 通知其他工作线程关闭调度器
         for (size_t i = 0; i < m_threadCount; ++i)
         {
+            SYLAR_LOG_INFO(g_logger) << "word thread tickle";
+            tickle();
+        }
+
+        // 通知主线程的关闭调度器
+        if (m_rootCoroutine)
+        {
+            SYLAR_LOG_INFO(g_logger) << "m_rootCoroutine tickle";
             tickle();
         }
 
         if (m_rootCoroutine)
         {
-            tickle();
+            // while (!stopping())
+            // {
+            //     if (m_rootCoroutine->getState() == Coroutine::State::TERM ||
+            //         m_rootCoroutine->getState() == Coroutine::State::EXCEPT)
+            //     {
+            //         m_rootCoroutine.reset(new Coroutine(std::bind(&Scheduler::run, this), 0, true));
+            //         SYLAR_LOG_INFO(g_logger) << "root coroutine is term, reset";
+            //         t_coroutine = m_rootCoroutine.get();
+            //     }
+            //     // 进入根协程，进行协程调度
+            //     m_rootCoroutine->call();
+            // }
+
+            if (!m_stopping)
+            {
+                m_rootCoroutine->call();
+            }
         }
 
-        if (stopping())
+        // 等待所有线程执行完任务然后退出
+        std::vector<Thread::ptr> thrs;
         {
-            return;
+            MutexType::Lock lock(m_mutex);
+            thrs.swap(m_threads);
+        }
+
+        for (auto &i : thrs)
+        {
+            i->join();
+        }
+    }
+
+    void Scheduler::tickle()
+    {
+        SYLAR_LOG_INFO(g_logger) << "tickle";
+    }
+
+    bool Scheduler::stopping()
+    {
+        MutexType::Lock lock(m_mutex);
+        return m_autoStop && m_coroutines.empty() && m_stopping && m_activeThreadCount == 0;
+    }
+
+    void Scheduler::idle()
+    {
+        SYLAR_LOG_INFO(g_logger) << "idle";
+        while (!stopping())
+        {
+            Coroutine::YieldToHold();
         }
     }
 
@@ -152,16 +231,17 @@ namespace sylar
      */
     void Scheduler::run()
     {
+        // return;
+        SYLAR_LOG_INFO(g_logger) << m_name << " run";
         setThis(); // 设置当前线程的调度器实例
 
-        // 如果不是主线程，则将主协程设置为当前线程正在执行的协程
         if (GetThreadId() != m_rootThread)
         {
             t_coroutine = Coroutine::GetThis().get();
         }
 
         // 创建空闲协程，当没有任务可执行时运行
-        Coroutine::ptr idle = std::make_shared<Coroutine>(Coroutine(std::bind(&Scheduler::idle, this)));
+        Coroutine::ptr idle_coroutine(new Coroutine(std::bind(&Scheduler::idle, this)));
         // 用于执行回调函数的协程
         Coroutine::ptr cb_coroutine;
 
@@ -178,14 +258,14 @@ namespace sylar
         {
             // ==========任务获取阶段==========
             ct.reset();             // 清除上一次循环中保存的任务，确保当前循环处理的是新任务
-            bool tickle_me = false; // 初始化标志位，用于标记是否需要通知其他线程
+            bool tickle_me = false; // 是否需要通知其他线程
+            bool is_active = false; // 线程是否处于活动状态
             {
                 // 加锁访问协程队列
                 MutexType::Lock lock(m_mutex);
                 auto it = m_coroutines.begin();
                 while (it != m_coroutines.end())
                 {
-                    SYLAR_ASSERT(it->coroutine || it->cb);
 
                     // 当前任务指定了执行线程，且该线程不是当前线程，则跳过该任务，并标记为需要通知其他线程
                     if (it->threadId != -1 && it->threadId != GetThreadId())
@@ -194,6 +274,8 @@ namespace sylar
                         tickle_me = true;
                         continue;
                     }
+
+                    SYLAR_ASSERT(it->coroutine || it->cb);
 
                     // 如果it中保存的是协程，并且正在执行中，则跳过
                     if (it->coroutine && it->coroutine->getState() == Coroutine::State::EXEC)
@@ -205,6 +287,9 @@ namespace sylar
                     // 取出协程任务
                     ct = *it;
                     m_coroutines.erase(it);
+                    ++m_activeThreadCount;
+                    is_active = true;
+                    break;
                 }
             }
 
@@ -220,7 +305,6 @@ namespace sylar
                 ct.coroutine->getState() != Coroutine::State::TERM &&
                 ct.coroutine->getState() != Coroutine::State::EXCEPT)
             {
-                ++m_activeThreadCount;
                 // 进入目标协程
                 ct.coroutine->swapIn();
                 // 离开目标协程
@@ -251,8 +335,6 @@ namespace sylar
                 {
                     cb_coroutine.reset(new Coroutine(ct.cb));
                 }
-
-                ++m_activeThreadCount;
                 // 进入回调函数
                 cb_coroutine->swapIn();
                 // 离开回调函数
@@ -264,7 +346,6 @@ namespace sylar
                     schedule(cb_coroutine);
                     cb_coroutine.reset();
                 }
-                // 如果协程未结束且无异常
                 else if (cb_coroutine->getState() == Coroutine::State::TERM ||
                          cb_coroutine->getState() == Coroutine::State::EXCEPT)
                 {
@@ -277,23 +358,28 @@ namespace sylar
                     cb_coroutine.reset();
                 }
             }
-            else if (idle)
+            else
             {
-                if (idle->getState() == Coroutine::State::TERM)
+                if (is_active)
                 {
+                    --m_activeThreadCount;
+                    continue;
+                }
+                if (idle_coroutine->getState() == Coroutine::State::TERM)
+                {
+                    SYLAR_LOG_INFO(g_logger) << "idle coroutine term";
                     break;
                 }
 
                 ++m_idleThreadCount;
-                // 运行空闲协程
-                idle->swapIn();
+                idle_coroutine->swapIn();
                 --m_idleThreadCount;
 
                 // 如果空闲协程未结束且无异常，设置为HOLD状态
-                if (idle->getState() != Coroutine::State::EXCEPT ||
-                    idle->getState() != Coroutine::State::TERM)
+                if (idle_coroutine->getState() != Coroutine::State::EXCEPT &&
+                    idle_coroutine->getState() != Coroutine::State::TERM)
                 {
-                    idle->setState(Coroutine::State::HOLD);
+                    idle_coroutine->setState(Coroutine::State::HOLD);
                 }
             }
         }
