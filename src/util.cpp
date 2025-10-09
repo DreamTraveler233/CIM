@@ -2,6 +2,7 @@
 #include "macro.hpp"
 #include "coroutine.hpp"
 #include <execinfo.h>
+#include <sys/time.h>
 
 namespace sylar
 {
@@ -79,5 +80,21 @@ namespace sylar
         }
 
         return ss.str();
+    }
+
+    uint64_t GetCurrentMS()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        return tv.tv_sec * 1000ul + tv.tv_usec / 1000;
+        return 0;
+    }
+
+    uint64_t GetCurrentUS()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        return tv.tv_sec * 1000000ul + tv.tv_usec;
+        return 0;
     }
 }

@@ -31,4 +31,7 @@ namespace sylar
      * @return 包含堆栈信息的字符串
      */
     std::string BacktraceToString(int size = 64, int skip = 2, const std::string &prefix = "    ");
+
+    uint64_t GetCurrentMS();
+    uint64_t GetCurrentUS();
 }

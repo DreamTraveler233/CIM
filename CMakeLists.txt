@@ -20,6 +20,8 @@ set(LIB_SRC
     src/thread/lock.cpp
     src/coroutine/coroutine.cpp
     src/coroutine/scheduler.cpp
+    src/coroutine/iomanager.cpp
+    src/timer.cpp
     src/util.cpp)
 
 # 生成动态库（.so）
@@ -43,6 +45,7 @@ set(TEST_EXECUTABLES
     test_util
     test_coroutine
     test_scheduler
+    test_iomanager
 )
 
 # 循环创建测试可执行文件

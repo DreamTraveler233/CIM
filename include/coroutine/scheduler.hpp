@@ -99,6 +99,7 @@ namespace sylar
                 {
                     // 将每个任务通过scheduleNolock添加到调度队列
                     need_tickle = scheduleNolock(&*begin, -1) || need_tickle;
+                    ++begin;
                 }
             }
             if (need_tickle)
@@ -114,6 +115,7 @@ namespace sylar
 
         void run();
         void setThis();
+        bool hasIdleThreads();
 
     private:
         /**

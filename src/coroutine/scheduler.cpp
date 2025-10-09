@@ -59,6 +59,11 @@ namespace sylar
     Scheduler *Scheduler::GetThis() { return t_scheduler; }
     void Scheduler::setThis() { t_scheduler = this; }
 
+    bool Scheduler::hasIdleThreads()
+    {
+        return m_idleThreadCount > 0;
+    }
+
     Coroutine *Scheduler::GetMainCoroutine() { return t_coroutine; }
 
     /**
@@ -163,7 +168,7 @@ namespace sylar
             //     m_rootCoroutine->call();
             // }
 
-            if (!m_stopping)
+            if (!stopping())
             {
                 m_rootCoroutine->call();
             }
@@ -212,23 +217,6 @@ namespace sylar
      * 4. 执行协程或回调函数
      * 5. 管理协程状态转换
      */
-    /*
-     1. 主协程(线程)运行
-             ↓
-     2. 调度器run()开始执行
-             ↓
-     3. 从任务队列取出协程任务
-             ↓
-     4. 调用 ct.coroutine->swapIn()
-             ↓
-     5. 切换到任务协程执行
-             ↓
-     6. 任务协程执行完毕或主动yield
-             ↓
-     7. 切换回主协程(或根协程)
-             ↓
-     8. 继续调度器run()循环
-     */
     void Scheduler::run()
     {
         // return;
@@ -248,12 +236,6 @@ namespace sylar
         // 存储从协程队列中取出的协程或回调任务
         CoroutineAndThread ct;
 
-        /*
-        1、任务在正确的线程上执行（线程亲和性）
-        2、正在执行的任务不会被重复调度（状态检查）
-        3、线程间的任务负载得到均衡（tickle机制）
-        4、整个过程是线程安全的（互斥锁保护）
-        */
         while (true)
         {
             // ==========任务获取阶段==========
