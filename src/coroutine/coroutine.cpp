@@ -110,8 +110,7 @@ namespace sylar
      */
     Coroutine::~Coroutine()
     {
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine"
-                                  << " id=" << m_id;
+        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine" << " id=" << m_id;
         if (m_stack) // 说明为子协程
         {
             SYLAR_ASSERT(m_state == State::TERM ||

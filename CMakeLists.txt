@@ -21,6 +21,8 @@ set(LIB_SRC
     src/coroutine/coroutine.cpp
     src/coroutine/scheduler.cpp
     src/coroutine/iomanager.cpp
+    src/hook/hook.cpp
+    src/hook/fdmanager.cpp
     src/timer.cpp
     src/util.cpp)
 
@@ -33,7 +35,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include/log)
 include_directories(${PROJECT_SOURCE_DIR}/include/config)
 include_directories(${PROJECT_SOURCE_DIR}/include/thread)
 include_directories(${PROJECT_SOURCE_DIR}/include/coroutine)
-
+include_directories(${PROJECT_SOURCE_DIR}/include/hook)
 
 # 定义测试可执行文件列表
 set(TEST_EXECUTABLES
@@ -46,6 +48,8 @@ set(TEST_EXECUTABLES
     test_coroutine
     test_scheduler
     test_iomanager
+    test_hook
+    test_hook2
 )
 
 # 循环创建测试可执行文件
