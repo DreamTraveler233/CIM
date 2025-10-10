@@ -23,8 +23,8 @@ set(LIB_SRC
     src/coroutine/iomanager.cpp
     src/hook/hook.cpp
     src/hook/fd_manager.cpp
-    src/timer.cpp
-    src/util.cpp)
+    src/base/timer.cpp
+    src/base/util.cpp)
 
 # 生成动态库（.so）
 add_library(sylar SHARED ${LIB_SRC})
@@ -36,6 +36,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include/config)
 include_directories(${PROJECT_SOURCE_DIR}/include/thread)
 include_directories(${PROJECT_SOURCE_DIR}/include/coroutine)
 include_directories(${PROJECT_SOURCE_DIR}/include/hook)
+include_directories(${PROJECT_SOURCE_DIR}/include/base)
 
 # 定义测试可执行文件列表
 set(TEST_EXECUTABLES
