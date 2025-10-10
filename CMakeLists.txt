@@ -24,7 +24,8 @@ set(LIB_SRC
     src/hook/hook.cpp
     src/hook/fd_manager.cpp
     src/base/timer.cpp
-    src/base/util.cpp)
+    src/base/util.cpp
+    src/network/address.cpp)
 
 # 生成动态库（.so）
 add_library(sylar SHARED ${LIB_SRC})
@@ -37,6 +38,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include/thread)
 include_directories(${PROJECT_SOURCE_DIR}/include/coroutine)
 include_directories(${PROJECT_SOURCE_DIR}/include/hook)
 include_directories(${PROJECT_SOURCE_DIR}/include/base)
+include_directories(${PROJECT_SOURCE_DIR}/include/network)
 
 # 定义测试可执行文件列表
 set(TEST_EXECUTABLES
@@ -51,6 +53,7 @@ set(TEST_EXECUTABLES
     test_iomanager
     test_hook
     test_hook2
+    test_address
 )
 
 # 循环创建测试可执行文件

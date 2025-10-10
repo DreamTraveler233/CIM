@@ -5,14 +5,30 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <sys/un.h>
+#include <vector>
+#include <map>
+#include <utility>
 
 namespace sylar
 {
+    class IPAddress;
     class Address
     {
     public:
         using ptr = std::shared_ptr<Address>;
 
+        static Address::ptr Create(const sockaddr *addr, socklen_t addrlen);
+        static bool Lookup(std::vector<Address::ptr> &result, const std::string &host,
+                           int family = AF_INET, int type = 0, int protocol = 0);
+        static Address::ptr LookupAny(const std::string &host, int family = AF_INET,
+                                      int type = 0, int protocol = 0);
+        static std::shared_ptr<IPAddress> LookupAnyIpAddress(const std::string &host, int family = AF_INET,
+                                                             int type = 0, int protocol = 0);
+        static bool GetInterfaceAddresses(std::multimap<std::string, std::pair<Address::ptr, uint32_t>> &result,
+                                          int family = AF_UNSPEC);
+        static bool GetInterfaceAddresses(std::vector<std::pair<Address::ptr, uint32_t>> &result,
+                                          const std::string &iface, int family = AF_INET);
         virtual ~Address() {}
 
         int getFamily() const;
@@ -33,8 +49,10 @@ namespace sylar
     public:
         using ptr = std::shared_ptr<IPAddress>;
 
+        static IPAddress::ptr Create(const char *address, uint32_t port = 0);
+
         virtual IPAddress::ptr broadcastAddress(uint32_t prefix_len) = 0;
-        virtual IPAddress::ptr networdAddress(uint32_t prefix_len) = 0;
+        virtual IPAddress::ptr networkAddress(uint32_t prefix_len) = 0;
         virtual IPAddress::ptr subnetMask(uint32_t prefix_len) = 0;
 
         virtual uint32_t getPort() const = 0;
@@ -46,6 +64,9 @@ namespace sylar
     public:
         using ptr = std::shared_ptr<IPv4Address>;
 
+        static IPv4Address::ptr Create(const char *address, uint32_t port = 0);
+
+        IPv4Address(const sockaddr_in &address);
         IPv4Address(uint32_t address = INADDR_ANY, uint32_t port = 0);
 
         const sockaddr *getAddr() const override;
@@ -54,7 +75,7 @@ namespace sylar
         std::ostream &insert(std::ostream &os) const override;
 
         IPAddress::ptr broadcastAddress(uint32_t prefix_len) override;
-        IPAddress::ptr networdAddress(uint32_t prefix_len) override;
+        IPAddress::ptr networkAddress(uint32_t prefix_len) override;
         IPAddress::ptr subnetMask(uint32_t prefix_len) override;
 
         uint32_t getPort() const override;
@@ -67,9 +88,13 @@ namespace sylar
     class IPv6Address : public IPAddress
     {
     public:
-        using ptr = std::shared_ptr<IPv4Address>;
+        using ptr = std::shared_ptr<IPv6Address>;
 
-        IPv6Address(uint32_t address = INADDR_ANY, uint32_t port = 0);
+        static IPv6Address::ptr Create(const char *address, uint32_t port = 0);
+
+        IPv6Address();
+        IPv6Address(const sockaddr_in6 &address);
+        IPv6Address(const uint8_t address[16], uint32_t port = 0);
 
         const sockaddr *getAddr() const override;
         socklen_t getAddrLen() const override;
@@ -77,7 +102,7 @@ namespace sylar
         std::ostream &insert(std::ostream &os) const override;
 
         IPAddress::ptr broadcastAddress(uint32_t prefix_len) override;
-        IPAddress::ptr networdAddress(uint32_t prefix_len) override;
+        IPAddress::ptr networkAddress(uint32_t prefix_len) override;
         IPAddress::ptr subnetMask(uint32_t prefix_len) override;
 
         uint32_t getPort() const override;
@@ -90,8 +115,9 @@ namespace sylar
     class UnixAddress : public Address
     {
     public:
-        using ptr = std::shared_ptr<IPAddress>;
+        using ptr = std::shared_ptr<UnixAddress>;
 
+        UnixAddress();
         UnixAddress(const std::string &path);
 
         const sockaddr *getAddr() const override;
@@ -108,6 +134,9 @@ namespace sylar
     {
     public:
         using ptr = std::shared_ptr<UnknownAddress>;
+
+        UnknownAddress(int family);
+        UnknownAddress(const sockaddr &addr);
 
         const sockaddr *getAddr() const override;
         socklen_t getAddrLen() const override;
