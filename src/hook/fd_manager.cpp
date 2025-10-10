@@ -1,4 +1,4 @@
-#include "fdmanager.hpp"
+#include "fd_manager.hpp"
 #include "hook.hpp"
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -64,7 +64,7 @@ namespace sylar
             int flags = fcntl_f(m_fd, F_GETFL, 0);
             if (!(flags & O_NONBLOCK))
             {
-                fcntl_f(m_fd, F_SETFL, 0, flags | O_NONBLOCK); // 设置非阻塞模式
+                fcntl_f(m_fd, F_SETFL, flags | O_NONBLOCK); // 设置非阻塞模式
             }
             m_sysNonBlock = true;
         }
@@ -153,7 +153,7 @@ namespace sylar
     void FdManager::del(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);
-        if (fd >= m_fdCtxs.size())
+        if (fd < 0 || fd >= (int)m_fdCtxs.size())
         {
             return;
         }

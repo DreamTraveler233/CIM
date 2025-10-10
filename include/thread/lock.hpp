@@ -194,11 +194,12 @@ namespace sylar
         pthread_spinlock_t m_mutex;
     };
 
+    // 原子锁
     class CASLock : public Noncopyable
     {
     public:
         using Lock = ScopedLockImpl<CASLock>;
-        
+
         CASLock();
         ~CASLock();
 

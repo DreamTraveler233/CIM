@@ -69,12 +69,10 @@ extern "C"
     extern close_fun close_f;
 
     // fcntl
-    typedef int (*fcntl_fun)(int fd, int cmd, va_list args);
+    typedef int (*fcntl_fun)(int fd, int op, ...);
     typedef int (*ioctl_fun)(int fd, unsigned long request, ...);
-    typedef int (*getsockopt_fun)(int sockfd, int level, int optname,
-                                  void *optval, socklen_t *optlen);
-    typedef int (*setsockopt_fun)(int sockfd, int level, int optname,
-                                  const void *optval, socklen_t optlen);
+    typedef int (*getsockopt_fun)(int sockfd, int level, int optname, void *optval, socklen_t *optlen);
+    typedef int (*setsockopt_fun)(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
     extern fcntl_fun fcntl_f;
     extern ioctl_fun ioctl_f;
     extern getsockopt_fun getsockopt_f;

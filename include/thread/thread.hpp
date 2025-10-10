@@ -9,7 +9,7 @@
 
 namespace sylar
 {
-    class Thread : public Noncopyable
+    class Thread
     {
     public:
         using ptr = std::shared_ptr<Thread>;
