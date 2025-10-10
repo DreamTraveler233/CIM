@@ -1,7 +1,9 @@
 #include "hook.hpp"
-#include "coroutine/coroutine.hpp"
-#include "coroutine/scheduler.hpp"
-#include "coroutine/iomanager.hpp"
+#include "coroutine.hpp"
+#include "scheduler.hpp"
+#include "iomanager.hpp"
+#include "fdmanager.hpp"
+#include "macro.hpp"
 #include <dlfcn.h>
 
 /*
@@ -18,6 +20,8 @@
 
 namespace sylar
 {
+    sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+
     static thread_local bool t_hook_enable = false;
 
     // 定义需要hook的函数列表
@@ -78,6 +82,128 @@ namespace sylar
     {
         t_hook_enable = flag;
     }
+}
+
+struct timer_info
+{
+    int cancelled;
+};
+
+/**
+ * @brief 执行带有协程支持的IO操作
+ * @tparam OriginFun 原始函数类型
+ * @tparam Args 函数参数包类型
+ * @param fd 文件描述符
+ * @param fun 原始系统调用函数指针
+ * @param hook_fun_name 被hook的函数名称
+ * @param event IO事件类型（READ/WRITE）
+ * @param timeout_so 超时设置选项（SO_RCVTIMEO/SO_SNDTIMEO）
+ * @param args 传递给原始函数的参数包
+ * @return 返回IO操作结果，成功返回传输字节数，失败返回-1并设置errno
+ *
+ * 该函数是所有IO相关hook函数的核心实现，提供以下功能：
+ * 1. 检查hook是否启用，未启用则直接调用原始函数
+ * 2. 获取文件描述符上下文信息
+ * 3. 处理非阻塞IO操作
+ * 4. 在IO阻塞时将当前协程挂起，并注册相应的事件监听
+ * 5. 支持超时控制
+ */
+template <typename OriginFun, typename... Args>
+static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name,
+                     uint32_t event, int timeout_so, Args &&...args)
+{
+    // 如果未启用hook，则直接调用原始函数
+    if (!sylar::is_hook_enable())
+    {
+        return fun(fd, std::forward<Args>(args)...);
+    }
+
+    // 获取文件描述符上下文
+    sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+    if (!ctx)
+    {
+        return fun(fd, std::forward<Args>(args)...);
+    }
+
+    // 如果文件描述符已经关闭，设置错误码并返回
+    if (ctx->isClose())
+    {
+        errno = EBADF;
+        return -1;
+    }
+
+    // 如果不是套接字或者用户设置了非阻塞模式，则直接调用原始函数
+    if (!ctx->isSocket() || ctx->getUserNonBlock())
+    {
+        return fun(fd, std::forward<Args>(args)...);
+    }
+
+    // 获取超时设置
+    uint64_t to = ctx->getTimeout(timeout_so);
+    std::shared_ptr<timer_info> tinfo(new timer_info);
+
+// 重试标签，用于IO操作被中断或需要重试的情况
+retry:
+    // 尝试执行原始IO操作
+    ssize_t n = fun(fd, std::forward<Args>(args)...);
+    // 如果被信号中断，则重试
+    while (n == -1 && errno == EINTR)
+    {
+        n = fun(fd, std::forward<Args>(args)...);
+    }
+
+    // 如果是因为缓冲区无数据/无法写入导致的阻塞
+    if (n == -1 && errno == EAGAIN)
+    {
+        sylar::IOManager *iom = sylar::IOManager::GetThis();
+        sylar::Timer::ptr timer;
+        std::weak_ptr<timer_info> winfo(tinfo);
+
+        // 如果设置了超时时间，则添加条件定时器
+        if (to != (uint64_t)-1)
+        {
+            timer = iom->addConditionTimer(to, [winfo, fd, iom, event]()
+                                           { 
+                                            auto t = winfo.lock();
+                                            if(!t||t->cancelled)
+                                            {
+                                                return;
+                                            } 
+                                            t->cancelled = ETIMEDOUT;
+                                            iom->cancelEvent(fd,event); }, winfo);
+        }
+
+        // 添加IO事件监听
+        int rt = iom->addEvent(fd, event);
+        if (rt)
+        {
+            // 添加事件失败，记录日志并返回错误
+            SYLAR_LOG_ERROR(g_logger) << hook_fun_name << " addEvent (" << fd << ", " << event << ")";
+            if (timer)
+            {
+                timer->cancel();
+            }
+            return -1;
+        }
+        else
+        {
+            // 成功添加事件，让出当前协程控制权
+            sylar::Coroutine::YieldToHold();
+            if (timer)
+            {
+                timer->cancel();
+            }
+            // 如果定时器触发（超时），设置错误码并返回
+            if (tinfo->cancelled)
+            {
+                errno = tinfo->cancelled;
+                return -1;
+            }
+            // 重新尝试IO操作
+            goto retry;
+        }
+    }
+    return n;
 }
 
 extern "C"
