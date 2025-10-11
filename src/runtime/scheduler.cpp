@@ -1,6 +1,6 @@
 #include "scheduler.hpp"
-#include "macro.hpp"
-#include "hook.hpp"
+#include "core/macro.hpp"
+#include "system/hook.hpp"
 
 namespace sylar
 {

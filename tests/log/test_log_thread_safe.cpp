@@ -1,6 +1,6 @@
-#include "thread.hpp"
-#include "macro.hpp"
-#include "lock.hpp"
+#include "core/thread.hpp"
+#include "core/macro.hpp"
+#include "core/lock.hpp"
 #include <vector>
 #include <iostream>
 #include <atomic>

@@ -1,8 +1,8 @@
 #include "coroutine.hpp"
-#include "config.hpp"
-#include "macro.hpp"
-#include "scheduler.hpp"
-#include "util.hpp"
+#include "config/config.hpp"
+#include "core/macro.hpp"
+#include "runtime/scheduler.hpp"
+#include "core/util.hpp"
 #include <atomic>
 
 namespace sylar

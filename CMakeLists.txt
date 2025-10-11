@@ -3,43 +3,33 @@ project(sylar)
 
 # 让 make 输出详细的编译命令，便于调试
 set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O3 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
 
-set(LIB_SRC
-    src/log/log_level.cpp
-    src/log/log_event.cpp
-    src/log/log_formatter.cpp
-    src/log/log_appender.cpp
-    src/log/logger.cpp
-    src/log/logger_manager.cpp
-    src/log/log_config.cpp
-    src/config/config_var_base.cpp
-    src/config/config.cpp
-    src/thread/thread.cpp
-    src/thread/semaphore.cpp
-    src/thread/lock.cpp
-    src/coroutine/coroutine.cpp
-    src/coroutine/scheduler.cpp
-    src/coroutine/iomanager.cpp
-    src/hook/hook.cpp
-    src/hook/fd_manager.cpp
-    src/base/timer.cpp
-    src/base/util.cpp
-    src/network/address.cpp
-    src/network/socket.cpp)
+# 根据构建类型设置不同的编译选项
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Wall -Wno-deprecated -Werror -Wno-unused-function")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -DNDEBUG -Wall -Wno-deprecated -Werror -Wno-unused-function")
+endif()
+
+# 添加通用编译选项
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -std=c++11")
+
+# 收集源文件
+file(GLOB_RECURSE LIB_SRC "src/*.cpp")
 
 # 生成动态库（.so）
 add_library(sylar SHARED ${LIB_SRC})
 
 # 头文件搜索目录
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/include/log)
-include_directories(${PROJECT_SOURCE_DIR}/include/config)
-include_directories(${PROJECT_SOURCE_DIR}/include/thread)
-include_directories(${PROJECT_SOURCE_DIR}/include/coroutine)
-include_directories(${PROJECT_SOURCE_DIR}/include/hook)
-include_directories(${PROJECT_SOURCE_DIR}/include/base)
-include_directories(${PROJECT_SOURCE_DIR}/include/network)
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/config
+    ${PROJECT_SOURCE_DIR}/include/core
+    ${PROJECT_SOURCE_DIR}/include/log
+    ${PROJECT_SOURCE_DIR}/include/net
+    ${PROJECT_SOURCE_DIR}/include/runtime
+    ${PROJECT_SOURCE_DIR}/include/system
+)
 
 # 定义测试可执行文件列表
 set(TEST_EXECUTABLES
@@ -58,11 +48,33 @@ set(TEST_EXECUTABLES
     test_socket
 )
 
+# 创建一个函数来确定测试源文件路径
+function(GET_TEST_SOURCE TEST_NAME RESULT)
+    # 根据测试名称确定源文件路径
+    if(${TEST_NAME} STREQUAL "test_util")
+        set(TEST_SOURCE "tests/core/${TEST_NAME}.cpp" PARENT_SCOPE)
+    elseif(${TEST_NAME} STREQUAL "test_coroutine" OR ${TEST_NAME} STREQUAL "test_scheduler" OR ${TEST_NAME} STREQUAL "test_iomanager")
+        set(TEST_SOURCE "tests/runtime/${TEST_NAME}.cpp" PARENT_SCOPE)
+    elseif(${TEST_NAME} STREQUAL "test_hook" OR ${TEST_NAME} STREQUAL "test_hook2")
+        set(TEST_SOURCE "tests/system/${TEST_NAME}.cpp" PARENT_SCOPE)
+    elseif(${TEST_NAME} STREQUAL "test_address" OR ${TEST_NAME} STREQUAL "test_socket")
+        set(TEST_SOURCE "tests/net/${TEST_NAME}.cpp" PARENT_SCOPE)
+    elseif(${TEST_NAME} MATCHES "test_log_.*")
+        set(TEST_SOURCE "tests/log/${TEST_NAME}.cpp" PARENT_SCOPE)
+    elseif(${TEST_NAME} MATCHES "test_config.*")
+        set(TEST_SOURCE "tests/config/${TEST_NAME}.cpp" PARENT_SCOPE)
+    else()
+        set(TEST_SOURCE "tests/${TEST_NAME}.cpp" PARENT_SCOPE)
+    endif()
+endfunction()
+
 # 循环创建测试可执行文件
 foreach(TEST_EXECUTABLE ${TEST_EXECUTABLES})
-    add_executable(${TEST_EXECUTABLE} tests/${TEST_EXECUTABLE}.cpp) # 生成可执行文件
-    #add_dependencies(${TEST_EXECUTABLE} sylar)                     # 指定test依赖 sylar库，先编译库再编译可执行文件
-    target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)        # 链接库到可执行文件
+    # 获取测试源文件路径
+    GET_TEST_SOURCE(${TEST_EXECUTABLE} TEST_SOURCE)
+    
+    add_executable(${TEST_EXECUTABLE} ${TEST_SOURCE})
+    target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)
 endforeach()
 
 # 指定可执行文件输出目录

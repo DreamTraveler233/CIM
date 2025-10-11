@@ -1,6 +1,6 @@
-#include "macro.hpp"
-#include "logger.hpp"
-#include "log_appender.hpp"
+#include "core/macro.hpp"
+#include "log/logger.hpp"
+#include "log/log_appender.hpp"
 #include <chrono>
 #include <iostream>
 #include <vector>

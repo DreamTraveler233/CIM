@@ -3,4 +3,7 @@ bin/log/
 bin/test_*
 .vscode/
 lib/*.so
-autobulid.sh
+autobuild.sh
+*.tmp
+*.log
+.DS_Store

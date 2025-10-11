@@ -1,7 +1,7 @@
 #include "socket.hpp"
-#include "fd_manager.hpp"
-#include "macro.hpp"
-#include "hook.hpp"
+#include "system/fd_manager.hpp"
+#include "core/macro.hpp"
+#include "system/hook.hpp"
 #include <netinet/tcp.h>
 
 namespace sylar
