@@ -12,6 +12,33 @@ namespace sylar
         using ptr = std::shared_ptr<Socket>;
         using weak_ptr = std::weak_ptr<Socket>;
 
+        enum class Type
+        {
+            NONE = 0,
+            TCP = SOCK_STREAM,
+            UDP = SOCK_DGRAM
+        };
+
+        enum class Family
+        {
+            NONE = AF_UNSPEC,
+            IPv4 = AF_INET,
+            IPv6 = AF_INET6,
+            UNIX = AF_LOCAL
+        };
+
+        static Socket::ptr CreateTCP(Address::ptr address);
+        static Socket::ptr CreateUDP(Address::ptr address);
+
+        static Socket::ptr CreateTCPSocket();
+        static Socket::ptr CreateUDPSocket();
+
+        static Socket::ptr CreateTCPSocket6();
+        static Socket::ptr CreateUDPSocket6();
+
+        static Socket::ptr CreateUnixTCPSocket();
+        static Socket::ptr CreateUnixUDPSocket();
+
         Socket(int family, int type, int protocol);
         ~Socket();
 

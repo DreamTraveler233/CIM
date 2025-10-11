@@ -8,6 +8,54 @@ namespace sylar
 {
     static auto g_logger = loggerMgr::GetInstance()->getLogger("system");
 
+    Socket::ptr Socket::CreateTCP(sylar::Address::ptr address)
+    {
+        Socket::ptr sock(new Socket(address->getFamily(), (int)Type::TCP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateUDP(sylar::Address::ptr address)
+    {
+        Socket::ptr sock(new Socket(address->getFamily(), (int)Type::UDP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateTCPSocket()
+    {
+        Socket::ptr sock(new Socket((int)Family::IPv4, (int)Type::TCP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateUDPSocket()
+    {
+        Socket::ptr sock(new Socket((int)Family::IPv4, (int)Type::UDP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateTCPSocket6()
+    {
+        Socket::ptr sock(new Socket((int)Family::IPv6, (int)Type::TCP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateUDPSocket6()
+    {
+        Socket::ptr sock(new Socket((int)Family::IPv6, (int)Type::UDP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateUnixTCPSocket()
+    {
+        Socket::ptr sock(new Socket((int)Family::UNIX, (int)Type::TCP, 0));
+        return sock;
+    }
+
+    Socket::ptr Socket::CreateUnixUDPSocket()
+    {
+        Socket::ptr sock(new Socket((int)Family::UNIX, (int)Type::UDP, 0));
+        return sock;
+    }
+
     Socket::Socket(int family, int type, int protocol)
         : m_sock(-1),
           m_family(family),
@@ -343,7 +391,7 @@ namespace sylar
         {
             return -1;
         }
-        socklen_t addrlen = sizeof(from);
+        socklen_t addrlen = from->getAddrLen();
         int ret = ::recvfrom(m_sock, buffer, length, flags, (sockaddr *)&from, &addrlen);
         if (ret == -1)
         {

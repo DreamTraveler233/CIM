@@ -55,6 +55,7 @@ set(TEST_EXECUTABLES
     test_hook
     test_hook2
     test_address
+    test_socket
 )
 
 # 循环创建测试可执行文件
