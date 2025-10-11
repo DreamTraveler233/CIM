@@ -477,7 +477,7 @@ namespace sylar
         memset(&hints, 0, sizeof(hints));
 
         // 设置地址解析参数：只解析数字格式IP地址，支持任意socket类型
-        hints.ai_family = AI_NUMERICHOST;
+        //hints.ai_family = AI_NUMERICHOST;
         hints.ai_socktype = AF_UNSPEC;
 
         // 调用getaddrinfo解析地址字符串

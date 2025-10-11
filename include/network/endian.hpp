@@ -40,7 +40,7 @@ namespace sylar
 
     // 针对不同系统字节序的字节序转换函数
 #if SYLAR_BYTE_ORDER == SYLAR_BIG_ENDIAN
-    // 在大端系统上进行字节转换
+    // 在大端系统上，网络字节序和主机字节序相同，不需要转换
     template <typename T>
     T ntoh(T n)
     {
@@ -54,7 +54,7 @@ namespace sylar
     }
 
 #else
-    // 在小端系统上进行字节转换
+    // 在小端系统上，网络字节序和主机字节序不同，需要进行字节交换
     template <typename T>
     T ntoh(T n)
     {

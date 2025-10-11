@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     // 测试IPv6地址创建和基本功能
     SYLAR_LOG_INFO(g_logger) << "=== IPv6 Address Tests ===";
     
-    // 1. 测试Create方法创建IPv6地址 (注意：代码中存在一个错误，应该使用AF_INET6而不是AF_INET)
+    // 1. 测试Create方法创建IPv6地址
     auto addr4 = sylar::IPv6Address::Create("::1", 8080);
     if (addr4) {
         SYLAR_LOG_INFO(g_logger) << "Created IPv6 address: " << addr4->toString();
