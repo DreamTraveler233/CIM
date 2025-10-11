@@ -48,33 +48,11 @@ set(TEST_EXECUTABLES
     test_socket
 )
 
-# 创建一个函数来确定测试源文件路径
-function(GET_TEST_SOURCE TEST_NAME RESULT)
-    # 根据测试名称确定源文件路径
-    if(${TEST_NAME} STREQUAL "test_util")
-        set(TEST_SOURCE "tests/core/${TEST_NAME}.cpp" PARENT_SCOPE)
-    elseif(${TEST_NAME} STREQUAL "test_coroutine" OR ${TEST_NAME} STREQUAL "test_scheduler" OR ${TEST_NAME} STREQUAL "test_iomanager")
-        set(TEST_SOURCE "tests/runtime/${TEST_NAME}.cpp" PARENT_SCOPE)
-    elseif(${TEST_NAME} STREQUAL "test_hook" OR ${TEST_NAME} STREQUAL "test_hook2")
-        set(TEST_SOURCE "tests/system/${TEST_NAME}.cpp" PARENT_SCOPE)
-    elseif(${TEST_NAME} STREQUAL "test_address" OR ${TEST_NAME} STREQUAL "test_socket")
-        set(TEST_SOURCE "tests/net/${TEST_NAME}.cpp" PARENT_SCOPE)
-    elseif(${TEST_NAME} MATCHES "test_log_.*")
-        set(TEST_SOURCE "tests/log/${TEST_NAME}.cpp" PARENT_SCOPE)
-    elseif(${TEST_NAME} MATCHES "test_config.*")
-        set(TEST_SOURCE "tests/config/${TEST_NAME}.cpp" PARENT_SCOPE)
-    else()
-        set(TEST_SOURCE "tests/${TEST_NAME}.cpp" PARENT_SCOPE)
-    endif()
-endfunction()
-
 # 循环创建测试可执行文件
 foreach(TEST_EXECUTABLE ${TEST_EXECUTABLES})
-    # 获取测试源文件路径
-    GET_TEST_SOURCE(${TEST_EXECUTABLE} TEST_SOURCE)
-    
-    add_executable(${TEST_EXECUTABLE} ${TEST_SOURCE})
-    target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)
+    add_executable(${TEST_EXECUTABLE} tests/${TEST_EXECUTABLE}.cpp) # 生成可执行文件
+    #add_dependencies(${TEST_EXECUTABLE} sylar)                     # 指定test依赖 sylar库，先编译库再编译可执行文件
+    target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)        # 链接库到可执行文件
 endforeach()
 
 # 指定可执行文件输出目录
