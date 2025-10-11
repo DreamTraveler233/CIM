@@ -464,7 +464,7 @@ namespace sylar
     int Socket::getErrno() const
     {
         int error = 0;
-        size_t len = sizeof(error);
+        socklen_t len = sizeof(error);
         if (!getOption(SOL_SOCKET, SO_ERROR, &error, &len))
         {
             return -1;
