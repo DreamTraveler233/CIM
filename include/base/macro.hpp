@@ -7,10 +7,14 @@
 #include <string.h>
 #include <assert.h>
 
+/**
+ * @brief 分支预测优化宏定义
+ * @details 这些宏用于帮助编译器进行分支预测优化，提高程序执行效率
+ * 在支持的编译器(GCC/LLVM)上使用__builtin_expect内建函数进行优化，
+ * 在不支持的编译器上退化为普通表达式
+ */
 #if defined __GNUC__ || defined __llvm__
-/// LIKCLY 宏的封装, 告诉编译器优化,条件大概率成立
 #define SYLAR_LIKELY(x) __builtin_expect(!!(x), 1)
-/// LIKCLY 宏的封装, 告诉编译器优化,条件大概率不成立
 #define SYLAR_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
 #define SYLAR_LIKELY(x) (x)
@@ -52,7 +56,7 @@
 #define SYLAR_LOG_NAME(name) sylar::loggerMgr::GetInstance()->getLogger(name)
 
 #define SYLAR_ASSERT(X)                                                                \
-    if (SYLAR_UNLIKELY(!(X)))                                                                          \
+    if (SYLAR_UNLIKELY(!(X)))                                                          \
     {                                                                                  \
         SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\nbacktrace:\n"                          \
@@ -61,7 +65,7 @@
     }
 
 #define SYLAR_ASSERT2(X, W)                                                            \
-    if (SYLAR_UNLIKELY(!(X)))                                                                          \
+    if (SYLAR_UNLIKELY(!(X)))                                                          \
     {                                                                                  \
         SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\n"                                      \

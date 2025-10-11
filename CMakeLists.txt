@@ -25,7 +25,8 @@ set(LIB_SRC
     src/hook/fd_manager.cpp
     src/base/timer.cpp
     src/base/util.cpp
-    src/network/address.cpp)
+    src/network/address.cpp
+    src/network/socket.cpp)
 
 # 生成动态库（.so）
 add_library(sylar SHARED ${LIB_SRC})

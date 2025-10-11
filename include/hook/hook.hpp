@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 /*
 Hook机制详解：
@@ -77,4 +78,6 @@ extern "C"
     extern ioctl_fun ioctl_f;
     extern getsockopt_fun getsockopt_f;
     extern setsockopt_fun setsockopt_f;
+
+    extern int connect_with_timeout(int fd, const struct sockaddr *addr, socklen_t addrlen, uint64_t timeout_ms);
 }

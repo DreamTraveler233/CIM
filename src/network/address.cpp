@@ -470,7 +470,7 @@ namespace sylar
      *          解析成功后，使用Address::Create工厂方法创建对应的地址对象，
      *          然后设置端口号并返回。
      */
-    IPAddress::ptr IPAddress::Create(const char *address, uint32_t port)
+    IPAddress::ptr IPAddress::Create(const char *address, uint16_t port)
     {
         addrinfo hints, *results;
         // 初始化hints结构体
@@ -529,7 +529,7 @@ namespace sylar
      *
      * @note 该函数只支持IPv4地址，不支持IPv6或其他格式地址
      */
-    IPv4Address::ptr IPv4Address::Create(const char *address, uint32_t port)
+    IPv4Address::ptr IPv4Address::Create(const char *address, uint16_t port)
     {
         // 创建IPv4Address对象
         IPv4Address::ptr rt(new IPv4Address);
@@ -554,7 +554,7 @@ namespace sylar
         m_addr = address;
     }
 
-    IPv4Address::IPv4Address(uint32_t address, uint32_t port)
+    IPv4Address::IPv4Address(uint32_t address, uint16_t port)
     {
         memset(&m_addr, 0, sizeof(m_addr));
         m_addr.sin_family = AF_INET;
@@ -563,6 +563,11 @@ namespace sylar
     }
 
     const sockaddr *IPv4Address::getAddr() const
+    {
+        return (sockaddr *)&m_addr;
+    }
+
+    sockaddr *IPv4Address::getAddr()
     {
         return (sockaddr *)&m_addr;
     }
@@ -706,7 +711,7 @@ namespace sylar
         return ntoh(m_addr.sin_port);
     }
 
-    void IPv4Address::setPort(uint32_t port)
+    void IPv4Address::setPort(uint16_t port)
     {
         m_addr.sin_port = hton(port);
     }
@@ -731,7 +736,7 @@ namespace sylar
      * @warning 当前实现中存在一个错误，使用了AF_INET而不是AF_INET6作为inet_pton的第一个参数，
      *          这会导致IPv6地址解析失败
      */
-    IPv6Address::ptr IPv6Address::Create(const char *address, uint32_t port)
+    IPv6Address::ptr IPv6Address::Create(const char *address, uint16_t port)
     {
         // 创建IPv6Address对象
         IPv6Address::ptr rt(new IPv6Address);
@@ -762,7 +767,7 @@ namespace sylar
         m_addr = address;
     }
 
-    IPv6Address::IPv6Address(const uint8_t address[16], uint32_t port)
+    IPv6Address::IPv6Address(const uint8_t address[16], uint16_t port)
     {
         memset(&m_addr, 0, sizeof(m_addr));
         m_addr.sin6_family = AF_INET6;
@@ -771,6 +776,11 @@ namespace sylar
     }
 
     const sockaddr *IPv6Address::getAddr() const
+    {
+        return (sockaddr *)&m_addr;
+    }
+
+    sockaddr *IPv6Address::getAddr()
     {
         return (sockaddr *)&m_addr;
     }
@@ -954,7 +964,7 @@ namespace sylar
         return ntoh(m_addr.sin6_port);
     }
 
-    void IPv6Address::setPort(uint32_t port)
+    void IPv6Address::setPort(uint16_t port)
     {
         m_addr.sin6_port = hton(port);
     }
@@ -1035,6 +1045,11 @@ namespace sylar
         return (sockaddr *)&m_addr;
     }
 
+    sockaddr *UnixAddress::getAddr()
+    {
+        return (sockaddr *)&m_addr;
+    }
+
     /**
      * @brief 获取Unix域套接字地址结构体长度
      * @return 返回地址结构体的实际长度
@@ -1045,6 +1060,11 @@ namespace sylar
     socklen_t UnixAddress::getAddrLen() const
     {
         return m_length;
+    }
+
+    void UnixAddress::setAddrLen(socklen_t length)
+    {
+        m_length = length;
     }
 
     /**
@@ -1108,6 +1128,11 @@ namespace sylar
      *          可用于socket相关系统调用。
      */
     const sockaddr *UnknownAddress::getAddr() const
+    {
+        return (sockaddr *)&m_addr;
+    }
+
+    sockaddr *UnknownAddress::getAddr()
     {
         return (sockaddr *)&m_addr;
     }
