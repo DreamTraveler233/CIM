@@ -534,7 +534,7 @@ namespace sylar
         // 创建IPv4Address对象
         IPv4Address::ptr rt(new IPv4Address);
         // 设置端口号，转换为网络字节序
-        rt->m_addr.sin_port = byteswapOnBigEndian(port);
+        rt->m_addr.sin_port = hton(port);
         // 使用inet_pton解析IPv4地址字符串
         int result = inet_pton(AF_INET, address, &rt->m_addr.sin_addr.s_addr);
         if (result <= 0)
@@ -558,8 +558,8 @@ namespace sylar
     {
         memset(&m_addr, 0, sizeof(m_addr));
         m_addr.sin_family = AF_INET;
-        m_addr.sin_port = byteswapOnBigEndian(port);
-        m_addr.sin_addr.s_addr = byteswapOnBigEndian(address);
+        m_addr.sin_port = hton(port);
+        m_addr.sin_addr.s_addr = hton(address);
     }
 
     const sockaddr *IPv4Address::getAddr() const
@@ -587,14 +587,14 @@ namespace sylar
     std::ostream &IPv4Address::insert(std::ostream &os) const
     {
         // 将IPv4地址从网络字节序转换为主机字节序
-        uint32_t address = byteswapOnLittleEndian(m_addr.sin_addr.s_addr);
+        uint32_t address = ntoh(m_addr.sin_addr.s_addr);
         // 按照xxx.xxx.xxx.xxx的格式输出IP地址的四个字节
         os << ((address >> 24) & 0xff) << "."
            << ((address >> 16) & 0xff) << "."
            << ((address >> 8) & 0xff) << "."
            << (address & 0xff);
         // 输出端口号，同样需要从网络字节序转换为主机字节序
-        os << ":" << byteswapOnLittleEndian(m_addr.sin_port);
+        os << ":" << ntoh(m_addr.sin_port);
         return os;
     }
 
@@ -626,8 +626,8 @@ namespace sylar
         sockaddr_in baddr(m_addr);
         // 计算广播地址：将IP地址与主机部分全1的掩码进行按位或运算
         // CreateMask<uint32_t>(prefix_len)创建主机部分全1的掩码
-        // byteswapOnBigEndian确保掩码使用网络字节序
-        baddr.sin_addr.s_addr |= byteswapOnBigEndian(CreateMask<uint32_t>(prefix_len));
+        // hton确保掩码使用网络字节序
+        baddr.sin_addr.s_addr |= hton(CreateMask<uint32_t>(prefix_len));
         // 创建并返回新的IPv4Address对象
         return IPv4Address::ptr(new IPv4Address(baddr));
     }
@@ -659,8 +659,8 @@ namespace sylar
         sockaddr_in baddr(m_addr);
         // 计算网络地址：将IP地址与子网掩码进行按位与运算
         // CreateMask<uint32_t>(prefix_len)创建主机部分全1的掩码
-        // byteswapOnBigEndian确保掩码使用网络字节序
-        baddr.sin_addr.s_addr &= byteswapOnBigEndian(CreateMask<uint32_t>(prefix_len));
+        // hton确保掩码使用网络字节序
+        baddr.sin_addr.s_addr &= hton(CreateMask<uint32_t>(prefix_len));
         // 创建并返回新的IPv4Address对象
         return IPv4Address::ptr(new IPv4Address(baddr));
     }
@@ -695,20 +695,20 @@ namespace sylar
         // 计算子网掩码：将主机部分全1的掩码取反得到网络部分全1的掩码
         // CreateMask<uint32_t>(prefix_len)创建主机部分全1的掩码
         // ~操作符将其取反得到子网掩码
-        // byteswapOnBigEndian确保掩码使用网络字节序
-        mask_addr.sin_addr.s_addr = ~byteswapOnBigEndian(CreateMask<uint32_t>(prefix_len));
+        // hton确保掩码使用网络字节序
+        mask_addr.sin_addr.s_addr = ~hton(CreateMask<uint32_t>(prefix_len));
         // 创建并返回新的IPv4Address对象
         return IPv4Address::ptr(new IPv4Address(mask_addr));
     }
 
     uint32_t IPv4Address::getPort() const
     {
-        return byteswapOnLittleEndian(m_addr.sin_port);
+        return ntoh(m_addr.sin_port);
     }
 
     void IPv4Address::setPort(uint32_t port)
     {
-        m_addr.sin_port = byteswapOnBigEndian(port);
+        m_addr.sin_port = hton(port);
     }
 
     /**
@@ -736,7 +736,7 @@ namespace sylar
         // 创建IPv6Address对象
         IPv6Address::ptr rt(new IPv6Address);
         // 设置端口号，转换为网络字节序
-        rt->m_addr.sin6_port = byteswapOnBigEndian(port);
+        rt->m_addr.sin6_port = hton(port);
         // 使用inet_pton解析IPv6地址字符串
         int result = inet_pton(AF_INET6, address, &rt->m_addr.sin6_addr);
         if (result <= 0)
@@ -766,7 +766,7 @@ namespace sylar
     {
         memset(&m_addr, 0, sizeof(m_addr));
         m_addr.sin6_family = AF_INET6;
-        m_addr.sin6_port = byteswapOnBigEndian(port);
+        m_addr.sin6_port = hton(port);
         memcpy(&m_addr.sin6_addr, address, sizeof(m_addr.sin6_addr));
     }
 
@@ -827,7 +827,7 @@ namespace sylar
                 os << ":";
             }
             // 输出当前16位地址段（转换为主机字节序并以十六进制格式输出）
-            os << std::hex << (int)byteswapOnLittleEndian(addr[i]) << std::dec;
+            os << std::hex << (int)ntoh(addr[i]) << std::dec;
         }
 
         // 处理末尾的零组情况
@@ -837,7 +837,7 @@ namespace sylar
         }
 
         // 输出结束方括号和端口号（端口号转换为主机字节序）
-        os << "]:" << byteswapOnLittleEndian(m_addr.sin6_port);
+        os << "]:" << ntoh(m_addr.sin6_port);
         return os;
     }
 
@@ -951,12 +951,12 @@ namespace sylar
 
     uint32_t IPv6Address::getPort() const
     {
-        return byteswapOnLittleEndian(m_addr.sin6_port);
+        return ntoh(m_addr.sin6_port);
     }
 
     void IPv6Address::setPort(uint32_t port)
     {
-        m_addr.sin6_port = byteswapOnBigEndian(port);
+        m_addr.sin6_port = hton(port);
     }
 
     // Unix域套接字路径最大长度常量
