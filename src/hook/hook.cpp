@@ -133,7 +133,7 @@ namespace sylar
         }
 
         // 获取文件描述符上下文
-        sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+        sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
         if (!ctx)
         {
             return fun(fd, std::forward<Args>(args)...);
@@ -343,7 +343,7 @@ namespace sylar
             {
                 return fd;
             }
-            sylar::FdMgr::getInstance()->get(fd, true);
+            sylar::FdMgr::GetInstance()->get(fd, true);
             return fd;
         }
 
@@ -353,7 +353,7 @@ namespace sylar
             {
                 return connect_f(fd, addr, addrlen);
             }
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
             if (!ctx || ctx->isClose())
             {
                 errno = EBADF;
@@ -447,7 +447,7 @@ namespace sylar
             int fd = do_io(sockfd, accept_f, "accept", sylar::IOManager::READ, SO_RCVTIMEO, addr, addrlen);
             if (fd >= 0)
             {
-                sylar::FdMgr::getInstance()->get(fd, true);
+                sylar::FdMgr::GetInstance()->get(fd, true);
             }
             return fd;
         }
@@ -511,7 +511,7 @@ namespace sylar
                 return close_f(fd);
             }
 
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
             if (ctx)
             {
                 auto iom = sylar::IOManager::GetThis();
@@ -519,7 +519,7 @@ namespace sylar
                 {
                     iom->cancelAll(fd);
                 }
-                sylar::FdMgr::getInstance()->del(fd);
+                sylar::FdMgr::GetInstance()->del(fd);
             }
             return close_f(fd);
         }
@@ -535,7 +535,7 @@ namespace sylar
             {
                 int arg = va_arg(args, int);
                 va_end(args);
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
                 if (!ctx || !ctx->isSocket() || ctx->isClose())
                 {
                     return fcntl_f(fd, cmd, arg);
@@ -556,7 +556,7 @@ namespace sylar
             {
                 va_end(args);
                 int arg = fcntl_f(fd, cmd);
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
                 if (!ctx || !ctx->isSocket() || ctx->isClose())
                 {
                     return arg;
@@ -635,7 +635,7 @@ namespace sylar
         if (FIONBIO == request)
         {
             bool user_nonblock = !!(*(int *)arg);
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(fd);
+            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
             if (!ctx || !ctx->isSocket() || ctx->isClose())
             {
                 return ioctl_f(fd, request, arg);
@@ -645,14 +645,12 @@ namespace sylar
         return ioctl_f(fd, request, arg);
     }
 
-    int getsockopt(int sockfd, int level, int optname,
-                   void *optval, socklen_t *optlen)
+    int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen)
     {
         return getsockopt_f(sockfd, level, optname, optval, optlen);
     }
 
-    int setsockopt(int sockfd, int level, int optname,
-                   const void *optval, socklen_t optlen)
+    int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
     {
         if (!sylar::is_hook_enable())
         {
@@ -663,7 +661,7 @@ namespace sylar
         {
             if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)
             {
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::getInstance()->get(sockfd);
+                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(sockfd);
                 if (ctx)
                 {
                     const timeval *tv = (const timeval *)optval;

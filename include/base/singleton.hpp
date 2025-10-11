@@ -7,7 +7,7 @@ namespace sylar
     class Singleton
     {
     public:
-        static T *getInstance()
+        static T *GetInstance()
         {
             static T v;
             return &v;
@@ -18,7 +18,7 @@ namespace sylar
     class SingletonPtr
     {
     public:
-        static std::shared_ptr<T> getInstance()
+        static std::shared_ptr<T> GetInstance()
         {
             static std::shared_ptr<T> v(new T);
             return v;

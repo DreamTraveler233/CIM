@@ -21,7 +21,7 @@ void test_log_system()
     SYLAR_LOG_INFO(root_log) << "info message for root";
 
     // 测试日志管理器
-    auto logger_manager = sylar::loggerMgr::getInstance();
+    auto logger_manager = sylar::loggerMgr::GetInstance();
     assert(logger_manager != nullptr);
 
     auto system_logger = logger_manager->getLogger("system");

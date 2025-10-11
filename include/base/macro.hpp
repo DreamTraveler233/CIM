@@ -3,11 +3,19 @@
 #include "logger.hpp"
 #include "logger_manager.hpp"
 #include "util.hpp"
-#include "util.hpp"
 #include "thread.hpp"
-
 #include <string.h>
 #include <assert.h>
+
+#if defined __GNUC__ || defined __llvm__
+/// LIKCLY 宏的封装, 告诉编译器优化,条件大概率成立
+#define SYLAR_LIKELY(x) __builtin_expect(!!(x), 1)
+/// LIKCLY 宏的封装, 告诉编译器优化,条件大概率不成立
+#define SYLAR_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define SYLAR_LIKELY(x) (x)
+#define SYLAR_UNLIKELY(x) (x)
+#endif
 
 #define SYLAR_LOG(logger, level)                                               \
     if (level >= logger->getLevel())                                           \
@@ -40,11 +48,11 @@
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::LogLevel::Level::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::LogLevel::Level::FATAL, fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_ROOT() sylar::loggerMgr::getInstance()->getRoot()
-#define SYLAR_LOG_NAME(name) sylar::loggerMgr::getInstance()->getLogger(name)
+#define SYLAR_LOG_ROOT() sylar::loggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::loggerMgr::GetInstance()->getLogger(name)
 
 #define SYLAR_ASSERT(X)                                                                \
-    if (!(X))                                                                          \
+    if (SYLAR_UNLIKELY(!(X)))                                                                          \
     {                                                                                  \
         SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\nbacktrace:\n"                          \
@@ -53,7 +61,7 @@
     }
 
 #define SYLAR_ASSERT2(X, W)                                                            \
-    if (!(X))                                                                          \
+    if (SYLAR_UNLIKELY(!(X)))                                                                          \
     {                                                                                  \
         SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\n"                                      \
