@@ -73,7 +73,7 @@ namespace sylar
         const int iovcnt = (writable < sizeof(extrabuf)) ? 2 : 1;
 
         // 执行分散读操作
-        const ssize_t n = readv(fd, vec, iovcnt);
+        const size_t n = readv(fd, vec, iovcnt);
         if (n < 0)
         {
             *savedErrno = errno;
