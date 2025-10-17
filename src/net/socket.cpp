@@ -132,13 +132,17 @@ namespace sylar
 
     Socket::ptr Socket::accept()
     {
+        // 创建一个新的Socket对象用于接收连接
         Socket::ptr sock(new Socket(m_family, m_type, m_protocol));
+        // 调用系统accept函数接受连接，返回新的文件描述符
         int new_sockfd = ::accept(m_sock, nullptr, nullptr);
         if (new_sockfd == -1)
         {
+            // 接受连接失败，记录错误日志并返回空指针
             SYLAR_LOG_ERROR(g_logger) << "accept(" << m_sock << ")" << " errno=" << errno << " " << strerror(errno);
             return nullptr;
         }
+        // 初始化新创建的Socket对象并返回
         if (sock->init(new_sockfd))
         {
             return sock;
@@ -146,9 +150,19 @@ namespace sylar
         return nullptr;
     }
 
+    /**
+     * @brief 初始化Socket对象
+     * @param[in] sockfd 套接字文件描述符
+     * @return 初始化成功返回true，失败返回false
+     *
+     * 该函数用于初始化Socket对象，将传入的文件描述符设置为当前Socket对象的套接字，
+     * 并获取相关的本地地址和远程地址信息。
+     */
     bool Socket::init(int sockfd)
     {
+        // 通过文件描述符管理器获取文件描述符上下文
         FdCtx::ptr ctx = FdMgr::GetInstance()->get(sockfd);
+        // 检查文件描述符是否有效：存在、是socket且未关闭
         if (ctx && ctx->isSocket() && !ctx->isClose())
         {
             m_sock = sockfd;
@@ -560,8 +574,12 @@ namespace sylar
      */
     void Socket::initSock()
     {
+        // 设置SO_REUSEADDR选项，允许在socket处于TIME_WAIT状态时重新启动服务器并绑定到相同的地址端口
         int val = 1;
         setOption(SOL_SOCKET, SO_REUSEADDR, val);
+
+        // 对于TCP类型的socket，启用TCP_NODELAY选项来禁用Nagle算法
+        // 这样可以减少小包传输的延迟，提高实时性
         if (m_type == SOCK_STREAM)
         {
             setOption(IPPROTO_TCP, TCP_NODELAY, val);
@@ -584,5 +602,10 @@ namespace sylar
             SYLAR_LOG_ERROR(g_logger) << "socket(" << m_family << ", " << m_type << ", " << m_protocol
                                       << ") errno=" << errno << " errstr=" << strerror(errno);
         }
+    }
+
+    std::ostream &operator<<(std::ostream &os, const Socket &socket)
+    {
+        return socket.dump(os);
     }
 }

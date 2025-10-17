@@ -631,12 +631,19 @@ namespace sylar
      */
     void ByteArray::setPosition(size_t v)
     {
-        if (v > m_data_size)
+        if (v > m_capacity)
         {
             throw std::out_of_range("ByteArray::setPosition out of range");
         }
 
         m_position = v;
+
+        // 更新实际数据大小
+        if (m_position > m_data_size)
+        {
+            m_data_size = m_position;
+        }
+
         m_cur_node = m_root_node;
         // 查找position所在节点
         while (v >= m_cur_node->size)

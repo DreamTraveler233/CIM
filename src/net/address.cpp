@@ -477,7 +477,7 @@ namespace sylar
         memset(&hints, 0, sizeof(hints));
 
         // 设置地址解析参数：只解析数字格式IP地址，支持任意socket类型
-        //hints.ai_family = AI_NUMERICHOST;
+        // hints.ai_family = AI_NUMERICHOST;
         hints.ai_socktype = AF_UNSPEC;
 
         // 调用getaddrinfo解析地址字符串
@@ -721,16 +721,16 @@ namespace sylar
      * @param[in] address IPv6地址字符串，如"::1"、"fe80::1"、"2001:db8::1"等
      * @param[in] port 端口号
      * @return 返回创建的IPv6Address对象智能指针，创建失败时返回nullptr
-     * 
+     *
      * @details 该函数专门用于创建IPv6地址对象，不依赖于getaddrinfo系统调用，
      *          而是直接使用inet_pton函数进行地址解析，效率更高。
-     *          
+     *
      *          函数流程：
      *          1. 创建IPv6Address对象
      *          2. 设置端口号（使用网络字节序）
      *          3. 使用inet_pton解析IPv6地址字符串
      *          4. 解析成功则返回对象，失败则记录日志并返回nullptr
-     *          
+     *
      * @note 该函数只支持IPv6地址，不支持IPv4或其他格式地址
      * @note 端口号会被转换为网络字节序存储
      * @warning 当前实现中存在一个错误，使用了AF_INET而不是AF_INET6作为inet_pton的第一个参数，
@@ -794,18 +794,18 @@ namespace sylar
      * @brief 将IPv6地址输出到流中
      * @param[in] os 输出流对象
      * @return 返回输出流对象的引用
-     * 
+     *
      * @details 该函数将IPv6地址格式化为"[xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx]:port"的形式输出到流中。
      *          IPv6地址的压缩表示法遵循RFC 5952标准：
      *          1. 每组4个十六进制数字表示16位
      *          2. 连续的全零组可以用"::"表示，但整个地址中只能出现一次
      *          3. 每组前导零可以省略
-     *          
+     *
      *          例如：
      *          - 完整形式：[2001:0db8:0000:0000:0000:0000:0000:0001]:8080
      *          - 压缩形式：[2001:db8::1]:8080
      *          - 本地回环：[::1]:8080
-     *          
+     *
      * @note 端口号使用主机字节序输出
      * @note 地址各组使用网络字节序存储，输出前需要转换为主机字节序
      */
@@ -855,16 +855,16 @@ namespace sylar
      * @brief 根据前缀长度计算广播地址
      * @param[in] prefix_len 前缀长度，取值范围0-128
      * @return 返回计算得到的广播地址对象，参数无效时返回nullptr
-     * 
+     *
      * @details 广播地址是网络中用于向所有主机发送数据的特殊地址。
      *          对于IPv6，计算方法是将IP地址与主机部分全为1的掩码进行按位或运算。
-     *          
+     *
      *          例如：IP地址2001:db8::1/64的广播地址计算过程：
      *          1. IP地址：2001:db8::1
      *          2. 前缀长度：64位（网络部分）
      *          3. 主机部分：后64位
      *          4. 广播地址：将后64位全部置为1
-     *          
+     *
      * @note 前缀长度必须在0-128范围内，超出范围返回nullptr
      * @note IPv6实际上不使用广播地址，而是使用多播地址，但此函数仍按传统方式计算
      */
@@ -893,15 +893,15 @@ namespace sylar
      * @brief 根据前缀长度计算网络地址
      * @param[in] prefix_len 前缀长度，取值范围0-128
      * @return 返回计算得到的网络地址对象，参数无效时返回nullptr
-     * 
+     *
      * @details 网络地址是标识一个网络段的特殊地址，主机部分全为0。
      *          计算方法是将IP地址与子网掩码进行按位与运算。
-     *          
+     *
      *          例如：IP地址2001:db8::1/64的网络地址计算过程：
      *          1. IP地址：2001:db8::1
      *          2. 前缀长度：64位（网络部分）
      *          3. 网络地址：将后64位全部置为0，得到2001:db8::
-     *          
+     *
      * @note 前缀长度必须在0-128范围内，超出范围返回nullptr
      */
     IPAddress::ptr IPv6Address::networkAddress(uint32_t prefix_len)
@@ -924,14 +924,14 @@ namespace sylar
      * @brief 根据前缀长度计算子网掩码
      * @param[in] prefix_len 前缀长度，取值范围0-128
      * @return 返回计算得到的子网掩码对象，参数无效时返回nullptr
-     * 
+     *
      * @details 子网掩码用于标识IP地址中网络部分和主机部分的边界。
      *          网络部分为1，主机部分为0。
-     *          
+     *
      *          例如：前缀长度64对应的子网掩码：
      *          1. 二进制表示：11111111...11111111 00000000...00000000 (前64位为1，后64位为0)
      *          2. 十六进制表示：ffff:ffff:ffff:ffff::
-     *          
+     *
      * @note 前缀长度必须在0-128范围内，超出范围返回nullptr
      */
     IPAddress::ptr IPv6Address::subnetMask(uint32_t prefix_len)
@@ -974,10 +974,10 @@ namespace sylar
 
     /**
      * @brief UnixAddress默认构造函数
-     * 
+     *
      * @details 初始化一个空的Unix域套接字地址对象。将地址结构体清零，
      *          设置地址族为AF_UNIX，并将地址长度设置为最大路径长度。
-     *          
+     *
      * @note Unix域套接字用于同一台机器上的进程间通信(IPC)，比TCP套接字更高效。
      */
     UnixAddress::UnixAddress()
@@ -993,16 +993,16 @@ namespace sylar
     /**
      * @brief UnixAddress带路径参数的构造函数
      * @param[in] path Unix域套接字路径
-     * 
+     *
      * @details 根据给定的路径字符串初始化Unix域套接字地址对象。
      *          会检查路径长度是否超过系统限制，并将路径复制到地址结构体中。
-     *          
+     *
      * @exception std::logic_error 当路径长度超过系统限制时抛出异常
-     * 
+     *
      * @note Unix域套接字路径有两种形式：
      *       1. 文件系统路径：如"/tmp/mysocket"
      *       2. 抽象路径：以null字符开头的路径，如"\0mysocket"
-     *       
+     *
      * @note Unix域套接字的路径长度限制通常为108字节（包括结尾的null字符）
      */
     UnixAddress::UnixAddress(const std::string &path)
@@ -1036,7 +1036,7 @@ namespace sylar
     /**
      * @brief 获取Unix域套接字地址结构体指针
      * @return 返回指向sockaddr结构体的指针
-     * 
+     *
      * @details 该函数返回指向内部Unix域套接字地址结构体的指针，
      *          可用于socket相关系统调用。
      */
@@ -1053,7 +1053,7 @@ namespace sylar
     /**
      * @brief 获取Unix域套接字地址结构体长度
      * @return 返回地址结构体的实际长度
-     * 
+     *
      * @details 该函数返回Unix域套接字地址结构体的实际长度，
      *          考虑了路径长度的差异，用于socket相关系统调用。
      */
@@ -1071,11 +1071,11 @@ namespace sylar
      * @brief 将Unix域套接字地址输出到流中
      * @param[in] os 输出流对象
      * @return 返回输出流对象的引用
-     * 
+     *
      * @details 该函数将Unix域套接字地址格式化输出到流中。
      *          对于抽象命名空间路径（以null字符开头），会以"\0"开头输出；
      *          对于普通文件系统路径，则直接输出路径字符串。
-     *          
+     *
      * @note 抽象命名空间路径不会在文件系统中创建实际的文件节点
      */
     std::ostream &UnixAddress::insert(std::ostream &os) const
@@ -1093,10 +1093,10 @@ namespace sylar
     /**
      * @brief UnknownAddress构造函数（根据地址族）
      * @param[in] family 地址族
-     * 
+     *
      * @details 使用指定的地址族初始化未知地址对象。
      *          主要用于创建不被当前实现支持的地址族的地址对象。
-     *          
+     *
      * @note UnknownAddress类用于处理系统支持但当前实现未专门处理的地址族
      */
     UnknownAddress::UnknownAddress(int family)
@@ -1110,7 +1110,7 @@ namespace sylar
     /**
      * @brief UnknownAddress构造函数（根据sockaddr结构体）
      * @param[in] addr sockaddr结构体引用
-     * 
+     *
      * @details 使用给定的sockaddr结构体初始化未知地址对象。
      *          用于将任意sockaddr结构体封装为Address对象。
      */
@@ -1123,7 +1123,7 @@ namespace sylar
     /**
      * @brief 获取未知地址结构体指针
      * @return 返回指向sockaddr结构体的指针
-     * 
+     *
      * @details 该函数返回指向内部sockaddr结构体的指针，
      *          可用于socket相关系统调用。
      */
@@ -1140,7 +1140,7 @@ namespace sylar
     /**
      * @brief 获取未知地址结构体长度
      * @return 返回sockaddr结构体的长度
-     * 
+     *
      * @details 该函数返回sockaddr结构体的固定长度，
      *          因为UnknownAddress不保存实际的长度信息。
      */
@@ -1153,10 +1153,10 @@ namespace sylar
      * @brief 将未知地址输出到流中
      * @param[in] os 输出流对象
      * @return 返回输出流对象的引用
-     * 
+     *
      * @details 该函数将未知地址格式化输出到流中，显示地址族信息。
      *          格式为：[UnknownAddress family=<地址族数值>]
-     *          
+     *
      * @note 这主要用于调试和日志记录，帮助识别未被专门处理的地址族
      */
     std::ostream &UnknownAddress::insert(std::ostream &os) const
@@ -1164,5 +1164,9 @@ namespace sylar
         // 输出未知地址族信息
         os << "[UnknownAddress family=" << m_addr.sa_family << "]";
         return os;
+    }
+    std::ostream &operator<<(std::ostream &os, const Address &addr)
+    {
+        return os << addr.toString();
     }
 }

@@ -147,7 +147,16 @@ namespace sylar
 
         // 初始化事件上下文
         FdContext::EventContext &event_ctx = fd_ctx->getContext(event);
-        SYLAR_ASSERT(!event_ctx.scheduler && !event_ctx.coroutine && !event_ctx.cb);
+
+        if (event_ctx.coroutine)
+        {
+            // SYLAR_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
+            //                          << fd << " event=" << event;
+            fd_ctx->resetContext(event_ctx);
+        }
+        SYLAR_ASSERT(!event_ctx.scheduler);
+        SYLAR_ASSERT(!event_ctx.coroutine);
+        SYLAR_ASSERT(!event_ctx.cb);
 
         event_ctx.scheduler = Scheduler::GetThis();
         if (cb)
@@ -448,7 +457,7 @@ namespace sylar
             listExpiredCb(cbs);
             if (!cbs.empty())
             {
-                //SYLAR_LOG_DEBUG(g_logger) << "on timer cbs.size=" << cbs.size();
+                // SYLAR_LOG_DEBUG(g_logger) << "on timer cbs.size=" << cbs.size();
                 schedule(cbs.begin(), cbs.end());
                 cbs.clear();
             }

@@ -143,14 +143,14 @@ namespace sylar
         // 通知其他工作线程关闭调度器
         for (size_t i = 0; i < m_threadCount; ++i)
         {
-            SYLAR_LOG_DEBUG(g_logger) << "word thread tickle";
+            // SYLAR_LOG_DEBUG(g_logger) << "word thread tickle";
             tickle();
         }
 
         // 通知主线程的关闭调度器
         if (m_rootCoroutine)
         {
-            SYLAR_LOG_DEBUG(g_logger) << "m_rootCoroutine tickle";
+            // SYLAR_LOG_DEBUG(g_logger) << "m_rootCoroutine tickle";
             tickle();
         }
 
@@ -221,7 +221,7 @@ namespace sylar
     void Scheduler::run()
     {
         // return;
-        SYLAR_LOG_INFO(g_logger) << m_name << " run";
+        // SYLAR_LOG_DEBUG(g_logger) << m_name << " run";
         sylar::set_hook_enable(true);
 
         setThis(); // 设置当前线程的调度器实例
@@ -352,7 +352,7 @@ namespace sylar
                 }
                 if (idle_coroutine->getState() == Coroutine::State::TERM)
                 {
-                    SYLAR_LOG_INFO(g_logger) << "idle coroutine term";
+                    SYLAR_LOG_INFO(g_logger) << "idle coroutine over";
                     break;
                 }
 

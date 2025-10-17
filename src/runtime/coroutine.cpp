@@ -41,7 +41,7 @@ namespace sylar
 
         SetThis(this);
         ++s_coroutine_count;
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine() id=" << m_id;
+        // SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine() id=" << m_id;
     }
 
     /**
@@ -52,7 +52,6 @@ namespace sylar
      */
     Coroutine::Coroutine(std::function<void()> cb, size_t stack_size, bool use_caller)
         : m_id(++s_coroutine_id),
-          m_state(State::INIT),
           m_cb(cb)
 
     {
@@ -97,7 +96,7 @@ namespace sylar
             --s_coroutine_count;
             throw; // 重新抛出异常
         }
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine()" << " id=" << m_id;
+        // SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine()" << " id=" << m_id;
     }
 
     /**
@@ -110,7 +109,7 @@ namespace sylar
      */
     Coroutine::~Coroutine()
     {
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine" << " id=" << m_id;
+        // SYLAR_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine" << " id=" << m_id;
         if (m_stack) // 说明为子协程
         {
             SYLAR_ASSERT(m_state == State::TERM ||
@@ -202,7 +201,7 @@ namespace sylar
         //              m_state != State::TERM &&
         //              m_state != State::EXCEPT);
         m_state = State::EXEC;
-        SYLAR_LOG_INFO(g_logger) << getId();
+        // SYLAR_LOG_INFO(g_logger) << getId();
         if (swapcontext(&t_thread_coroutine->m_ctx, &m_ctx))
         {
             SYLAR_ASSERT2(false, "swapcontext");

@@ -127,13 +127,13 @@ namespace sylar
                          uint32_t event, int timeout_so, Args &&...args)
     {
         // 如果未启用hook，则直接调用原始函数
-        if (!sylar::is_hook_enable())
+        if (!is_hook_enable())
         {
             return fun(fd, std::forward<Args>(args)...);
         }
 
         // 获取文件描述符上下文
-        sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+        FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
         if (!ctx)
         {
             return fun(fd, std::forward<Args>(args)...);
@@ -169,8 +169,8 @@ namespace sylar
         // 如果是因为缓冲区无数据/无法写入导致的阻塞
         if (n == -1 && errno == EAGAIN)
         {
-            sylar::IOManager *iom = sylar::IOManager::GetThis();
-            sylar::Timer::ptr timer;
+            IOManager *iom = IOManager::GetThis();
+            Timer::ptr timer;
             std::weak_ptr<timer_info> winfo(tinfo);
 
             // 如果设置了超时时间，则添加条件定时器
@@ -184,11 +184,11 @@ namespace sylar
                                                 return;
                                             } 
                                             t->cancelled = ETIMEDOUT;
-                                            iom->cancelEvent(fd,(sylar::IOManager::Event)event); }, winfo);
+                                            iom->cancelEvent(fd,(IOManager::Event)event); }, winfo);
             }
 
             // 添加IO事件监听
-            int rt = iom->addEvent(fd, (sylar::IOManager::Event)event);
+            int rt = iom->addEvent(fd, (IOManager::Event)event);
             if (rt)
             {
                 // 添加事件失败，记录日志并返回错误
@@ -202,7 +202,7 @@ namespace sylar
             else
             {
                 // 成功添加事件，让出当前协程控制权
-                sylar::Coroutine::YieldToHold();
+                Coroutine::YieldToHold();
                 if (timer)
                 {
                     timer->cancel();

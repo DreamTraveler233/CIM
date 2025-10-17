@@ -50,6 +50,11 @@ set(TEST_EXECUTABLES
     test_bytearray
     test_http
     test_http_parser
+    test_tcp_server
+)
+
+set(EXAMPLES_EXECUTABLES
+    echo_server
 )
 
 # 循环创建测试可执行文件
@@ -58,6 +63,13 @@ foreach(TEST_EXECUTABLE ${TEST_EXECUTABLES})
     #add_dependencies(${TEST_EXECUTABLE} sylar)                     # 指定test依赖 sylar库，先编译库再编译可执行文件
     target_link_libraries(${TEST_EXECUTABLE} sylar yaml-cpp)        # 链接库到可执行文件
 endforeach()
+
+foreach(EXAMPLES_EXECUTABLES ${EXAMPLES_EXECUTABLES})
+    add_executable(${EXAMPLES_EXECUTABLES} examples/${EXAMPLES_EXECUTABLES}.cpp)
+    #add_dependencies(${TEST_EXECUTABLE} sylar)                          # 指定test依赖 sylar库，先编译库再编译可执行文件
+    target_link_libraries(${EXAMPLES_EXECUTABLES} sylar yaml-cpp)        # 链接库到可执行文件
+endforeach()
+
 
 # 指定可执行文件输出目录
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

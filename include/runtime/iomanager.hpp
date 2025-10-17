@@ -11,6 +11,9 @@ namespace sylar
         using ptr = std::shared_ptr<IOManager>;
         using RWMutexType = RWMutex;
 
+        /**
+         * @brief IO事件
+         */
         enum Event
         {
             /// 无事件
