@@ -113,8 +113,7 @@ namespace sylar
             RWMutexType::WriteLock lock(m_mutex);
             ++func_id;
             m_cbs[func_id] = cb;
-            SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Adding listener for config variable: "
-                                             << getName() << " with key: " << func_id;
+            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Adding listener for config variable: "<< getName() << " with key: " << func_id;
             return func_id;
         }
         void delListener(uint64_t key)

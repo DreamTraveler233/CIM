@@ -29,6 +29,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include/net
     ${PROJECT_SOURCE_DIR}/include/runtime
     ${PROJECT_SOURCE_DIR}/include/system
+    ${PROJECT_SOURCE_DIR}/include/http
 )
 
 # 定义测试可执行文件列表
@@ -47,6 +48,8 @@ set(TEST_EXECUTABLES
     test_address
     test_socket
     test_bytearray
+    test_http
+    test_http_parser
 )
 
 # 循环创建测试可执行文件
