@@ -268,7 +268,7 @@ namespace sylar
 
         // 计算新的事件集合，并确定epoll操作类型
         Event new_events = (Event)(fd_ctx->events & ~event);
-        int op = new_events ? EPOLL_CTL_MOD : EPOLLET;
+        int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
         epoll_event ev = {};
         ev.events = new_events | EPOLLET;
         ev.data.ptr = fd_ctx;
@@ -486,10 +486,10 @@ namespace sylar
                 */
                 if (event.events & (EPOLLERR | EPOLLHUP))
                 {
-                    event.events |= (EPOLLIN | EPOLLOUT);
+                    event.events |= (EPOLLIN | EPOLLOUT) & fd_ctx->events;
                 }
 
-                int real_events = Event::NONE;
+                int real_events = NONE;
 
                 // 确定实际发生的事件
                 if (event.events & EPOLLIN)
@@ -524,7 +524,6 @@ namespace sylar
                 // 如果适用，则触发读事件回调
                 if (real_events & READ)
                 {
-                    SYLAR_LOG_DEBUG(g_logger) << "read event trigger by scheduler";
                     fd_ctx->triggerEvent(READ);
                     --m_pendingEventCount;
                 }
@@ -532,7 +531,6 @@ namespace sylar
                 // 如果适用，则触发写事件回调
                 if (real_events & WRITE)
                 {
-                    SYLAR_LOG_DEBUG(g_logger) << "read event trigger by scheduler";
                     fd_ctx->triggerEvent(WRITE);
                     --m_pendingEventCount;
                 }

@@ -454,6 +454,8 @@ namespace sylar
          */
         void setAddrLen(socklen_t length);
 
+        std::string getPath() const;
+
         /**
          * @brief 插入到输出流
          * @param[inout] os 输出流

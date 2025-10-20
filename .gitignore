@@ -1,8 +1,8 @@
 build/
 bin/test_*
 .vscode/
-lib/*.so
 autobuild.sh
+*.so
 *.tmp
 *.log
-.DS_Store
+*.rl.cpp

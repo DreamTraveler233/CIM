@@ -392,7 +392,7 @@ namespace sylar::http
      * @param[in] len 数据长度
      * @param[in] chunck 是否为chunk模式
      * @return 解析的数据偏移量
-     * 
+     *
      * @details 使用httpclient_parser解析HTTP响应数据。如果chunck为true，
      * 则先初始化解析器，然后执行解析操作，并将已解析的数据从缓冲区移除，
      * 返回解析的偏移量。
@@ -404,7 +404,6 @@ namespace sylar::http
             httpclient_parser_init(&m_parser);
         }
         size_t offset = httpclient_parser_execute(&m_parser, data, len, 0);
-
         memmove(data, data + offset, (len - offset));
         return offset;
     }
@@ -412,7 +411,7 @@ namespace sylar::http
     /**
      * @brief 检查解析是否完成
      * @return 1表示完成，0表示未完成
-     * 
+     *
      * @details 调用httpclient_parser_finish检查HTTP响应解析是否已完成
      */
     int HttpResponseParser::isFinished()
@@ -423,7 +422,7 @@ namespace sylar::http
     /**
      * @brief 检查解析过程中是否有错误
      * @return 1表示有错误，0表示无错误
-     * 
+     *
      * @details 检查m_error成员变量或调用httpclient_parser_has_error检查是否有解析错误
      */
     int HttpResponseParser::hasError()

@@ -274,6 +274,10 @@ namespace sylar
         }
         // 获取写锁以修改定时器集合
         RWMutex::WriteLock lock(m_mutex);
+        if (m_timers.empty())
+        {
+            return;
+        }
 
         // 检查是否有系统时钟回退或是否有到期的定时器
         bool rollover = detectClockRollover(now_ms);

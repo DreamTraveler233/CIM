@@ -1,414 +1,434 @@
-/**
- * @file socket.hpp
- * @brief Socket封装类
- * @author your_name
- * @date 2025-10-17
- *
- * 该文件定义了Socket类，用于封装网络套接字操作，包括创建、连接、监听、发送和接收数据等功能。
- * 支持TCP和UDP协议，IPv4和IPv6地址族，以及Unix域套接字。
- */
-
 #pragma once
 
+#include <memory>
+#include <netinet/tcp.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
 #include "address.hpp"
 #include "noncopyable.hpp"
-#include <memory>
 
 namespace sylar
 {
     /**
-     * @brief Socket类，封装了套接字操作
-     *
-     * 该类提供了对套接字的高级封装，包括创建、连接、监听、发送和接收数据等操作。
-     * 支持TCP和UDP协议，IPv4和IPv6地址族，以及Unix域套接字。
-     * 使用智能指针管理Socket对象的生命周期。
+     * @brief Socket封装类
      */
     class Socket : public std::enable_shared_from_this<Socket>, Noncopyable
     {
     public:
-        /// 智能指针类型定义
-        using ptr = std::shared_ptr<Socket>;
-        using weak_ptr = std::weak_ptr<Socket>;
+        typedef std::shared_ptr<Socket> ptr;
+        typedef std::weak_ptr<Socket> weak_ptr;
 
         /**
-         * @brief Socket类型枚举
+         * @brief Socket类型
          */
-        enum class Type
+        enum Type
         {
-            NONE = 0,          /// 未指定类型
-            TCP = SOCK_STREAM, /// TCP类型
-            UDP = SOCK_DGRAM   /// UDP类型
+            /// TCP类型
+            TCP = SOCK_STREAM,
+            /// UDP类型
+            UDP = SOCK_DGRAM
         };
 
         /**
-         * @brief 协议族枚举
+         * @brief Socket协议簇
          */
-        enum class Family
+        enum Family
         {
-            NONE = AF_UNSPEC, /// 未指定协议族
-            IPv4 = AF_INET,   /// IPv4协议族
-            IPv6 = AF_INET6,  /// IPv6协议族
-            UNIX = AF_LOCAL   /// Unix域套接字协议族
+            /// IPv4 socket
+            IPv4 = AF_INET,
+            /// IPv6 socket
+            IPv6 = AF_INET6,
+            /// Unix socket
+            UNIX = AF_UNIX,
         };
 
         /**
-         * @brief 创建TCP套接字
-         * @param[in] address 地址对象，根据地址类型确定创建IPv4还是IPv6套接字
-         * @return Socket::ptr 创建的TCP套接字对象
+         * @brief 创建TCP Socket(满足地址类型)
+         * @param[in] address 地址
          */
-        static Socket::ptr CreateTCP(Address::ptr address);
+        static Socket::ptr CreateTCP(sylar::Address::ptr address);
 
         /**
-         * @brief 创建UDP套接字
-         * @param[in] address 地址对象，根据地址类型确定创建IPv4还是IPv6套接字
-         * @return Socket::ptr 创建的UDP套接字对象
+         * @brief 创建UDP Socket(满足地址类型)
+         * @param[in] address 地址
          */
-        static Socket::ptr CreateUDP(Address::ptr address);
+        static Socket::ptr CreateUDP(sylar::Address::ptr address);
 
         /**
-         * @brief 创建IPv4 TCP套接字
-         * @return Socket::ptr 创建的IPv4 TCP套接字对象
+         * @brief 创建IPv4的TCP Socket
          */
         static Socket::ptr CreateTCPSocket();
 
         /**
-         * @brief 创建IPv4 UDP套接字
-         * @return Socket::ptr 创建的IPv4 UDP套接字对象
+         * @brief 创建IPv4的UDP Socket
          */
         static Socket::ptr CreateUDPSocket();
 
         /**
-         * @brief 创建IPv6 TCP套接字
-         * @return Socket::ptr 创建的IPv6 TCP套接字对象
+         * @brief 创建IPv6的TCP Socket
          */
         static Socket::ptr CreateTCPSocket6();
 
         /**
-         * @brief 创建IPv6 UDP套接字
-         * @return Socket::ptr 创建的IPv6 UDP套接字对象
+         * @brief 创建IPv6的UDP Socket
          */
         static Socket::ptr CreateUDPSocket6();
 
         /**
-         * @brief 创建Unix域 TCP套接字
-         * @return Socket::ptr 创建的Unix域 TCP套接字对象
+         * @brief 创建Unix的TCP Socket
          */
         static Socket::ptr CreateUnixTCPSocket();
 
         /**
-         * @brief 创建Unix域 UDP套接字
-         * @return Socket::ptr 创建的Unix域 UDP套接字对象
+         * @brief 创建Unix的UDP Socket
          */
         static Socket::ptr CreateUnixUDPSocket();
 
         /**
-         * @brief 构造函数
-         * @param[in] family 协议族
-         * @param[in] type 套接字类型
-         * @param[in] protocol 协议类型
+         * @brief Socket构造函数
+         * @param[in] family 协议簇
+         * @param[in] type 类型
+         * @param[in] protocol 协议
          */
-        Socket(int family, int type, int protocol);
+        Socket(int family, int type, int protocol = 0);
 
         /**
          * @brief 析构函数
          */
-        ~Socket();
+        virtual ~Socket();
 
         /**
-         * @brief 获取发送超时时间
-         * @return int64_t 发送超时时间(毫秒)
+         * @brief 获取发送超时时间(毫秒)
          */
-        int64_t getSendTimeout() const;
+        int64_t getSendTimeout();
 
         /**
-         * @brief 设置发送超时时间
-         * @param[in] v 发送超时时间(毫秒)
+         * @brief 设置发送超时时间(毫秒)
          */
         void setSendTimeout(int64_t v);
 
         /**
-         * @brief 获取接收超时时间
-         * @return int64_t 接收超时时间(毫秒)
+         * @brief 获取接受超时时间(毫秒)
          */
-        int64_t getRecvTimeout() const;
+        int64_t getRecvTimeout();
 
         /**
-         * @brief 设置接收超时时间
-         * @param[in] v 接收超时时间(毫秒)
+         * @brief 设置接受超时时间(毫秒)
          */
         void setRecvTimeout(int64_t v);
 
         /**
-         * @brief 获取套接字选项
-         * @param[in] level 协议层次
-         * @param[in] option 选项名称
-         * @param[out] result 选项值
-         * @param[inout] len 选项值长度
-         * @return bool 获取成功返回true，失败返回false
+         * @brief 获取sockopt @see getsockopt
          */
-        bool getOption(int level, int option, void *result, socklen_t *len) const;
+        bool getOption(int level, int option, void *result, socklen_t *len);
 
         /**
-         * @brief 获取套接字选项模板函数
-         * @tparam T 选项值类型
-         * @param[in] level 协议层次
-         * @param[in] option 选项名称
-         * @param[out] result 选项值
-         * @return bool 获取成功返回true，失败返回false
+         * @brief 获取sockopt模板 @see getsockopt
          */
-        template <typename T>
+        template <class T>
         bool getOption(int level, int option, T &result)
         {
-            socklen_t len = sizeof(T);
-            return getOption(level, option, &result, &len);
+            socklen_t length = sizeof(T);
+            return getOption(level, option, &result, &length);
         }
 
         /**
-         * @brief 设置套接字选项
-         * @param[in] level 协议层次
-         * @param[in] option 选项名称
-         * @param[in] result 选项值
-         * @param[in] len 选项值长度
-         * @return bool 设置成功返回true，失败返回false
+         * @brief 设置sockopt @see setsockopt
          */
         bool setOption(int level, int option, const void *result, socklen_t len);
 
         /**
-         * @brief 设置套接字选项模板函数
-         * @tparam T 选项值类型
-         * @param[in] level 协议层次
-         * @param[in] option 选项名称
-         * @param[in] result 选项值
-         * @return bool 设置成功返回true，失败返回false
+         * @brief 设置sockopt模板 @see setsockopt
          */
-        template <typename T>
-        bool setOption(int level, int option, const T &result)
+        template <class T>
+        bool setOption(int level, int option, const T &value)
         {
-            return setOption(level, option, &result, sizeof(T));
+            return setOption(level, option, &value, sizeof(T));
         }
 
         /**
-         * @brief 接受连接
-         * @return Socket::ptr 新的连接套接字对象，失败返回nullptr
+         * @brief 接收connect链接
+         * @return 成功返回新连接的socket,失败返回nullptr
+         * @pre Socket必须 bind , listen  成功
          */
-        Socket::ptr accept();
+        virtual Socket::ptr accept();
 
         /**
          * @brief 绑定地址
-         * @param[in] address 要绑定的地址
-         * @return bool 绑定成功返回true，失败返回false
+         * @param[in] addr 地址
+         * @return 是否绑定成功
          */
-        bool bind(const Address::ptr &address);
+        virtual bool bind(const Address::ptr addr);
 
         /**
-         * @brief 连接指定地址
-         * @param[in] address 要连接的地址
-         * @param[in] timeout_ms 连接超时时间(毫秒)，默认为-1表示不超时
-         * @return bool 连接成功返回true，失败返回false
+         * @brief 连接地址
+         * @param[in] addr 目标地址
+         * @param[in] timeout_ms 超时时间(毫秒)
          */
-        bool connect(const Address::ptr &address, uint64_t timeout_ms = -1);
+        virtual bool connect(const Address::ptr addr, uint64_t timeout_ms = -1);
+
+        virtual bool reconnect(uint64_t timeout_ms = -1);
 
         /**
-         * @brief 监听连接
-         * @param[in] backlog 监听队列大小，默认为SOMAXCONN
-         * @return bool 监听成功返回true，失败返回false
+         * @brief 监听socket
+         * @param[in] backlog 未完成连接队列的最大长度
+         * @result 返回监听是否成功
+         * @pre 必须先 bind 成功
          */
-        bool listen(int backlog = SOMAXCONN);
+        virtual bool listen(int backlog = SOMAXCONN);
 
         /**
-         * @brief 关闭套接字
-         * @return bool 关闭成功返回true，失败返回false
+         * @brief 关闭socket
          */
-        bool close();
+        virtual bool close();
 
         /**
          * @brief 发送数据
-         * @param[in] buffer 待发送数据缓冲区
-         * @param[in] length 数据长度
-         * @param[in] flags 发送标志
-         * @return int 实际发送的字节数，失败返回-1
+         * @param[in] buffer 待发送数据的内存
+         * @param[in] length 待发送数据的长度
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 发送成功对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int send(const void *buffer, size_t length, int flags = 0);
+        virtual int send(const void *buffer, size_t length, int flags = 0);
 
         /**
-         * @brief 发送分散数据
-         * @param[in] vec 分散数据向量
-         * @param[in] size 向量大小
-         * @param[in] flags 发送标志
-         * @return int 实际发送的字节数，失败返回-1
+         * @brief 发送数据
+         * @param[in] buffers 待发送数据的内存(iovec数组)
+         * @param[in] length 待发送数据的长度(iovec长度)
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 发送成功对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int send(const iovec *vec, size_t size, int flags = 0);
+        virtual int send(const iovec *buffers, size_t length, int flags = 0);
 
         /**
-         * @brief 发送数据到指定地址
-         * @param[in] buffer 待发送数据缓冲区
-         * @param[in] length 数据长度
-         * @param[in] to 目标地址
-         * @param[in] flags 发送标志
-         * @return int 实际发送的字节数，失败返回-1
+         * @brief 发送数据
+         * @param[in] buffer 待发送数据的内存
+         * @param[in] length 待发送数据的长度
+         * @param[in] to 发送的目标地址
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 发送成功对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int sendTo(const void *buffer, size_t length, const Address::ptr &to, int flags = 0);
+        virtual int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0);
 
         /**
-         * @brief 发送分散数据到指定地址
-         * @param[in] vec 分散数据向量
-         * @param[in] size 向量大小
-         * @param[in] to 目标地址
-         * @param[in] flags 发送标志
-         * @return int 实际发送的字节数，失败返回-1
+         * @brief 发送数据
+         * @param[in] buffers 待发送数据的内存(iovec数组)
+         * @param[in] length 待发送数据的长度(iovec长度)
+         * @param[in] to 发送的目标地址
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 发送成功对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int sendTo(const iovec *vec, size_t size, const Address::ptr &to, int flags = 0);
+        virtual int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0);
 
         /**
-         * @brief 接收数据
-         * @param[out] buffer 接收数据缓冲区
-         * @param[in] length 缓冲区长度
-         * @param[in] flags 接收标志
-         * @return int 实际接收的字节数，失败返回-1
+         * @brief 接受数据
+         * @param[out] buffer 接收数据的内存
+         * @param[in] length 接收数据的内存大小
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 接收到对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int recv(void *buffer, size_t length, int flags = 0);
+        virtual int recv(void *buffer, size_t length, int flags = 0);
 
         /**
-         * @brief 接收分散数据
-         * @param[out] vec 分散数据向量
-         * @param[in] size 向量大小
-         * @param[in] flags 接收标志
-         * @return int 实际接收的字节数，失败返回-1
+         * @brief 接受数据
+         * @param[out] buffers 接收数据的内存(iovec数组)
+         * @param[in] length 接收数据的内存大小(iovec数组长度)
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 接收到对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int recv(iovec *vec, size_t size, int flags = 0);
+        virtual int recv(iovec *buffers, size_t length, int flags = 0);
 
         /**
-         * @brief 从指定地址接收数据
-         * @param[out] buffer 接收数据缓冲区
-         * @param[in] length 缓冲区长度
-         * @param[out] from 发送方地址
-         * @param[in] flags 接收标志
-         * @return int 实际接收的字节数，失败返回-1
+         * @brief 接受数据
+         * @param[out] buffer 接收数据的内存
+         * @param[in] length 接收数据的内存大小
+         * @param[out] from 发送端地址
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 接收到对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int recvFrom(void *buffer, size_t length, Address::ptr &from, int flags = 0);
+        virtual int recvFrom(void *buffer, size_t length, Address::ptr from, int flags = 0);
 
         /**
-         * @brief 从指定地址接收分散数据
-         * @param[out] vec 分散数据向量
-         * @param[in] size 向量大小
-         * @param[out] from 发送方地址
-         * @param[in] flags 接收标志
-         * @return int 实际接收的字节数，失败返回-1
+         * @brief 接受数据
+         * @param[out] buffers 接收数据的内存(iovec数组)
+         * @param[in] length 接收数据的内存大小(iovec数组长度)
+         * @param[out] from 发送端地址
+         * @param[in] flags 标志字
+         * @return
+         *      @retval >0 接收到对应大小的数据
+         *      @retval =0 socket被关闭
+         *      @retval <0 socket出错
          */
-        int recvFrom(iovec *vec, size_t size, Address::ptr &from, int flags = 0);
+        virtual int recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags = 0);
 
         /**
-         * @brief 获取本地地址
-         * @return Address::ptr 本地地址对象
-         */
-        Address::ptr getLocalAddress();
-
-        /**
-         * @brief 获取远程地址
-         * @return Address::ptr 远程地址对象
+         * @brief 获取远端地址
          */
         Address::ptr getRemoteAddress();
 
         /**
-         * @brief 获取协议族
-         * @return int 协议族
+         * @brief 获取本地地址
          */
-        int getFamily() const;
+        Address::ptr getLocalAddress();
 
         /**
-         * @brief 获取套接字类型
-         * @return int 套接字类型
+         * @brief 获取协议簇
          */
-        int getType() const;
+        int getFamily() const { return m_family; }
 
         /**
-         * @brief 获取协议类型
-         * @return int 协议类型
+         * @brief 获取类型
          */
-        int getProtocol() const;
+        int getType() const { return m_type; }
 
         /**
-         * @brief 获取套接字文件描述符
-         * @return int 套接字文件描述符
+         * @brief 获取协议
          */
-        int getSocket() const;
+        int getProtocol() const { return m_protocol; }
 
         /**
-         * @brief 判断套接字是否已连接
-         * @return bool 已连接返回true，否则返回false
+         * @brief 返回是否连接
          */
-        bool isConnected() const;
+        bool isConnected() const { return m_isConnected; }
 
         /**
-         * @brief 判断套接字是否有效
-         * @return bool 有效返回true，否则返回false
+         * @brief 是否有效(m_sock != -1)
          */
         bool isValid() const;
 
         /**
-         * @brief 获取套接字错误码
-         * @return int 错误码
+         * @brief 返回Socket错误
          */
-        int getErrno() const;
+        int getError();
 
         /**
-         * @brief 输出套接字信息到流
-         * @param[in] os 输出流
-         * @return std::ostream& 输出流
+         * @brief 输出信息到流中
          */
-        std::ostream &dump(std::ostream &os) const;
+        virtual std::ostream &dump(std::ostream &os) const;
+
+        virtual std::string toString() const;
 
         /**
-         * @brief 取消读事件
-         * @return bool 取消成功返回true，失败返回false
+         * @brief 返回socket句柄
+         */
+        int getSocket() const { return m_sock; }
+
+        /**
+         * @brief 取消读
          */
         bool cancelRead();
 
         /**
-         * @brief 取消写事件
-         * @return bool 取消成功返回true，失败返回false
+         * @brief 取消写
          */
         bool cancelWrite();
 
         /**
-         * @brief 取消接受连接事件
-         * @return bool 取消成功返回true，失败返回false
+         * @brief 取消accept
          */
         bool cancelAccept();
 
         /**
          * @brief 取消所有事件
-         * @return bool 取消成功返回true，失败返回false
          */
         bool cancelAll();
 
-    private:
+    protected:
         /**
-         * @brief 初始化套接字
-         * @param[in] sockfd 套接字文件描述符
-         * @return bool 初始化成功返回true，失败返回false
-         */
-        bool init(int sockfd);
-
-        /**
-         * @brief 初始化套接字选项
+         * @brief 初始化socket
          */
         void initSock();
 
         /**
-         * @brief 创建新的套接字
+         * @brief 创建socket
          */
         void newSock();
 
-    private:
-        int m_sock;                   /// socket文件描述符
-        int m_family;                 /// 协议族
-        int m_type;                   /// socket类型
-        int m_protocol;               /// 协议类型
-        bool m_isConnected;           /// 是否已连接标识
-        Address::ptr m_localAddress;  /// 本地地址
-        Address::ptr m_remoteAddress; /// 远程地址
+        /**
+         * @brief 初始化sock
+         */
+        virtual bool init(int sock);
+
+    protected:
+        /// socket句柄
+        int m_sock;
+        /// 协议簇
+        int m_family;
+        /// 类型
+        int m_type;
+        /// 协议
+        int m_protocol;
+        /// 是否连接
+        bool m_isConnected;
+        /// 本地地址
+        Address::ptr m_localAddress;
+        /// 远端地址
+        Address::ptr m_remoteAddress;
     };
 
-    std::ostream &operator<<(std::ostream &os, const Socket &socket);
+    class SSLSocket : public Socket
+    {
+    public:
+        typedef std::shared_ptr<SSLSocket> ptr;
+
+        static SSLSocket::ptr CreateTCP(sylar::Address::ptr address);
+        static SSLSocket::ptr CreateTCPSocket();
+        static SSLSocket::ptr CreateTCPSocket6();
+
+        SSLSocket(int family, int type, int protocol = 0);
+        virtual Socket::ptr accept() override;
+        virtual bool bind(const Address::ptr addr) override;
+        virtual bool connect(const Address::ptr addr, uint64_t timeout_ms = -1) override;
+        virtual bool listen(int backlog = SOMAXCONN) override;
+        virtual bool close() override;
+        virtual int send(const void *buffer, size_t length, int flags = 0) override;
+        virtual int send(const iovec *buffers, size_t length, int flags = 0) override;
+        virtual int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0) override;
+        virtual int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0) override;
+        virtual int recv(void *buffer, size_t length, int flags = 0) override;
+        virtual int recv(iovec *buffers, size_t length, int flags = 0) override;
+        virtual int recvFrom(void *buffer, size_t length, Address::ptr from, int flags = 0) override;
+        virtual int recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags = 0) override;
+
+        bool loadCertificates(const std::string &cert_file, const std::string &key_file);
+        virtual std::ostream &dump(std::ostream &os) const override;
+
+    protected:
+        virtual bool init(int sock) override;
+
+    private:
+        std::shared_ptr<SSL_CTX> m_ctx;
+        std::shared_ptr<SSL> m_ssl;
+    };
+
+    /**
+     * @brief 流式输出socket
+     * @param[in, out] os 输出流
+     * @param[in] sock Socket类
+     */
+    std::ostream &operator<<(std::ostream &os, const Socket &sock);
+
 }
