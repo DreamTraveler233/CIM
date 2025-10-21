@@ -93,15 +93,15 @@ namespace sylar
         // 遍历所有日志文件，根据轮转类型进行轮转
         for (auto &log : m_logs)
         {
-            if (minute_change && log.second->getRotateType() == RotateType::Minute)
+            if (minute_change && log.second->getRotateType() == RotateType::MINUTE)
             {
                 rotateMinute(log.second);
             }
-            if (hour_change && log.second->getRotateType() == RotateType::Hour)
+            if (hour_change && log.second->getRotateType() == RotateType::HOUR)
             {
                 rotateHours(log.second);
             }
-            if (day_change && log.second->getRotateType() == RotateType::Day)
+            if (day_change && log.second->getRotateType() == RotateType::DAY)
             {
                 rotateDays(log.second);
             }

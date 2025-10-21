@@ -25,15 +25,20 @@ namespace sylar
 
     Level LogLevel::FromString(const std::string &str)
     {
-#define XX(level, name) \
+#define XX(name, level) \
     if (str == #name)   \
         return Level::level;
 
-        XX(DEBUG, debug);
-        XX(INFO, info);
-        XX(WARN, warn);
-        XX(ERROR, error);
-        XX(FATAL, fatal);
+        XX(debug, DEBUG);
+        XX(info, INFO);
+        XX(warn, WARN);
+        XX(error, ERROR);
+        XX(fatal, FATAL);
+        XX(Debug, DEBUG);
+        XX(Info, INFO);
+        XX(Warn, WARN);
+        XX(Error, ERROR);
+        XX(Fatal, FATAL);
         XX(DEBUG, DEBUG);
         XX(INFO, INFO);
         XX(WARN, WARN);

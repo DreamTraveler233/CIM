@@ -20,10 +20,10 @@ namespace sylar
      */
     enum class RotateType
     {
-        None,   ///< 不轮转
-        Minute, ///< 按分钟轮转
-        Hour,   ///< 按小时轮转
-        Day     ///< 按天轮转
+        NONE,   ///< 不轮转
+        MINUTE, ///< 按分钟轮转
+        HOUR,   ///< 按小时轮转
+        DAY     ///< 按天轮转
     };
 
     /**
@@ -111,14 +111,14 @@ namespace sylar
          * @param rotateType 轮转类型字符串
          * @return RotateType 轮转类型枚举值
          */
-        RotateType rotateTypeFromString(const std::string &rotateType);
-        
+        static RotateType rotateTypeFromString(const std::string &rotateType);
+
         /**
          * @brief 将轮转类型转换为字符串
          * @param rotateType 轮转类型枚举值
          * @return std::string 轮转类型字符串
          */
-        std::string rotateTypeToString(RotateType rotateType);
+        static std::string rotateTypeToString(RotateType rotateType);
 
     private:
         int m_fd;                ///< 文件描述符

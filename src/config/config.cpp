@@ -2,6 +2,8 @@
 
 namespace sylar
 {
+    static auto g_logger = SYLAR_LOG_NAME("system");
+
     /**
      * @brief 递归遍历YAML节点，将所有配置项的名称和节点存入输出列表
      * @param prefix 配置项名称前缀
@@ -18,7 +20,7 @@ namespace sylar
         // 检查配置项名称是否合法，只能包含字母、数字、下划线和点号
         if (prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789._") != std::string::npos)
         {
-            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Config invalid name " << prefix << " : " << node;
+            SYLAR_LOG_ERROR(g_logger) << "Config invalid name " << prefix << " : " << node;
             return;
         }
         // 将当前节点添加到输出列表
@@ -81,8 +83,8 @@ namespace sylar
                     var->fromString(ss.str()); // 转换为字符串后赋值给配置变量
                 }
             }
-
-            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << loggerMgr::getInstance()->toYamlString();
+            SYLAR_LOG_DEBUG(g_logger) << std::endl
+                                      << loggerMgr::GetInstance()->toYamlString();
         }
     }
 

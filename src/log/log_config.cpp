@@ -85,7 +85,7 @@ namespace sylar
                                         }
             
                                         // 如果配置了日志轮转类型，则设置文件日志输出器的轮转类型
-                                        if(j.rotateType != RotateType::None)
+                                        if(j.rotateType != RotateType::NONE)
                                         {
                                             // 检查ap是否为FileLogAppender类型
                                             auto fileAppender = std::dynamic_pointer_cast<FileLogAppender>(ap);

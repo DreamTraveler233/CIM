@@ -12,7 +12,7 @@ namespace sylar
     LogFile::LogFile(const std::string &filePath)
         : m_fd(-1),
           m_filePath(filePath),
-          m_rotateType(RotateType::None)
+          m_rotateType(RotateType::NONE)
     {
     }
 
@@ -91,15 +91,21 @@ namespace sylar
 
     RotateType LogFile::rotateTypeFromString(const std::string &str)
     {
-#define XX(rotateType, name) \
+#define XX(name, rotateType) \
     if (str == #name)        \
         return RotateType::rotateType;
 
-        XX(Minute, minute);
-        XX(Hour, hour);
-        XX(Day, day);
+        XX(minute, MINUTE);
+        XX(hour, HOUR);
+        XX(day, DAY);
+        XX(Minute, MINUTE);
+        XX(Hour, HOUR);
+        XX(Day, DAY);
+        XX(MINUTE, MINUTE);
+        XX(HOUR, HOUR);
+        XX(DAY, DAY);
 #undef XX
-        return RotateType::None;
+        return RotateType::NONE;
     }
 
     std::string LogFile::rotateTypeToString(RotateType rotateType)
@@ -110,9 +116,9 @@ namespace sylar
     case RotateType::name: \
         return #name;
 
-            XX(Minute);
-            XX(Hour);
-            XX(Day);
+            XX(MINUTE);
+            XX(HOUR);
+            XX(DAY);
 #undef XX
         default:
             return "None";

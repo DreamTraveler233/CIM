@@ -287,6 +287,8 @@ namespace sylar
             node["level"] = LogLevel::ToString(val.level);
             node["formatter"] = val.formatter;
             node["path"] = val.path;
+            node["rotate_type"] = LogFile::rotateTypeToString(val.rotateType);
+
             std::stringstream ss;
             ss << node;
             return ss.str();
@@ -325,6 +327,12 @@ namespace sylar
             {
                 lad.path = node["path"].as<std::string>();
             }
+
+            if (node["rotate_type"].IsDefined())
+            {
+                lad.rotateType = LogFile::rotateTypeFromString(node["rotate_type"].as<std::string>());
+            }
+
             return lad;
         }
     };
@@ -353,6 +361,7 @@ namespace sylar
                 appender_node["level"] = LogLevel::ToString(appender.level);
                 appender_node["formatter"] = appender.formatter;
                 appender_node["path"] = appender.path;
+                appender_node["rotate_type"] = LogFile::rotateTypeToString(appender.rotateType);
                 node["appenders"].push_back(appender_node);
             }
             std::stringstream ss;
@@ -408,6 +417,10 @@ namespace sylar
                     if (appender_node["path"].IsDefined())
                     {
                         lad.path = appender_node["path"].as<std::string>();
+                    }
+                    if (appender_node["rotate_type"].IsDefined())
+                    {
+                        lad.rotateType = LogFile::rotateTypeFromString(appender_node["rotate_type"].as<std::string>());
                     }
                     ld.appenders.push_back(lad);
                 }

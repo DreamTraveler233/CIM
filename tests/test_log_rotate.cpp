@@ -4,12 +4,14 @@
 
 void test()
 {
-    static auto g_logger = SYLAR_LOG_NAME("test");
-    g_logger->clearAppender();
+    static auto g_logger = SYLAR_LOG_NAME("system");
 
-    sylar::FileLogAppender::ptr file_ap(new sylar::FileLogAppender("/home/szy/code/sylar/bin/log/test.log"));
-    file_ap->getLogFile()->setRotateType(sylar::RotateType::Minute);
-    g_logger->addAppender(file_ap);
+    YAML::Node test = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
+    sylar::Config::LoadFromYaml(test);
+
+    // sylar::FileLogAppender::ptr file_ap(new sylar::FileLogAppender("/home/szy/code/sylar/bin/log/test.log"));
+    // file_ap->getLogFile()->setRotateType(sylar::RotateType::Minute);
+    // g_logger->addAppender(file_ap);
 
     for (int i = 0; i < 10000; ++i)
     {

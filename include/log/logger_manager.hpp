@@ -77,7 +77,7 @@ namespace sylar
         Level level = Level::UNKNOWN;             ///< 日志级别
         std::string formatter;                    ///< 日志格式化器
         std::string path;                         ///< 日志文件路径(仅FileLogAppender有效)
-        RotateType rotateType = RotateType::None; ///< 日志轮转类型(仅FileLogAppender有效)
+        RotateType rotateType = RotateType::NONE; ///< 日志轮转类型(仅FileLogAppender有效)
 
         /**
          * @brief 判断两个追加器配置是否相等

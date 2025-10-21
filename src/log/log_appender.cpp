@@ -80,6 +80,7 @@ namespace sylar
         {
             node["formatter"] = m_formatter->getPattern();
         }
+        node["rotate_type"] = LogFile::rotateTypeToString(m_logFile->getRotateType());
         std::stringstream ss;
         ss << node;
         return ss.str();
