@@ -1,3 +1,13 @@
+/**
+ * @file log_file.hpp
+ * @brief 文件日志类定义
+ * @author sylar
+ * @date 2025-10-21
+ *
+ * 该文件定义了文件日志类(LogFile)，用于封装单个日志文件的打开、写入、轮转、
+ * 获取大小等操作。支持多种轮转类型，包括不轮转、按分钟、小时和天轮转。
+ */
+
 #pragma once
 
 #include <string>
@@ -5,16 +15,21 @@
 
 namespace sylar
 {
+    /**
+     * @brief 日志轮转类型枚举
+     */
     enum class RotateType
     {
-        None,   // 不轮转
-        Minute, // 按分钟轮转
-        Hour,   // 按小时轮转
-        Day     // 按天轮转
+        None,   ///< 不轮转
+        Minute, ///< 按分钟轮转
+        Hour,   ///< 按小时轮转
+        Day     ///< 按天轮转
     };
 
     /**
-     * @brief 文件日志类，封装单个日志文件的打开、写入、轮转、获取大小等操作
+     * @brief 文件日志类
+     *
+     * 封装单个日志文件的打开、写入、轮转、获取大小等操作
      */
     class LogFile
     {
@@ -91,12 +106,23 @@ namespace sylar
          */
         RotateType getRotateType() const;
 
+        /**
+         * @brief 从字符串转换轮转类型
+         * @param rotateType 轮转类型字符串
+         * @return RotateType 轮转类型枚举值
+         */
         RotateType rotateTypeFromString(const std::string &rotateType);
+        
+        /**
+         * @brief 将轮转类型转换为字符串
+         * @param rotateType 轮转类型枚举值
+         * @return std::string 轮转类型字符串
+         */
         std::string rotateTypeToString(RotateType rotateType);
 
     private:
-        int m_fd;                //!< 文件描述符
-        std::string m_filePath;  //!< 日志文件名
-        RotateType m_rotateType; //!< 日志轮转类型
+        int m_fd;                ///< 文件描述符
+        std::string m_filePath;  ///< 日志文件路径
+        RotateType m_rotateType; ///< 日志轮转类型
     };
 }

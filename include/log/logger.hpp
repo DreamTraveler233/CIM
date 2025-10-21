@@ -1,7 +1,8 @@
 /**
  * @file logger.hpp
  * @brief 日志器类定义
- * @author szy
+ * @author sylar
+ * @date 2025-10-21
  *
  * 该文件定义了日志器(Logger)类，负责管理日志的输出目标和日志级别的控制。
  * Logger是日志系统的核心组件之一，负责收集日志事件并将其分发给所有注册的

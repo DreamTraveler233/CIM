@@ -1,10 +1,12 @@
 /**
  * @file log_level.hpp
  * @brief 日志等级定义及转换接口
- * @author szy
- *
+ * @author sylar
+ * @date 2025-10-21
+ * 
  * 该文件定义了日志系统的日志等级枚举和相关转换函数，
  * 包括从日志等级到字符串的转换和从字符串到日志等级的转换。
+ * 日志等级从低到高依次为: DEBUG, INFO, WARN, ERROR, FATAL
  */
 
 #pragma once

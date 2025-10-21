@@ -2,6 +2,7 @@
  * @file log_appender.hpp
  * @brief 日志追加器定义文件
  * @author sylar
+ * @date 2025-10-21
  *
  * 该文件定义了日志系统的核心组件——日志追加器(LogAppender)基类及其派生类，
  * 包括标准输出追加器和文件追加器，用于控制日志的输出目标和格式化方式。

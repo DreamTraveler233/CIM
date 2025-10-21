@@ -1,7 +1,8 @@
 /**
  * @file log_event.hpp
  * @brief 日志事件相关类定义
- * @author szy
+ * @author sylar
+ * @date 2025-10-21
  *
  * 该文件定义了日志事件相关的类，包括LogEvent和LogEventWrap。
  * LogEvent用于封装一次日志记录的所有相关信息，如文件名、行号、线程ID等。
@@ -143,7 +144,7 @@ namespace sylar
         uint32_t m_CoroutineId = 0;       ///< 协程ID
         uint64_t m_time;                  ///< 时间戳
         std::stringstream m_messageSS;    ///< 日志消息流
-        Level m_level;          ///< 日志等级
+        Level m_level;                    ///< 日志等级
         std::shared_ptr<Logger> m_logger; ///< 关联的日志器
     };
 

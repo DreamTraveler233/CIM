@@ -2,6 +2,7 @@
  * @file log_formatter.hpp
  * @brief 日志格式化器头文件
  * @author sylar
+ * @date 2025-10-21
  *
  * 定义了日志格式化器(LogFormatter)及相关格式化项类。
  * LogFormatter负责将日志事件(LogEvent)按照指定的格式模式转换为字符串输出。

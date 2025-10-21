@@ -2,6 +2,7 @@
  * @file logger_manager.hpp
  * @brief 日志管理器定义文件
  * @author sylar
+ * @date 2025-10-21
  *
  * 该文件定义了日志管理器(LoggerManager)及相关配置结构体，
  * 用于统一管理和配置系统中的所有日志记录器(Logger)实例。
