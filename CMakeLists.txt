@@ -37,6 +37,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include/system
     ${PROJECT_SOURCE_DIR}/include/http
     ${PROJECT_SOURCE_DIR}/include/stream
+    ${PROJECT_SOURCE_DIR}/include/util
 )
 
 # 定义测试可执行文件列表

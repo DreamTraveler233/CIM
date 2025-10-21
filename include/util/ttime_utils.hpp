@@ -1,0 +1,52 @@
+#pragma once
+
+#include <stdint.h>
+#include <string>
+
+namespace sylar
+{
+    class TTime
+    {
+    public:
+        /**
+         * @brief 获取当前 UTC 时间（毫秒级）。
+         *
+         * @return uint64_t 当前 UTC 时间，单位为毫秒
+         */
+        static uint64_t NowToMS();
+
+        /**
+         * @brief 获取当前 UTC 时间（微秒级）。
+         *
+         * @return uint64_t 当前 UTC 时间，单位为微秒
+         */
+        static uint64_t NowToUS();
+
+        /**
+         * @brief 获取当前 UTC 时间（秒级）。
+         *
+         * @return uint64_t 当前 UTC 时间，单位为秒
+         */
+        static uint64_t NowToS();
+
+        /**
+         * @brief 获取当前本地时间的年月日时分秒，并返回当前时间戳（秒）。
+         *
+         * @param[out] year   年
+         * @param[out] month  月
+         * @param[out] day    日
+         * @param[out] hour   时
+         * @param[out] minute 分
+         * @param[out] second 秒
+         * @return uint64_t 当前时间戳（秒）
+         */
+        static uint64_t Now(int &year, int &month, int &day, int &hour, int &minute, int &second);
+
+        /**
+         * @brief 获取当前时间的 ISO 格式字符串（yyyy-MM-ddTHH:mm:ss）。
+         *
+         * @return std::string 当前时间的 ISO 格式字符串
+         */
+        static std::string NowToString();
+    };
+}
