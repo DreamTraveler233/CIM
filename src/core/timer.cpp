@@ -13,7 +13,7 @@ namespace sylar
     Timer::Timer(uint64_t ms, std::function<void()> cb, bool recurring, TimerManager *manager)
         : m_recurring(recurring),
           m_ms(ms),
-          m_next(sylar::GetCurrentMS() + m_ms),
+          m_next(TTime::NowToMS() + m_ms),
           m_cb(cb),
           m_manager(manager) {}
 
@@ -70,7 +70,7 @@ namespace sylar
             return false;
         }
         m_manager->m_timers.erase(it);
-        m_next = sylar::GetCurrentMS() + m_ms;
+        m_next = TTime::NowToMS() + m_ms;
         m_manager->m_timers.insert(shared_from_this());
         return true;
     }
@@ -114,7 +114,7 @@ namespace sylar
         if (from_now)
         {
             // 从当前时间开始计算
-            start = sylar::GetCurrentMS();
+            start = TTime::NowToMS();
         }
         else
         {
@@ -171,7 +171,7 @@ namespace sylar
 
     TimerManager::TimerManager()
     {
-        m_previouseTime = sylar::GetCurrentMS();
+        m_previouseTime = TTime::NowToMS();
     }
 
     TimerManager::~TimerManager()
@@ -240,7 +240,7 @@ namespace sylar
             return ~0ull;
         }
         const Timer::ptr &next = *m_timers.begin();
-        uint64_t now = sylar::GetCurrentMS();
+        uint64_t now = TTime::NowToMS();
         if (now >= next->m_next)
         {
             return 0;
@@ -262,7 +262,7 @@ namespace sylar
      */
     void TimerManager::listExpiredCb(std::vector<std::function<void()>> &cbs)
     {
-        uint64_t now_ms = sylar::GetCurrentMS();
+        uint64_t now_ms = TTime::NowToMS();
         std::vector<Timer::ptr> expired;
 
         {

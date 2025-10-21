@@ -27,7 +27,7 @@ namespace sylar::http
     HttpConnection::HttpConnection(Socket::ptr sock, bool owner)
         : SocketStream(sock, owner)
     {
-        m_createTime = GetCurrentMS();
+        m_createTime = TTime::NowToMS();
     }
 
     HttpConnection::~HttpConnection()
@@ -417,7 +417,7 @@ namespace sylar::http
      */
     HttpConnection::ptr HttpConnectionPool::getConnection()
     {
-        uint64_t now_ms = sylar::GetCurrentMS();     // 获取当前时间，用于判断当前连接是否超时
+        uint64_t now_ms = TTime::NowToMS();     // 获取当前时间，用于判断当前连接是否超时
         std::vector<HttpConnection *> invalid_conns; // 用于储存无效连接
         HttpConnection *ptr = nullptr;               // 用于存放取出的 connection
         MutexType::Lock lock(m_mutex);
@@ -494,7 +494,7 @@ namespace sylar::http
         ++ptr->m_request;
         // 检查连接是否应该被销毁：连接已断开、超过最大存活时间或达到最大请求数
         if (!ptr->isConnected() ||
-            ((ptr->m_createTime + pool->m_maxAliveTime) < GetCurrentMS()) ||
+            ((ptr->m_createTime + pool->m_maxAliveTime) < TTime::NowToMS()) ||
             (ptr->m_request >= pool->m_maxRequest))
         {
             delete ptr;

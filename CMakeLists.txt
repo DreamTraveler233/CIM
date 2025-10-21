@@ -42,10 +42,9 @@ include_directories(
 # 定义测试可执行文件列表
 set(TEST_EXECUTABLES
     test_log_basic
-    test_log_thread_safe
     test_log_performance
+    test_log_rotate
     test_config
-    test_config_thread_sefa
     test_util
     test_coroutine
     test_scheduler

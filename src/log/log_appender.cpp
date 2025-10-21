@@ -14,12 +14,12 @@ namespace sylar
         MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
-    void LogAppender::setLevel(LogLevel::Level level)
+    void LogAppender::setLevel(Level level)
     {
         MutexType::Lock lock(m_mutex);
         m_level = level;
     }
-    LogLevel::Level LogAppender::getLevel() const
+    Level LogAppender::getLevel() const
     {
         MutexType::Lock lock(m_mutex);
         return m_level;
@@ -51,17 +51,9 @@ namespace sylar
     }
 
     FileLogAppender::FileLogAppender(const std::string &fileName)
-        : m_fileName(fileName)
     {
-        reopen();
-    }
-
-    FileLogAppender::~FileLogAppender()
-    {
-        if (m_fileStream.is_open())
-        {
-            m_fileStream.close();
-        }
+        m_logFile = LogFileManager::GetInstance()->getLogFile(fileName);
+        m_logFile->openFile();
     }
 
     void FileLogAppender::log(LogEvent::ptr event)
@@ -69,8 +61,11 @@ namespace sylar
         if (event->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);
-            // 将日志事件（event）格式化后输出到文件流
-            m_fileStream << m_formatter->format(event);
+            if (m_logFile)
+            {
+                std::string formatted_msg = m_formatter->format(event);
+                m_logFile->writeLog(formatted_msg);
+            }
         }
     }
 
@@ -79,7 +74,7 @@ namespace sylar
         MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["type"] = "FileLogAppender";
-        node["file"] = m_fileName;
+        node["file"] = m_logFile->getFilePath();
         node["level"] = LogLevel::ToString(m_level);
         if (m_formatter)
         {
@@ -89,17 +84,9 @@ namespace sylar
         ss << node;
         return ss.str();
     }
-
-    bool FileLogAppender::reopen()
+    
+    LogFile::ptr FileLogAppender::getLogFile() const
     {
-        MutexType::Lock lock(m_mutex);
-        if (m_fileStream.is_open())
-        {
-            m_fileStream.close();
-        }
-        // m_fileStream.open(m_fileName, std::ios::app);
-        m_fileStream.open(m_fileName);
-
-        return m_fileStream.is_open();
+        return m_logFile;
     }
 }

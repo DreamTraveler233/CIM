@@ -286,7 +286,7 @@ namespace sylar
             }
             node["level"] = LogLevel::ToString(val.level);
             node["formatter"] = val.formatter;
-            node["file"] = val.file;
+            node["path"] = val.path;
             std::stringstream ss;
             ss << node;
             return ss.str();
@@ -321,9 +321,9 @@ namespace sylar
             {
                 lad.formatter = node["formatter"].as<std::string>();
             }
-            if (node["file"].IsDefined())
+            if (node["path"].IsDefined())
             {
-                lad.file = node["file"].as<std::string>();
+                lad.path = node["path"].as<std::string>();
             }
             return lad;
         }
@@ -352,7 +352,7 @@ namespace sylar
                 }
                 appender_node["level"] = LogLevel::ToString(appender.level);
                 appender_node["formatter"] = appender.formatter;
-                appender_node["file"] = appender.file;
+                appender_node["path"] = appender.path;
                 node["appenders"].push_back(appender_node);
             }
             std::stringstream ss;
@@ -405,9 +405,9 @@ namespace sylar
                     {
                         lad.formatter = appender_node["formatter"].as<std::string>();
                     }
-                    if (appender_node["file"].IsDefined())
+                    if (appender_node["path"].IsDefined())
                     {
-                        lad.file = appender_node["file"].as<std::string>();
+                        lad.path = appender_node["path"].as<std::string>();
                     }
                     ld.appenders.push_back(lad);
                 }

@@ -2,13 +2,13 @@
 
 namespace sylar
 {
-    const char *LogLevel::ToString(LogLevel::Level level)
+    const char *LogLevel::ToString(Level level)
     {
         switch (level)
         {
 // 宏定义
-#define XX(name)                \
-    case LogLevel::Level::name: \
+#define XX(name)      \
+    case Level::name: \
         return #name;
 
             XX(DEBUG);
@@ -23,11 +23,11 @@ namespace sylar
         }
     }
 
-    LogLevel::Level LogLevel::FromString(const std::string &str)
+    Level LogLevel::FromString(const std::string &str)
     {
 #define XX(level, name) \
     if (str == #name)   \
-        return LogLevel::Level::level;
+        return Level::level;
 
         XX(DEBUG, debug);
         XX(INFO, info);
@@ -40,6 +40,6 @@ namespace sylar
         XX(ERROR, ERROR);
         XX(FATAL, FATAL);
 #undef XX
-        return LogLevel::Level::UNKNOWN;
+        return Level::UNKNOWN;
     }
 }

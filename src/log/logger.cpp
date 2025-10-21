@@ -5,9 +5,9 @@ namespace sylar
 {
     Logger::Logger(const std::string &name)
         : m_name(name),
-          m_level(LogLevel::Level::DEBUG)
+          m_level(Level::DEBUG)
     {
-        // 时间 线程号 协程号 [日志级别] 文件名 行号 日志信息 回车
+        // 时间 线程名称 线程号 协程号 [日志级别] [日志器名称] <文件名:行号> 日志信息 回车
         m_formatter = std::make_shared<LogFormatter>("%d%T%N%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n");
     }
 
@@ -17,7 +17,7 @@ namespace sylar
      *      2、如果有附加器(appender)，则遍历所有附加器记录日志
      *      3、如果没有附加器但有根日志器，则使用根日志器记录日志
      */
-    void Logger::log(LogLevel::Level level, LogEvent::ptr event)
+    void Logger::log(Level level, LogEvent::ptr event)
     {
         if (level >= m_level)
         {
@@ -47,23 +47,23 @@ namespace sylar
 
     void Logger::debug(LogEvent::ptr event)
     {
-        log(LogLevel::Level::DEBUG, event);
+        log(Level::DEBUG, event);
     }
     void Logger::info(LogEvent::ptr event)
     {
-        log(LogLevel::Level::INFO, event);
+        log(Level::INFO, event);
     }
     void Logger::warn(LogEvent::ptr event)
     {
-        log(LogLevel::Level::WARN, event);
+        log(Level::WARN, event);
     }
     void Logger::error(LogEvent::ptr event)
     {
-        log(LogLevel::Level::ERROR, event);
+        log(Level::ERROR, event);
     }
     void Logger::fatal(LogEvent::ptr event)
     {
-        log(LogLevel::Level::FATAL, event);
+        log(Level::FATAL, event);
     }
 
     void Logger::addAppender(LogAppender::ptr appender)
@@ -95,12 +95,12 @@ namespace sylar
         MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
-    LogLevel::Level Logger::getLevel() const
+    Level Logger::getLevel() const
     {
         MutexType::Lock lock(m_mutex);
         return m_level;
     }
-    void Logger::setLevel(LogLevel::Level level)
+    void Logger::setLevel(Level level)
     {
         MutexType::Lock lock(m_mutex);
         m_level = level;
@@ -130,7 +130,6 @@ namespace sylar
                       << std::endl;
             return;
         }
-        // m_formatter = new_val;
         setFormatter(new_val);
     }
     LogFormatter::ptr Logger::getFormatter() const

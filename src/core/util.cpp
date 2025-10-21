@@ -21,18 +21,6 @@ namespace sylar
         return Coroutine::GetCoroutineId();
     }
 
-    /**
-     * @brief 获取函数调用堆栈信息
-     * @param bt[out] 存储堆栈信息的字符串向量
-     * @param size[in] 需要获取的堆栈层数
-     * @param skip[in] 跳过的堆栈层数，从第skip层开始记录
-     *
-     * 1、使用backtrace函数获取函数调用堆栈地址
-     * 2、使用backtrace_symbols将地址转换为可读的符号字符串
-     * 3、将符号信息存入传入的vector中，跳过指定层数(skip)
-     * 4、释放分配的内存资源
-     * 5、skip默认值为1，表示忽略掉Backtrace函数
-     */
     void Backtrace(std::vector<std::string> &bt, int size, int skip)
     {
         // 分配存储堆栈地址的数组空间
@@ -60,18 +48,6 @@ namespace sylar
         free(strings);
     }
 
-    /**
-     * @brief 将函数调用堆栈信息转换为字符串
-     * @param size 需要获取的堆栈层数
-     * @param skip 跳过的堆栈层数，从第skip层开始记录
-     * @param prefix 每行输出的前缀字符串
-     * @return 包含堆栈信息的字符串
-     *
-     * 1、调用Backtrace函数获取调用栈信息，存储在vector中
-     * 2、使用stringstream将每个栈帧信息加上前缀后拼接成一个字符串
-     * 3、返回拼接后的完整调用栈字符串
-     * 4、skip默认值为2，表示忽略掉BacktraceToString和Backtrace函数
-     */
     std::string BacktraceToString(int size, int skip, const std::string &prefix)
     {
         std::vector<std::string> bt;
@@ -85,20 +61,170 @@ namespace sylar
         return ss.str();
     }
 
-    uint64_t GetCurrentMS()
+    uint64_t TTime::NowToMS()
     {
         struct timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec * 1000ul + tv.tv_usec / 1000;
-        return 0;
+        return tv.tv_sec * 1000 + tv.tv_usec / 1000;
     }
 
-    uint64_t GetCurrentUS()
+    uint64_t TTime::NowToUS()
     {
         struct timeval tv;
         gettimeofday(&tv, nullptr);
-        return tv.tv_sec * 1000000ul + tv.tv_usec;
-        return 0;
+        return tv.tv_sec * 1000000 + tv.tv_usec;
+    }
+
+    uint64_t TTime::NowToS()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, nullptr); // 获取当前时间
+        return tv.tv_sec;           // 返回秒数
+    }
+
+    uint64_t TTime::Now(int& year, int& month, int& day, int& hour, int& minute, int& second)
+    {
+        struct tm tm;
+        time_t t = time(nullptr); // 获取当前时间戳（Unix 时间戳）
+        localtime_r(&t, &tm);     // 线程安全地将时间戳转换为本地时间
+
+        year = tm.tm_year + 1900;
+        month = tm.tm_mon + 1;
+        day = tm.tm_mday;
+        hour = tm.tm_hour;
+        minute = tm.tm_min;
+        second = tm.tm_sec;
+        return t; // 返回当前时间戳（秒）
+    }
+
+    std::string TTime::NowToString()
+    {
+        struct tm tm;             // 用于存储分解的时间值
+        time_t t = time(nullptr); // 获取当前时间戳（Unix 时间戳）
+        localtime_r(&t, &tm);     // 线程安全地将时间戳转换为本地时间
+
+        char buf[128] = {0};
+        size_t n = strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
+        return std::string(buf, n); // 使用buf的前n个字符构造string对象
+    }
+
+    bool StringUtils::StartsWith(const std::string &str, const std::string &sub)
+    {
+        // 如果字串为空，直接返回 true
+        if (sub.empty())
+        {
+            return true;
+        }
+        // 如果字符串为空或字符串比子串短，直接返回 false
+        auto strLen = str.size();
+        auto subLen = sub.size();
+        if (str.empty() || strLen < subLen)
+        {
+            return false;
+        }
+        // 用 str 从下标 0 开始、长度为 subLen 的子串，与 sub 进行比较
+        return str.compare(0, subLen, sub) == 0;
+    }
+
+    bool StringUtils::EndsWith(const std::string &str, const std::string &sub)
+    {
+        // 如果字串为空，直接返回 true
+        if (sub.empty())
+        {
+            return true;
+        }
+        // 如果字符串为空或字符串比子串短，直接返回 false
+        auto strLen = str.size();
+        auto subLen = sub.size();
+        if (str.empty() || strLen < subLen)
+        {
+            return false;
+        }
+        // 用 str 从下标 0 开始、长度为 subLen 的子串，与 sub 进行比较
+        return str.compare(strLen - subLen, subLen, sub) == 0;
+    }
+
+    std::string StringUtils::FilePath(const std::string &path)
+    {
+        auto pos = path.find_last_of("/\\"); // 查找最后一个'/'或'\'的位置（兼容Linux和Windows路径）
+        if (pos != std::string::npos)        // 如果找到了分隔符
+        {
+            return path.substr(0, pos + 1); // 返回从开头到分隔符前的所有字符（即目录部分）
+        }
+        else // 如果没有找到分隔符
+        {
+            return "./"; // 返回当前目录
+        }
+    }
+
+    std::string StringUtils::FileNameExt(const std::string &path)
+    {
+        auto pos = path.find_last_of("/\\"); // 查找路径中最后一个'/'或'\'的位置（兼容Linux和Windows路径）
+        if (pos != std::string::npos)        // 如果找到了分隔符
+        {
+            if (pos + 1 < path.size()) // 并且分隔符后还有内容
+            {
+                return path.substr(pos + 1); // 返回分隔符后的所有内容（即文件名+扩展名）
+            }
+        }
+        return path; // 如果没有分隔符，直接返回原字符串（说明本身就是文件名）
+    }
+
+    std::string StringUtils::FileName(const std::string &path)
+    {
+        std::string file_name = FileNameExt(path); // 先获取文件名（含扩展名）
+        auto pos = file_name.find_last_of(".");    // 查找最后一个'.'的位置（即扩展名前的点）
+        if (pos != std::string::npos)              // 如果找到了'.'
+        {
+            if (pos != 0) // 并且'.'不是第一个字符（防止隐藏文件如 .bashrc）
+            {
+                return file_name.substr(0, pos); // 返回从头到'.'前的内容（即文件名，不含扩展名）
+            }
+        }
+        return file_name; // 如果没有'.'，或'.'在第一个字符，直接返回整个文件名
+    }
+
+    std::string StringUtils::Extension(const std::string &path)
+    {
+        std::string file_name = FileNameExt(path); // 先获取文件名（含扩展名）
+        auto pos = file_name.find_last_of(".");    // 查找最后一个'.'的位置
+        if (pos != std::string::npos)              // 如果找到了'.'
+        {
+            if (pos != 0 && pos + 1 < path.size()) // '.'不是第一个字符，且后面还有内容
+            {
+                return file_name.substr(pos); // 返回从'.'开始到结尾的内容（即扩展名，包含点）
+            }
+        }
+        return std::string(); // 没有扩展名则返回空字符串
+    }
+
+    std::vector<std::string> StringUtils::SplitString(const std::string &str, const std::string &delimiter)
+    {
+        std::vector<std::string> result; // 存放分割后的子串
+        // 如果分隔符为空，直接返回空vector
+        if (delimiter.empty())
+        {
+            return result;
+        }
+        size_t last = 0; // 上一次分割结束的位置
+        size_t next = 0; // 下一个分隔符出现的位置
+        // 循环查找分隔符并分割
+        while ((next = str.find(delimiter, last)) != std::string::npos)
+        {
+            if (next > last) // 分隔符前有内容
+            {
+                // 截取从last到next之间的子串，加入结果
+                result.emplace_back(str.substr(last, next - last));
+            }
+            // 更新last到下一个分隔符后面
+            last = next + delimiter.size();
+        }
+        // 处理最后一段（如果last还没到末尾）
+        if (last < str.size())
+        {
+            result.emplace_back(str.substr(last));
+        }
+        return result; // 返回所有分割结果
     }
 
     void FSUtil::ListAllFile(std::vector<std::string> &files, const std::string &path, const std::string &subfix)

@@ -30,44 +30,44 @@ long long g_overall_duration_us = 0;           // 整体耗时
 std::map<std::string, PerformanceResult> g_test_results;
 
 // 测试不同日志级别的写入性能
-void testLogLevelPerformance(sylar::Logger::ptr logger, sylar::LogLevel::Level level,
+void testLogLevelPerformance(sylar::Logger::ptr logger, sylar::Level level,
                              int log_count, PerformanceResult &result)
 {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     switch (level)
     {
-    case sylar::LogLevel::Level::DEBUG:
+    case sylar::Level::DEBUG:
         for (int i = 0; i < log_count; ++i)
         {
             SYLAR_LOG_DEBUG(logger) << "Debug message " << i << " for performance test";
         }
         break;
-    case sylar::LogLevel::Level::INFO:
+    case sylar::Level::INFO:
         for (int i = 0; i < log_count; ++i)
         {
             SYLAR_LOG_INFO(logger) << "Info message " << i << " for performance test";
         }
         break;
-    case sylar::LogLevel::Level::WARN:
+    case sylar::Level::WARN:
         for (int i = 0; i < log_count; ++i)
         {
             SYLAR_LOG_WARN(logger) << "Warn message " << i << " for performance test";
         }
         break;
-    case sylar::LogLevel::Level::ERROR:
+    case sylar::Level::ERROR:
         for (int i = 0; i < log_count; ++i)
         {
             SYLAR_LOG_ERROR(logger) << "Error message " << i << " for performance test";
         }
         break;
-    case sylar::LogLevel::Level::FATAL:
+    case sylar::Level::FATAL:
         for (int i = 0; i < log_count; ++i)
         {
             SYLAR_LOG_FATAL(logger) << "Fatal message " << i << " for performance test";
         }
         break;
-    case sylar::LogLevel::Level::UNKNOWN:
+    case sylar::Level::UNKNOWN:
     default:
         for (int i = 0; i < log_count; ++i)
         {
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 
     // 创建测试logger
     auto logger = SYLAR_LOG_ROOT();
-    logger->setLevel(sylar::LogLevel::Level::DEBUG);
+    logger->setLevel(sylar::Level::DEBUG);
 
     // 添加文件appender用于测试
     auto file_appender = std::make_shared<sylar::FileLogAppender>("./log/performance_test.log");
@@ -198,19 +198,19 @@ int main(int argc, char **argv)
     g_total_log_count = 0;
     g_total_duration_us = 0;
 
-    testLogLevelPerformance(logger, sylar::LogLevel::Level::DEBUG, 10000, result);
+    testLogLevelPerformance(logger, sylar::Level::DEBUG, 10000, result);
     printPerformanceResult("DEBUG级别性能测试", result);
 
-    testLogLevelPerformance(logger, sylar::LogLevel::Level::INFO, 10000, result);
+    testLogLevelPerformance(logger, sylar::Level::INFO, 10000, result);
     printPerformanceResult("INFO级别性能测试", result);
 
-    testLogLevelPerformance(logger, sylar::LogLevel::Level::WARN, 10000, result);
+    testLogLevelPerformance(logger, sylar::Level::WARN, 10000, result);
     printPerformanceResult("WARN级别性能测试", result);
 
-    testLogLevelPerformance(logger, sylar::LogLevel::Level::ERROR, 10000, result);
+    testLogLevelPerformance(logger, sylar::Level::ERROR, 10000, result);
     printPerformanceResult("ERROR级别性能测试", result);
 
-    testLogLevelPerformance(logger, sylar::LogLevel::Level::FATAL, 10000, result);
+    testLogLevelPerformance(logger, sylar::Level::FATAL, 10000, result);
     printPerformanceResult("FATAL级别性能测试", result);
 
     g_overall_log_count += 50000;                        // 累计日志数
@@ -281,14 +281,14 @@ int main(int argc, char **argv)
     g_total_log_count = 0;
     g_total_duration_us = 0;
 
-    testLogLevelPerformance(logger_console, sylar::LogLevel::Level::INFO, 10000, result);
+    testLogLevelPerformance(logger_console, sylar::Level::INFO, 10000, result);
     printPerformanceResult("仅控制台Appender性能测试", result);
 
     // 仅文件appender
     auto logger_file = SYLAR_LOG_NAME("file_only");
     logger_file->addAppender(std::make_shared<sylar::FileLogAppender>("./log/file_only_test.log"));
 
-    testLogLevelPerformance(logger_file, sylar::LogLevel::Level::INFO, 10000, result);
+    testLogLevelPerformance(logger_file, sylar::Level::INFO, 10000, result);
     printPerformanceResult("仅文件Appender性能测试", result);
 
     // 混合appender
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
     logger_mixed->addAppender(std::make_shared<sylar::StdoutLogAppender>());
     logger_mixed->addAppender(std::make_shared<sylar::FileLogAppender>("./log/mixed_test.log"));
 
-    testLogLevelPerformance(logger_mixed, sylar::LogLevel::Level::INFO, 10000, result);
+    testLogLevelPerformance(logger_mixed, sylar::Level::INFO, 10000, result);
     printPerformanceResult("混合Appender性能测试", result);
 
     g_overall_log_count += 30000;                        // 累计日志数

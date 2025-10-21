@@ -4,8 +4,9 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        file: /home/szy/code/sylar/bin/log/root.log
+        path: /home/szy/code/sylar/bin/log/root.log
         formatter: "%d%T%t%T%m%n"
+        rotate_type: Minute
       - type: StdoutLogAppender
         formatter: "%d%T<%f:%l>%m%n"
         
@@ -14,7 +15,8 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        file: /home/szy/code/sylar/bin/log/system.log
+        path: /home/szy/code/sylar/bin/log/system.log
         level: info
         formatter: "%d%T<%f:%l>%m%n"
+        rotate_type: Minute
       - type: StdoutLogAppender

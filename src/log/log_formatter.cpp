@@ -7,7 +7,8 @@
 namespace sylar
 {
     LogFormatter::LogFormatter(const std::string &pattern)
-        : m_pattern(pattern)
+        : m_pattern(pattern),
+          m_isError(false)
     {
         init();
     }
@@ -21,102 +22,87 @@ namespace sylar
         }
         return ss.str();
     }
-    LogFormatter::FormatItem::FormatItem(const std::string &fmt) {}
-    LogFormatter::FormatItem::~FormatItem() {}
+
     bool LogFormatter::isError() const { return m_isError; }
     const std::string &LogFormatter::getPattern() const { return m_pattern; }
+    /**
+     * @brief 初始化解析日志格式模式
+     *
+     * 该函数解析传入的格式模式字符串，将其分解为普通字符串和格式化项，
+     * 并根据格式化项创建对应的格式化对象。
+     *
+     * 解析规则：
+     * 1. 普通字符直接作为字符串处理
+     * 2. %后跟字母表示格式化项
+     * 3. %%表示转义的%字符
+     */
     void LogFormatter::init()
     {
-        std::vector<std::tuple<std::string, std::string, int>> vec;
+        // 存储解析后的格式项，每个元组包含：字符串内容、格式参数、类型(0-普通字符串，1-格式化项)
+        std::vector<std::map<std::string, int>> vec;
+        // 存储普通字符串
         std::string nstr;
+
+        // 遍历格式模式字符串，逐字符解析
         for (size_t i = 0; i < m_pattern.size(); ++i)
         {
+            // 如果当前字符不是%，则作为普通字符串处理
             if (m_pattern[i] != '%')
             {
                 nstr.append(1, m_pattern[i]);
                 continue;
             }
 
-            if ((i + 1) < m_pattern.size())
+            // 处理连续的两个%%，表示转义的%字符
+            if ((i + 1) < m_pattern.size() && m_pattern[i + 1] == '%')
             {
-                if (m_pattern[i + 1] == '%')
-                {
-                    nstr.append(1, '%');
-                    continue;
-                }
+                nstr.append(1, '%');
+                continue;
             }
 
+            // 开始解析格式化项
             size_t n = i + 1;
-            int fmt_status = 0;
-            size_t fmt_begin = 0;
+            std::string str; // 格式项名称
 
-            std::string str;
-            std::string fmt;
-            while (n < m_pattern.size())
+            // 查找格式化项名称（字母）
+            while (n < m_pattern.size() && isalpha(m_pattern[n]))
             {
-                if (!fmt_status && (!isalpha(m_pattern[n])) && m_pattern[n] != '{' && m_pattern[n] != '}')
-                {
-                    str = m_pattern.substr(i + 1, n - i - 1);
-                    break;
-                }
-                if (fmt_status == 0)
-                {
-                    if (m_pattern[n] == '{')
-                    {
-                        str = m_pattern.substr(i + 1, n - i - 1);
-                        fmt_status = 1;
-                        fmt_begin = n;
-                        ++n;
-                        continue;
-                    }
-                }
-                else if (fmt_status == 1)
-                {
-                    if (m_pattern[n] == '}')
-                    {
-                        fmt = m_pattern.substr(fmt_begin + 1, n - fmt_begin - 1);
-                        fmt_status = 0;
-                        ++n;
-                        break;
-                    }
-                }
+                str.append(1, m_pattern[n]);
                 ++n;
-                if (n == m_pattern.size())
-                {
-                    if (str.empty())
-                    {
-                        str = m_pattern.substr(i + 1);
-                    }
-                }
             }
 
-            if (fmt_status == 0)
-            {
-                if (!nstr.empty())
-                {
-                    vec.push_back(std::make_tuple(nstr, "", 0));
-                    nstr.clear();
-                }
-                vec.push_back(std::make_tuple(str, fmt, 1));
-                i = n - 1;
-            }
-            else if (fmt_status == 1)
+            // 如果没有找到格式化项名称，则是错误
+            if (str.empty())
             {
                 std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
                 m_isError = true;
-                vec.push_back(std::make_tuple("<<pattern_error>>", fmt, 0));
+                vec.push_back({{"<<pattern_error>>", 0}});
+                continue;
             }
+
+            // 如果存在普通字符串，先将其加入结果列表
+            if (!nstr.empty())
+            {
+                vec.push_back({{nstr, 0}});
+                nstr.clear();
+            }
+
+            // 将解析到的格式项加入结果列表
+            vec.push_back({{str, 1}});
+            i = n - 1;
         }
 
+        // 处理最后剩余的普通字符串
         if (!nstr.empty())
         {
-            vec.push_back(std::make_tuple(nstr, "", 0));
+            vec.push_back({{nstr, 0}});
         }
 
-        static std::map<std::string, std::function<FormatItem::ptr(const std::string &str)>> s_format_items = {
-#define XX(str, C)                                                               \
-    {                                                                            \
-        #str, [](const std::string &fmt) { return FormatItem::ptr(new C(fmt)); } \
+        // 定义格式项创建函数映射表
+        static std::map<std::string, std::function<FormatItem::ptr()>> s_format_items = {
+#define XX(str, C)                                      \
+    {                                                   \
+        #str, []() { return FormatItem::ptr(new C()); } \
     }
             XX(m, MessageFormatItem),    // %m -- 消息体
             XX(p, LevelFormatItem),      // %p -- level
@@ -133,80 +119,66 @@ namespace sylar
 #undef XX
         };
 
+        // 根据解析结果创建对应的格式化项对象
         for (auto &i : vec)
         {
-            if (std::get<2>(i) == 0)
+            auto it_map = i.begin();
+            std::string content = it_map->first;
+            int type = it_map->second;
+            if (type == 0)
             {
-                m_items.push_back(FormatItem::ptr(new StringFormatItem(std::get<0>(i))));
+                // 普通字符串，创建字符串格式化项
+                m_items.push_back(FormatItem::ptr(new StringFormatItem(content)));
             }
             else
             {
-                auto it = s_format_items.find(std::get<0>(i));
+                // 格式化项，查找对应的创建函数
+                auto it = s_format_items.find(content);
                 if (it == s_format_items.end())
                 {
-                    m_items.push_back(FormatItem::ptr(new StringFormatItem("<<error_format %" + std::get<0>(i) + ">>")));
+                    // 未找到对应的格式化项，创建错误提示项
+                    m_items.push_back(FormatItem::ptr(new StringFormatItem("<<error_format %" + content + ">>")));
                     m_isError = true;
                 }
                 else
                 {
-                    m_items.push_back(it->second(std::get<1>(i)));
+                    // 创建对应的格式化项对象，不传递任何参数
+                    m_items.push_back(it->second());
                 }
             }
-
-            // std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i) << ") - (" << std::get<2>(i) << ")" << std::endl;
         }
-
-        // std::cout << m_items.size() << std::endl;
     }
 
-    MessageFormatItem::MessageFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
     void MessageFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getMessage();
     }
-    LevelFormatItem::LevelFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void LevelFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << LogLevel::ToString(event->getLevel());
     }
-    ElapseFormatItem::ElapseFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void ElapseFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getElapse();
     }
-    NameFormatItem::NameFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void NameFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getLogger()->getName();
     }
-    ThreadIdFormatItem::ThreadIdFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void ThreadIdFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getThreadId();
     }
-    DateTimeFormatItem::DateTimeFormatItem(const std::string &fmt)
-        : m_format(fmt)
+
+    DateTimeFormatItem::DateTimeFormatItem()
+        : m_format("%Y-%m-%d %H:%M:%S")
     {
-        if (m_format.empty())
-        {
-            m_format = "%Y-%m-%d %H:%M:%S";
-        }
     }
+
     void DateTimeFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         struct tm tm;
@@ -216,46 +188,32 @@ namespace sylar
         strftime(buf, sizeof(buf), m_format.c_str(), &tm);
         os << buf;
     }
-    FileNameFormatItem::FileNameFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void FileNameFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getRelativeFileName();
     }
-    LineFormatItem::LineFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void LineFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getLine();
     }
-    NewLineFormatItem::NewLineFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void NewLineFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << std::endl;
     }
-    TabFormatItem::TabFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void TabFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << "\t";
     }
-    FiberIdFormatItem::FiberIdFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void FiberIdFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
-        os << event->getFiberId();
+        os << event->getCoroutineId();
     }
+
     StringFormatItem::StringFormatItem(const std::string &fmt)
         : m_string(fmt)
     {
@@ -264,10 +222,7 @@ namespace sylar
     {
         os << m_string;
     }
-    ThreadNameFormatItem::ThreadNameFormatItem(const std::string &fmt)
-        : FormatItem(fmt)
-    {
-    }
+
     void ThreadNameFormatItem::format(std::ostream &os, std::shared_ptr<LogEvent> event)
     {
         os << event->getThreadName();

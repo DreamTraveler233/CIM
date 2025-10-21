@@ -6,6 +6,10 @@
 #include <iostream>
 #include <cassert>
 #include <fstream>
+#include <thread>
+#include <vector>
+#include <chrono>
+#include <atomic>
 
 // 测试日志系统
 void test_log_system()
@@ -66,8 +70,8 @@ void test_logger_creation()
     assert(logger1 == logger2);
 
     // 测试日志级别设置
-    logger1->setLevel(sylar::LogLevel::Level::ERROR);
-    assert(logger1->getLevel() == sylar::LogLevel::Level::ERROR);
+    logger1->setLevel(sylar::Level::ERROR);
+    assert(logger1->getLevel() == sylar::Level::ERROR);
 
     std::cout << "日志器创建和级别设置测试通过" << std::endl;
 }
@@ -124,15 +128,15 @@ void test_log_level()
     auto test_logger = SYLAR_LOG_NAME("level_test");
 
     // 设置日志级别为ERROR
-    test_logger->setLevel(sylar::LogLevel::Level::ERROR);
+    test_logger->setLevel(sylar::Level::ERROR);
 
     // DEBUG和INFO级别应该不输出（因为我们无法直接验证输出，但可以通过其他方式验证）
-    assert(test_logger->getLevel() == sylar::LogLevel::Level::ERROR);
+    assert(test_logger->getLevel() == sylar::Level::ERROR);
 
     // 测试不同级别的日志事件创建
-    auto event_debug = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::DEBUG,
+    auto event_debug = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::DEBUG,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0), "main");
-    auto event_error = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::ERROR,
+    auto event_error = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::ERROR,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0), "main");
 
     event_debug->getSS() << "这是一条DEBUG消息";
@@ -152,7 +156,7 @@ void test_log_event()
     auto test_logger = SYLAR_LOG_NAME("event_test");
 
     // 创建日志事件
-    auto event = std::make_shared<sylar::LogEvent>(test_logger, sylar::LogLevel::Level::INFO,
+    auto event = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::INFO,
                                                    "test_file.cpp", 123, 1000, 12345, 1, time(0), "main");
 
     // 测试格式化功能
@@ -162,12 +166,95 @@ void test_log_event()
     assert(std::string(event->getFileName()) == "test_file.cpp");
     assert(event->getLine() == 123);
     assert(event->getThreadId() == 12345);
-    assert(event->getFiberId() == 1);
+    assert(event->getCoroutineId() == 1);
 
     // 输出日志
     test_logger->info(event);
 
     std::cout << "日志事件测试通过" << std::endl;
+}
+
+void test_log_rotate()
+{
+    std::cout << "=================== 测试日志轮转 ===================" << std::endl;
+
+    static auto g_logger = SYLAR_LOG_ROOT();
+
+    // 加载配置文件
+    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
+    sylar::Config::LoadFromYaml(root);
+
+    for (int i = 0; i < 10000; ++i)
+    {
+        SYLAR_LOG_INFO(g_logger) << "日志轮转测试";
+    }
+}
+
+// 原子计数器用于线程安全测试
+std::atomic<int> g_log_count(0);
+std::atomic<bool> g_test_running(false);
+
+void thread_safe_log_test_func(int thread_id, int log_count) {
+    auto logger = SYLAR_LOG_NAME("thread_safe_test");
+    for (int i = 0; i < log_count && g_test_running; ++i) {
+        SYLAR_LOG_INFO(logger) << "Thread " << thread_id << " log message #" << i;
+        g_log_count++;
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+}
+
+void test_log_thread_safety() {
+    std::cout << "=================== 测试日志线程安全性 ===================" << std::endl;
+    
+    const int num_threads = 8;
+    const int logs_per_thread = 100;
+    
+    g_log_count = 0;
+    g_test_running = true;
+    
+    std::vector<std::thread> threads;
+    
+    auto logger = SYLAR_LOG_NAME("thread_safe_test");
+    logger->setLevel(sylar::Level::INFO);
+    
+    // 创建多个线程同时写入日志
+    for (int i = 0; i < num_threads; ++i) {
+        threads.emplace_back(thread_safe_log_test_func, i, logs_per_thread);
+    }
+    
+    // 等待所有线程完成
+    for (auto& t : threads) {
+        t.join();
+    }
+    
+    g_test_running = false;
+    
+    std::cout << "线程安全测试完成，总共写入日志: " << g_log_count.load() << " 条" << std::endl;
+    std::cout << "日志线程安全性测试通过" << std::endl;
+}
+
+void test_config_integration() {
+    std::cout << "=================== 测试日志与配置集成 ===================" << std::endl;
+    
+    // 获取日志管理器
+    auto logger_manager = sylar::loggerMgr::GetInstance();
+    
+    // 保存原始配置
+    std::string before_config = logger_manager->toYamlString();
+    
+    // 重新加载配置
+    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
+    sylar::Config::LoadFromYaml(root);
+    
+    // 检查配置是否发生变化
+    std::string after_config = logger_manager->toYamlString();
+    assert(before_config != after_config);
+    
+    // 测试重新配置后的日志输出
+    auto system_logger = SYLAR_LOG_NAME("system");
+    SYLAR_LOG_INFO(system_logger) << "配置集成测试消息";
+    
+    std::cout << "日志与配置集成测试通过" << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -180,6 +267,9 @@ int main(int argc, char **argv)
     test_log_appender();
     test_log_level();
     test_log_event();
+    test_log_rotate();
+    test_log_thread_safety();
+    test_config_integration();
 
     std::cout << "=================== 日志模块所有测试通过 ===================" << std::endl;
     return 0;
