@@ -61,6 +61,7 @@ set(TEST_EXECUTABLES
     test_http_server
     test_uri
     test_http_connection
+    test_daemon
 )
 
 set(EXAMPLES_EXECUTABLES

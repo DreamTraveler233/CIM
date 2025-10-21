@@ -48,5 +48,14 @@ namespace sylar
          * @return std::string 当前时间的 ISO 格式字符串
          */
         static std::string NowToString();
+
+        /**
+         * @brief 将时间戳转换为指定格式的时间字符串
+         *
+         * @param timestamp 时间戳（秒）
+         * @param format 格式字符串，如 "%Y-%m-%d %H:%M:%S"
+         * @return std::string 格式化后的时间字符串
+         */
+        static std::string TimeToString(uint64_t timestamp, const std::string &format = "%Y-%m-%d %H:%M:%S");
     };
 }

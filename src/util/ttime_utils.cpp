@@ -50,4 +50,15 @@ namespace sylar
         size_t n = strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
         return std::string(buf, n); // 使用buf的前n个字符构造string对象
     }
+
+    std::string TTime::TimeToString(uint64_t timestamp, const std::string &format)
+    {
+        struct tm tm;
+        time_t t = timestamp;
+        localtime_r(&t, &tm); // 线程安全地将时间戳转换为本地时间
+
+        char buf[128] = {0};
+        size_t n = strftime(buf, sizeof(buf), format.c_str(), &tm);
+        return std::string(buf, n); // 使用buf的前n个字符构造string对象
+    }
 }
