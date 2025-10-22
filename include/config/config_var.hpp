@@ -1,3 +1,13 @@
+/**
+ * @file config_var.hpp
+ * @brief 配置变量模板类定义文件
+ * @author sylar
+ *
+ * 该文件定义了配置系统中的核心模板类 ConfigVar，用于存储和管理各种类型的配置项。
+ * ConfigVar 继承自 ConfigVariableBase，提供了类型安全的配置项管理功能，
+ * 支持配置值的序列化/反序列化、变更监听回调等特性。
+ */
+
 #pragma once
 
 #include "lexical_cast.hpp"
@@ -6,19 +16,39 @@
 
 namespace sylar
 {
-    //
+    /**
+     * @brief 配置变量模板类
+     * @tparam T 配置项的数据类型
+     * @tparam fromStr 从字符串转换为T类型的转换器，默认使用LexicalCast
+     * @tparam toStr 从T类型转换为字符串的转换器，默认使用LexicalCast
+     *
+     * ConfigVar 是配置系统的核心类，它封装了特定类型的配置项。
+     * 通过模板参数可以支持任意数据类型，并提供配置值的自动序列化和反序列化功能。
+     * 同时支持配置变更时的回调通知机制。
+     */
     template <class T,
               class fromStr = LexicalCast<std::string, T>,
               class toStr = LexicalCast<T, std::string>>
-    class ConfigVar : public ConfigVarBase
+    class ConfigVar : public ConfigVariableBase
     {
     public:
+        /// 智能指针类型定义
         using ptr = std::shared_ptr<ConfigVar>;
+
+        /// 配置变更回调函数类型，当配置值发生变更时被调用
         using ConfigChangeCb = std::function<void(const T &old_value, const T &new_value)>;
+
+        /// 读写锁类型定义
         using RWMutexType = RWMutex;
 
+        /**
+         * @brief 构造函数
+         * @param[in] name 配置项名称
+         * @param[in] default_value 配置项默认值
+         * @param[in] description 配置项描述信息
+         */
         ConfigVar(const std::string &name, const T &default_value, const std::string &description)
-            : ConfigVarBase(name, description),
+            : ConfigVariableBase(name, description),
               m_val(default_value)
         {
         }
@@ -74,11 +104,23 @@ namespace sylar
             return false;
         }
 
+        /**
+         * @brief 获取配置项值的类型名称
+         * @return 返回T类型的typeid名称
+         */
         std::string getTypeName() const override
         {
             return typeid(T).name();
         }
 
+        /**
+         * @brief 设置配置项的值
+         * @param[in] v 新的配置值
+         *
+         * 如果新值与当前值相同则不进行任何操作。
+         * 否则更新配置值，并触发所有注册的变更回调函数。
+         * 回调函数在无锁状态下执行，避免潜在的死锁问题。
+         */
         void setValue(const T &v)
         {
             T old_value;
@@ -101,21 +143,35 @@ namespace sylar
                 i.second(old_value, v);
             }
         }
+
+        /**
+         * @brief 获取配置项的值
+         * @return 当前配置项的值
+         */
         T getValue() const
         {
             RWMutexType::ReadLock lock(m_mutex);
             return m_val;
         }
 
+        /**
+         * @brief 添加配置变更监听器
+         * @param[in] cb 配置变更回调函数
+         * @return 监听器ID，可用于删除监听器
+         */
         uint64_t addListener(const ConfigChangeCb &cb)
         {
             static uint64_t func_id = 0;
             RWMutexType::WriteLock lock(m_mutex);
             ++func_id;
             m_cbs[func_id] = cb;
-            // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Adding listener for config variable: "<< getName() << " with key: " << func_id;
             return func_id;
         }
+
+        /**
+         * @brief 删除指定的配置变更监听器
+         * @param[in] key 监听器ID
+         */
         void delListener(uint64_t key)
         {
             RWMutexType::WriteLock lock(m_mutex);
@@ -131,11 +187,21 @@ namespace sylar
                                                  << getName() << " with key: " << key;
             }
         }
+
+        /**
+         * @brief 清除所有配置变更监听器
+         */
         void clearListener()
         {
             RWMutexType::WriteLock lock(m_mutex);
             m_cbs.clear();
         }
+
+        /**
+         * @brief 获取指定的配置变更监听器
+         * @param[in] key 监听器ID
+         * @return 对应的回调函数，如果不存在则返回nullptr
+         */
         ConfigChangeCb getListener(uint64_t key)
         {
             RWMutexType::ReadLock lock(m_mutex);

@@ -1,7 +1,7 @@
 #include "daemon.hpp"
 #include "macro.hpp"
 #include "config.hpp"
-#include "ttime_utils.hpp"
+#include "time_utils.hpp"
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
@@ -19,8 +19,8 @@ namespace sylar
         std::stringstream ss;
         ss << "[ProcessInfo parent_id=" << parent_id
            << " main_id=" << main_id
-           << " parent_start_time=" << TTime::TimeToString(parent_start_time)
-           << " main_start_time=" << TTime::TimeToString(main_start_time)
+           << " parent_start_time=" << TimeUtils::TimeToString(parent_start_time)
+           << " main_start_time=" << TimeUtils::TimeToString(main_start_time)
            << " restart_count=" << restart_count << "]";
         return ss.str();
     }
@@ -51,7 +51,7 @@ namespace sylar
     static int real_daemon(int argc, char **argv,
                            std::function<int(int argc, char **argv)> main_cb)
     {
-        // 将当前进程转换为守护进程
+        // 将当前进程转换为守护进程，保持当前工作目录不变，并关闭文件描述符
         daemon(1, 0);
         // 记录父进程ID和启动时间
         ProcessInfoMgr::GetInstance()->parent_id = getpid();

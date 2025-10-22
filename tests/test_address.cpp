@@ -1,6 +1,6 @@
-#include "net/address.hpp"
-#include "log/logger.hpp"
-#include "log/logger_manager.hpp"
+#include "address.hpp"
+#include "logger.hpp"
+#include "logger_manager.hpp"
 #include <iostream>
 #include <vector>
 

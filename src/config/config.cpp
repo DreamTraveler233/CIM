@@ -36,7 +36,7 @@ namespace sylar
         }
     }
 
-    ConfigVarBase::ptr Config::LookupBase(const std::string &name)
+    ConfigVariableBase::ptr Config::LookupBase(const std::string &name)
     {
         RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
@@ -68,7 +68,7 @@ namespace sylar
             // 将配置项名称转换为小写
             std::transform(key.begin(), key.end(), key.begin(), ::tolower);
             // 查找已存在的配置项
-            ConfigVarBase::ptr var = LookupBase(key);
+            ConfigVariableBase::ptr var = LookupBase(key);
 
             if (var) // 如果找到了对应的配置变量
             {
@@ -95,7 +95,7 @@ namespace sylar
      * 该函数使用读锁保护配置项容器，在遍历过程中对每个配置项执行指定的回调操作。
      * 主要用于批量处理所有配置项，例如序列化、打印信息等操作。
      */
-    void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb)
+    void Config::Visit(std::function<void(ConfigVariableBase::ptr)> cb)
     {
         RWMutexType::ReadLock lock(GetMutex());
         ConfigVarMap &m = GetDatas();

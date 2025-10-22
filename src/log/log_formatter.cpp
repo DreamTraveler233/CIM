@@ -108,14 +108,14 @@ namespace sylar
             XX(p, LevelFormatItem),      // %p -- level
             XX(r, ElapseFormatItem),     // %r -- 启动后的时间
             XX(c, NameFormatItem),       // %c -- 日志名称
-            XX(t, ThreadIdFormatItem),   // %t -- 线程id
+            XX(t, ThreadIdFormatItem),   // %t -- 线程ID
             XX(N, ThreadNameFormatItem), // %N -- 线程名称
             XX(n, NewLineFormatItem),    // %n -- 回车换行
             XX(d, DateTimeFormatItem),   // %d -- 时间
             XX(f, FileNameFormatItem),   // %f -- 文件名
             XX(l, LineFormatItem),       // %l -- 行号
             XX(T, TabFormatItem),        // %T -- Tab
-            XX(F, FiberIdFormatItem),    // %F -- 协程号
+            XX(F, FiberIdFormatItem),    // %F -- 协程ID
 #undef XX
         };
 

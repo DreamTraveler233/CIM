@@ -1,8 +1,8 @@
-#include "string_utils.hpp"
+#include "string_util.hpp"
 
 namespace sylar
 {
-    bool StringUtils::StartsWith(const std::string &str, const std::string &sub)
+    bool StringUtil::StartsWith(const std::string &str, const std::string &sub)
     {
         // 如果字串为空，直接返回 true
         if (sub.empty())
@@ -20,7 +20,7 @@ namespace sylar
         return str.compare(0, subLen, sub) == 0;
     }
 
-    bool StringUtils::EndsWith(const std::string &str, const std::string &sub)
+    bool StringUtil::EndsWith(const std::string &str, const std::string &sub)
     {
         // 如果字串为空，直接返回 true
         if (sub.empty())
@@ -38,7 +38,7 @@ namespace sylar
         return str.compare(strLen - subLen, subLen, sub) == 0;
     }
 
-    std::string StringUtils::FilePath(const std::string &path)
+    std::string StringUtil::FilePath(const std::string &path)
     {
         auto pos = path.find_last_of("/\\"); // 查找最后一个'/'或'\'的位置（兼容Linux和Windows路径）
         if (pos != std::string::npos)        // 如果找到了分隔符
@@ -51,7 +51,7 @@ namespace sylar
         }
     }
 
-    std::string StringUtils::FileNameExt(const std::string &path)
+    std::string StringUtil::FileNameExt(const std::string &path)
     {
         auto pos = path.find_last_of("/\\"); // 查找路径中最后一个'/'或'\'的位置（兼容Linux和Windows路径）
         if (pos != std::string::npos)        // 如果找到了分隔符
@@ -64,7 +64,7 @@ namespace sylar
         return path; // 如果没有分隔符，直接返回原字符串（说明本身就是文件名）
     }
 
-    std::string StringUtils::FileName(const std::string &path)
+    std::string StringUtil::FileName(const std::string &path)
     {
         std::string file_name = FileNameExt(path); // 先获取文件名（含扩展名）
         auto pos = file_name.find_last_of(".");    // 查找最后一个'.'的位置（即扩展名前的点）
@@ -78,7 +78,7 @@ namespace sylar
         return file_name; // 如果没有'.'，或'.'在第一个字符，直接返回整个文件名
     }
 
-    std::string StringUtils::Extension(const std::string &path)
+    std::string StringUtil::Extension(const std::string &path)
     {
         std::string file_name = FileNameExt(path); // 先获取文件名（含扩展名）
         auto pos = file_name.find_last_of(".");    // 查找最后一个'.'的位置
@@ -92,7 +92,7 @@ namespace sylar
         return std::string(); // 没有扩展名则返回空字符串
     }
 
-    std::vector<std::string> StringUtils::SplitString(const std::string &str, const std::string &delimiter)
+    std::vector<std::string> StringUtil::SplitString(const std::string &str, const std::string &delimiter)
     {
         std::vector<std::string> result; // 存放分割后的子串
         // 如果分隔符为空，直接返回空vector

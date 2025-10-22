@@ -1,18 +1,42 @@
+/**
+ * @file config.hpp
+ * @brief 配置管理器定义文件
+ * @author sylar
+ *
+ * 该文件定义了配置系统的核心管理类 Config，负责配置项的注册、查找、加载和管理。
+ * Config 类提供了全局的配置管理功能，支持从 YAML 文件加载配置，并提供线程安全的
+ * 配置项访问接口。通过模板方法支持任意类型的配置项管理。
+ */
+
 #pragma once
 
 #include "yaml-cpp/yaml.h"
-#include "config_var_base.hpp"
+#include "config_variable_base.hpp"
 #include "config_var.hpp"
 #include "macro.hpp"
 #include "lock.hpp"
 
 namespace sylar
 {
-    // 配置管理器
+    /**
+     * @brief 配置管理器类
+     *
+     * Config 是配置系统的核心管理类，提供了全局的配置项管理功能。
+     * 主要功能包括：
+     * 1. 配置项的注册和查找
+     * 2. 从 YAML 文件加载配置
+     * 3. 线程安全的配置访问
+     * 4. 配置项遍历功能
+     *
+     * 使用单例模式管理所有配置项，通过静态方法提供全局访问接口。
+     */
     class Config
     {
     public:
-        using ConfigVarMap = std::map<std::string, ConfigVarBase::ptr>;
+        /// 配置项映射类型定义，键为配置项名称，值为配置项基类指针
+        using ConfigVarMap = std::map<std::string, ConfigVariableBase::ptr>;
+
+        /// 读写锁类型定义
         using RWMutexType = RWMutex;
 
         /**
@@ -27,7 +51,6 @@ namespace sylar
          * 2、如果找到但类型不匹配则记录错误日志
          * 3、如果未找到且名称合法，则创建新的配置项并返回
          * 4、如果名称不合法则抛出异常
-         *
          */
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name,
@@ -98,25 +121,35 @@ namespace sylar
          * @param name 配置项名称
          * @return 找到的配置项指针，如果未找到则返回nullptr
          */
-        static ConfigVarBase::ptr LookupBase(const std::string &name);
+        static ConfigVariableBase::ptr LookupBase(const std::string &name);
 
         /**
          * @brief 从YAML配置文件中加载配置项
          * @param root YAML配置文件的根节点
          */
         static void LoadFromYaml(const YAML::Node &root);
-        static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
+
+        /**
+         * @brief 遍历所有配置项
+         * @param cb 回调函数，用于处理每个配置项
+         */
+        static void Visit(std::function<void(ConfigVariableBase::ptr)> cb);
 
     private:
         /**
          * 通过静态函数和静态局部变量来解决静态初始化顺序问题，函数首次调用时会初始化这个静态变量，
          * 之后的调用都会返回同一个实例的引用，这样防止了当该静态变量没有初始化就被使用
+         * @return 配置项存储容器的引用
          */
         static ConfigVarMap &GetDatas()
         {
             static ConfigVarMap m_datas; // 配置项存储
             return m_datas;
         }
+
+        /**
+         * @return 读写锁的引用
+         */
         static RWMutexType &GetMutex()
         {
             static RWMutexType m_mutex; // 读写锁

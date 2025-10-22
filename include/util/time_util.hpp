@@ -5,7 +5,7 @@
 
 namespace sylar
 {
-    class TTime
+    class TimeUtil
     {
     public:
         /**

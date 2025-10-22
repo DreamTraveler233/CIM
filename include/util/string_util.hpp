@@ -5,7 +5,7 @@
 
 namespace sylar
 {
-    class StringUtils
+    class StringUtil
     {
     public:
         /**

@@ -1,6 +1,6 @@
 #include "log_file_manager.hpp"
 #include "string_utils.hpp"
-#include "ttime_utils.hpp"
+#include "time_utils.hpp"
 #include "macro.hpp"
 #include <iostream>
 #include <sstream>
@@ -57,7 +57,7 @@ namespace sylar
 
         // 获取当前时间
         int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-        TTime::Now(year, month, day, hour, minute, second);
+        TimeUtils::Now(year, month, day, hour, minute, second);
 
         // 如果是第一次检查
         if (-1 == m_lastYear && -1 == m_lastMonth && -1 == m_lastDay && -1 == m_lastHour && -1 == m_lastMinute)

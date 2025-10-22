@@ -29,14 +29,14 @@ target_link_libraries(sylar ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 # 头文件搜索目录
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/base
     ${PROJECT_SOURCE_DIR}/include/config
-    ${PROJECT_SOURCE_DIR}/include/core
+    ${PROJECT_SOURCE_DIR}/include/coroutine
+    ${PROJECT_SOURCE_DIR}/include/http
     ${PROJECT_SOURCE_DIR}/include/log
     ${PROJECT_SOURCE_DIR}/include/net
-    ${PROJECT_SOURCE_DIR}/include/runtime
-    ${PROJECT_SOURCE_DIR}/include/system
-    ${PROJECT_SOURCE_DIR}/include/http
-    ${PROJECT_SOURCE_DIR}/include/stream
+    ${PROJECT_SOURCE_DIR}/include/other
+    ${PROJECT_SOURCE_DIR}/include/thread
     ${PROJECT_SOURCE_DIR}/include/util
 )
 
