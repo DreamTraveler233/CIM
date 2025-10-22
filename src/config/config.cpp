@@ -87,21 +87,4 @@ namespace sylar
                                       << loggerMgr::GetInstance()->toYamlString();
         }
     }
-
-    /**
-     * @brief 遍历所有配置项并执行回调函数
-     * @param cb 回调函数，接受一个ConfigVarBase::ptr参数，无返回值
-     *
-     * 该函数使用读锁保护配置项容器，在遍历过程中对每个配置项执行指定的回调操作。
-     * 主要用于批量处理所有配置项，例如序列化、打印信息等操作。
-     */
-    void Config::Visit(std::function<void(ConfigVariableBase::ptr)> cb)
-    {
-        RWMutexType::ReadLock lock(GetMutex());
-        ConfigVarMap &m = GetDatas();
-        for (auto it = m.begin(); it != m.end(); ++it)
-        {
-            cb(it->second);
-        }
-    }
 }

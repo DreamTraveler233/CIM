@@ -129,12 +129,6 @@ namespace sylar
          */
         static void LoadFromYaml(const YAML::Node &root);
 
-        /**
-         * @brief 遍历所有配置项
-         * @param cb 回调函数，用于处理每个配置项
-         */
-        static void Visit(std::function<void(ConfigVariableBase::ptr)> cb);
-
     private:
         /**
          * 通过静态函数和静态局部变量来解决静态初始化顺序问题，函数首次调用时会初始化这个静态变量，
