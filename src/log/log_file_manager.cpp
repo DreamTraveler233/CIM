@@ -1,6 +1,6 @@
 #include "log_file_manager.hpp"
-#include "string_utils.hpp"
-#include "time_utils.hpp"
+#include "string_util.hpp"
+#include "time_util.hpp"
 #include "macro.hpp"
 #include <iostream>
 #include <sstream>
@@ -57,7 +57,7 @@ namespace sylar
 
         // 获取当前时间
         int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-        TimeUtils::Now(year, month, day, hour, minute, second);
+        TimeUtil::Now(year, month, day, hour, minute, second);
 
         // 如果是第一次检查
         if (-1 == m_lastYear && -1 == m_lastMonth && -1 == m_lastDay && -1 == m_lastHour && -1 == m_lastMinute)
@@ -133,12 +133,6 @@ namespace sylar
         return log;
     }
 
-    void LogFileManager::removeLogFile(const LogFile::ptr &log)
-    {
-        MutexType::Lock lock(m_mutex);
-        m_logs.erase(log->getFilePath());
-    }
-
     void LogFileManager::rotateMinute(const LogFile::ptr &file)
     {
         if (file->getFileSize() > 0)
@@ -149,11 +143,11 @@ namespace sylar
 
             std::string file_path = file->getFilePath();
             // 获取文件路径
-            std::string path = StringUtils::FilePath(file_path);
+            std::string path = StringUtil::FilePath(file_path);
             // 获取文件名
-            std::string file_name = StringUtils::FileName(file_path);
+            std::string file_name = StringUtil::FileName(file_path);
             // 获取扩展名
-            std::string file_ext = StringUtils::Extension(file_path);
+            std::string file_ext = StringUtil::Extension(file_path);
 
             std::ostringstream ss;
             ss << path      // ../log/
@@ -174,11 +168,11 @@ namespace sylar
 
             std::string file_path = file->getFilePath();
             // 获取文件路径
-            std::string path = StringUtils::FilePath(file_path);
+            std::string path = StringUtil::FilePath(file_path);
             // 获取文件名
-            std::string file_name = StringUtils::FileName(file_path);
+            std::string file_name = StringUtil::FileName(file_path);
             // 获取扩展名
-            std::string file_ext = StringUtils::Extension(file_path);
+            std::string file_ext = StringUtil::Extension(file_path);
 
             std::ostringstream ss;
             ss << path
@@ -199,11 +193,11 @@ namespace sylar
 
             std::string file_path = file->getFilePath();
             // 获取文件路径
-            std::string path = StringUtils::FilePath(file_path);
+            std::string path = StringUtil::FilePath(file_path);
             // 获取文件名
-            std::string file_name = StringUtils::FileName(file_path);
+            std::string file_name = StringUtil::FileName(file_path);
             // 获取扩展名
-            std::string file_ext = StringUtils::Extension(file_path);
+            std::string file_ext = StringUtil::Extension(file_path);
 
             std::ostringstream ss;
             ss << path

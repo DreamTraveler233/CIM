@@ -66,6 +66,15 @@ namespace sylar
         ~LogFileManager();
 
         /**
+         * @brief 获取指定文件名的日志文件对象，如果不存在则创建。
+         *
+         * @param fileName 日志文件名（含路径）
+         * @return LogFilePtr 日志文件智能指针，打开失败时返回空指针
+         */
+        LogFile::ptr getLogFile(const std::string &fileName);
+
+    private:
+        /**
          * @brief 初始化日志文件管理器
          *
          * 初始化定时器，每秒执行一次onCheck()方法检查是否需要轮转日志文件
@@ -81,36 +90,21 @@ namespace sylar
         void onCheck();
 
         /**
-         * @brief 获取指定文件名的日志文件对象，如果不存在则创建。
-         *
-         * @param fileName 日志文件名（含路径）
-         * @return LogFilePtr 日志文件智能指针，打开失败时返回空指针
-         */
-        LogFile::ptr getLogFile(const std::string &fileName);
-
-        /**
-         * @brief 移除指定的日志文件对象。
-         *
-         * @param log 日志文件智能指针
-         */
-        void removeLogFile(const LogFile::ptr &log);
-
-        /**
-         * @brief 对按分钟轮转的日志文件进行轮转。
+         * @brief 按分钟进行日志轮转。
          *
          * @param file 日志文件智能指针
          */
         void rotateMinute(const LogFile::ptr &file);
 
         /**
-         * @brief 对按小时轮转的日志文件进行轮转。
+         * @brief 按小时进行日志轮转。
          *
          * @param file 日志文件智能指针
          */
         void rotateHours(const LogFile::ptr &file);
 
         /**
-         * @brief 对按天轮转的日志文件进行轮转。
+         * @brief 按天进行日志轮转。
          *
          * @param file 日志文件智能指针
          */

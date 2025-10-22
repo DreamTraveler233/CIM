@@ -1,4 +1,4 @@
-# 高性能服务器框架日志模块API详解
+# 日志模块API详解
 
 ## 概述
 
@@ -12,6 +12,8 @@
 4. [LogAppender（日志输出器）](#4-logappender---日志输出器) - 控制日志的输出目标
 5. [Logger（日志器）](#5-logger---日志器) - 管理日志的记录和分发
 6. [LoggerManager（日志管理器）](#6-loggermanager---日志管理器) - 管理所有的日志器实例
+7. [LogFile（日志文件）](#7-logfile---日志文件) - 管理日志文件的读写和轮转
+8. [LogFileManager（日志文件管理器）](#8-logfilemanager---日志文件管理器) - 管理所有日志文件实例
 
 ## 核心组件详解
 
@@ -55,6 +57,8 @@ LogEvent封装了一次日志记录的所有相关信息，包括源文件名、
 - `std::string getMessage() const` - 获取日志消息内容
 - `std::shared_ptr<Logger> getLogger() const` - 获取关联的日志器
 - `Level getLevel() const` - 获取日志等级
+- `void format(const char *fmt, ...)t` - 格式化写入日志内容
+- `void format(const char *fmt, va_list al)` - 格式化写入日志内容
 
 ### 3. LogFormatter - 日志格式化器
 
@@ -94,10 +98,9 @@ LogAppender定义日志的输出目标和格式化方式，是日志系统的核
 #### 主要方法
 
 - `virtual void log(LogEvent::ptr event) = 0` - 写入日志事件
+- `virtual std::string toYamlString() = 0` - 将追加器配置转换为YAML字符串
 - `void setFormatter(LogFormatter::ptr formatter)` - 设置日志格式器
-- `LogFormatter::ptr getFormatter() const` - 获取日志格式器
 - `void setLevel(Level level)` - 设置日志级别
-- `Level getLevel() const` - 获取日志级别
 
 ### 5. Logger - 日志器
 
@@ -105,14 +108,14 @@ Logger是日志系统的中枢组件，负责管理日志的输出目标和日�
 
 #### 主要方法
 
-- `Logger(const std::string &name = "root")` - 构造函数
 - `void log(Level level, LogEvent::ptr event)` - 记录日志
 - `void debug/info/warn/error/fatal(LogEvent::ptr event)` - 记录特定级别日志
 - `void addAppender(LogAppender::ptr appender)` - 添加日志输出器
 - `void delAppender(LogAppender::ptr appender)` - 删除日志输出器
 - `void clearAppender()` - 清空所有日志输出器
 - `void setLevel(Level level)` - 设置日志级别
-- `Level getLevel() const` - 获取日志级别
+- `void setFormatter(LogFormatter::ptr val)` - 设置日志格式器
+- `std::string toYamlString()` - 将日志器配置转换为YAML格式字符串
 
 ### 6. LoggerManager - 日志管理器
 
@@ -123,6 +126,40 @@ LoggerManager负责管理系统中所有的日志记录器(Logger)实例。
 - `std::shared_ptr<Logger> getLogger(const std::string &name)` - 获取指定名称的日志记录器
 - `std::shared_ptr<Logger> getRoot() const` - 获取根日志记录器
 - `std::string toYamlString()` - 将日志管理器配置转换为YAML字符串
+
+### 7. LogFile - 日志文件
+
+LogFile负责管理日志文件的读写和轮转。
+
+#### 枚举值
+```cpp
+enum class RotateType
+{
+    NONE,   ///< 不轮转
+    MINUTE, ///< 按分钟轮转
+    HOUR,   ///< 按小时轮转
+    DAY     ///< 按天轮转
+};
+```
+
+#### 主要方法
+
+- `bool openFile()` - 打开文件
+- `size_t writeLog(const std::string &logMsg)` - 写入文件
+- `void rotate(const std::string &newFilePath)` - 日志文件轮转（切换）
+
+### 8. LogFileManager - 日志文件管理器
+
+LogFileManager是一个单例类，负责日志文件（LogFile）管理类，负责日志文件对象的创建、轮转和管理。
+
+#### 主要方法
+
+- `LogFile::ptr getLogFile(const std::string &fileName)` - 获取指定名称日志文件的智能指针
+- `void init()` - 初始化日志管理器
+- `void onCheck()` - 检查日志文件是否需要轮转（按分钟、小时、天），并执行轮转操作
+- `void rotateMinute(const LogFile::ptr &file)` - 按分钟进行日志轮转
+- `void rotateHours(const LogFile::ptr &file)` - 按小时进行日志轮转
+- `void rotateDays(const LogFile::ptr &file)` - 按天进行日志轮转
 
 ## 使用指南
 
