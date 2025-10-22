@@ -1,6 +1,7 @@
 #include "ws_session.hpp"
 #include "macro.hpp"
 #include "endian.hpp"
+#include "hash_util.hpp"
 #include <string.h>
 
 namespace sylar::http
@@ -150,7 +151,7 @@ namespace sylar::http
                     {
                         break;
                     }
-                    length = sylar::byteswapOnLittleEndian(len);
+                    length = sylar::byteswap(len);
                 }
                 else if (ws_head.payload == 127)
                 {
@@ -159,7 +160,7 @@ namespace sylar::http
                     {
                         break;
                     }
-                    length = sylar::byteswapOnLittleEndian(len);
+                    length = sylar::byteswap(len);
                 }
                 else
                 {
@@ -246,7 +247,7 @@ namespace sylar::http
             if (ws_head.payload == 126)
             {
                 uint16_t len = size;
-                len = sylar::byteswapOnLittleEndian(len);
+                len = sylar::byteswap(len);
                 if (stream->writeFixSize(&len, sizeof(len)) <= 0)
                 {
                     break;
@@ -254,7 +255,7 @@ namespace sylar::http
             }
             else if (ws_head.payload == 127)
             {
-                uint64_t len = sylar::byteswapOnLittleEndian(size);
+                uint64_t len = sylar::byteswap(size);
                 if (stream->writeFixSize(&len, sizeof(len)) <= 0)
                 {
                     break;

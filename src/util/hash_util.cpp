@@ -1,11 +1,14 @@
 #include "hash_util.hpp"
-
 #include <algorithm>
 #include <cstdlib>
 #include <stdexcept>
 #include <string.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
+
+// 忽略OpenSSL 3.0的弃用警告
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 namespace sylar
 {
@@ -316,11 +319,11 @@ namespace sylar
     std::string sha0sum(const void *data, size_t len)
     {
         SHA_CTX ctx;
-        SHA_Init(&ctx);
-        SHA_Update(&ctx, data, len);
+        SHA1_Init(&ctx);
+        SHA1_Update(&ctx, data, len);
         std::string result;
         result.resize(SHA_DIGEST_LENGTH);
-        SHA_Final((unsigned char *)&result[0], &ctx);
+        SHA1_Final((unsigned char *)&result[0], &ctx);
         return result;
     }
 

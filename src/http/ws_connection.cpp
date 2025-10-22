@@ -1,4 +1,5 @@
 #include "ws_connection.hpp"
+#include "hash_util.hpp"
 
 namespace sylar::http
 {

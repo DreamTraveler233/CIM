@@ -1,7 +1,7 @@
 #include "daemon.hpp"
 #include "macro.hpp"
 #include "config.hpp"
-#include "time_utils.hpp"
+#include "time_util.hpp"
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
@@ -19,8 +19,8 @@ namespace sylar
         std::stringstream ss;
         ss << "[ProcessInfo parent_id=" << parent_id
            << " main_id=" << main_id
-           << " parent_start_time=" << TimeUtils::TimeToString(parent_start_time)
-           << " main_start_time=" << TimeUtils::TimeToString(main_start_time)
+           << " parent_start_time=" << TimeUtil::TimeToString(parent_start_time)
+           << " main_start_time=" << TimeUtil::TimeToString(main_start_time)
            << " restart_count=" << restart_count << "]";
         return ss.str();
     }
