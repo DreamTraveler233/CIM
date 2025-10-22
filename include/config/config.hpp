@@ -57,6 +57,7 @@ namespace sylar
                                                  const T &default_value,
                                                  const std::string &description = "")
         {
+            SYLAR_ASSERT(!name.empty());
             RWMutexType::WriteLock lock(GetMutex());
             // 根据配置项名称在存储容器中查找
             auto it = GetDatas().find(name);
@@ -106,6 +107,7 @@ namespace sylar
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
+            SYLAR_ASSERT(!name.empty());
             RWMutexType::ReadLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if (it == GetDatas().end())

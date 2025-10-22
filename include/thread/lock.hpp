@@ -1,3 +1,13 @@
+/**
+ * @file lock.hpp
+ * @brief 线程同步锁封装模块
+ * @author sylar
+ *
+ * 该文件定义了多种线程同步锁的封装，包括互斥锁、读写锁、自旋锁和原子锁等，
+ * 并提供了RAII风格的锁管理器模板，确保锁的自动获取和释放，防止死锁和忘记释放锁的问题。
+ * 所有锁类都继承自Noncopyable，禁止拷贝构造和赋值操作，确保锁的安全性。
+ */
+
 #pragma once
 
 #include "noncopyable.hpp"
@@ -6,7 +16,14 @@
 
 namespace sylar
 {
-    // 通用锁管理模板，RAII风格
+    /**
+     * @brief 通用锁管理模板，RAII风格
+     *
+     * 该模板为各种锁类型提供统一的RAII管理机制，在构造时自动加锁，析构时自动解锁。
+     * 支持普通锁操作，适用于Mutex、SpinLock、CASLock等互斥锁类型。
+     *
+     * @tparam T 锁类型
+     */
     template <class T>
     struct ScopedLockImpl : public Noncopyable
     {
@@ -52,7 +69,14 @@ namespace sylar
         bool m_locked;
     };
 
-    // 读锁
+    /**
+     * @brief 读锁管理模板
+     *
+     * 专门用于管理读写锁的读锁部分，提供RAII风格的读锁管理。
+     * 在构造时自动加读锁，析构时自动解锁。
+     *
+     * @tparam T 读写锁类型
+     */
     template <class T>
     struct ReadScopedLockImpl : public Noncopyable
     {
@@ -96,7 +120,14 @@ namespace sylar
         bool m_locked;
     };
 
-    // 写锁
+    /**
+     * @brief 写锁管理模板
+     *
+     * 专门用于管理读写锁的写锁部分，提供RAII风格的写锁管理。
+     * 在构造时自动加写锁，析构时自动解锁。
+     *
+     * @tparam T 读写锁类型
+     */
     template <class T>
     struct WriteScopedLockImpl : public Noncopyable
     {
@@ -145,6 +176,12 @@ namespace sylar
         bool m_locked;
     };
 
+    /**
+     * @brief 互斥锁类
+     *
+     * 对pthread_mutex_t的面向对象封装，提供基本的互斥锁功能。
+     * 同一时间只允许一个线程持有该锁，适用于保护临界区资源。
+     */
     class Mutex : public Noncopyable
     {
     public:
@@ -160,7 +197,13 @@ namespace sylar
         pthread_mutex_t m_mutex;
     };
 
-    // 读共享、写独占
+    /**
+     * @brief 读写锁类
+     *
+     * 对pthread_rwlock_t的面向对象封装，提供读写锁功能。
+     * 支持多个读者同时读取（共享锁），但写者独占访问（独占锁）。
+     * 适用于读多写少的场景。
+     */
     class RWMutex : public Noncopyable
     {
     public:
@@ -178,7 +221,13 @@ namespace sylar
         pthread_rwlock_t m_mutex;
     };
 
-    // 自旋锁
+    /**
+     * @brief 自旋锁类
+     *
+     * 对pthread_spinlock_t的面向对象封装，提供自旋锁功能。
+     * 线程在获取锁失败时不会睡眠，而是一直循环尝试获取锁（忙等待）。
+     * 适用于锁持有时间很短的场景。
+     */
     class SpinLock : public Noncopyable
     {
     public:
@@ -194,7 +243,12 @@ namespace sylar
         pthread_spinlock_t m_mutex;
     };
 
-    // 原子锁
+    /**
+     * @brief 原子锁类
+     *
+     * 基于std::atomic_flag实现的无锁同步机制，使用CAS操作实现。
+     * 通过原子标志位实现锁功能，适用于高性能无锁编程场景。
+     */
     class CASLock : public Noncopyable
     {
     public:
@@ -210,6 +264,12 @@ namespace sylar
         volatile std::atomic_flag m_mutex;
     };
 
+    /**
+     * @brief 空锁类
+     *
+     * 不执行任何实际锁定操作的空实现，主要用于性能测试和调试。
+     * 可以在测试中替换真实锁来测量锁操作的开销。
+     */
     class NullMutex : public Noncopyable
     {
     public:
@@ -222,6 +282,12 @@ namespace sylar
         void unlock() {}
     };
 
+    /**
+     * @brief 空读写锁类
+     *
+     * 不执行任何实际锁定操作的空实现，主要用于性能测试和调试。
+     * 可以在测试中替换真实读写锁来测量锁操作的开销。
+     */
     class NullRWMutex : public Noncopyable
     {
     public:
@@ -235,19 +301,4 @@ namespace sylar
         void wrlock() {}
         void unlock() {}
     };
-
-    /**
-     * 互斥锁的应用场景：
-     *      完全互斥的访问：当多个线程都需要对同一资源进行读写操作时，使用互斥锁确保任何时刻只有一个线程能访问该资源。
-     *      写多读少的场景：如果对资源的访问大部分是写操作，读写比例接近1:1，使用互斥锁更为合适。
-     *      简单的同步需求：对于简单的临界区保护，互斥锁是最佳选择，因为它实现简单，开销较小。
-     * 独写锁的应用场景：
-     *      读多写少的场景：当对资源的访问以读操作为主（读写比例远大于1:1），使用读写锁可以大大提高并发性能。
-     *      可并发读取的资源：允许多个线程同时读取资源，但写操作需要独占访问。
-     *      提高读操作并发性：在读操作不会改变资源状态的情况下，多个读操作可以同时进行。
-     * 在哪些地方需要加锁：
-     *      保护共享资源的访问：当多个线程需要访问和修改同一个全局变量或共享资源时，需要使用锁来保护。
-     *      临界区保护：在执行原子操作或需要保证一系列操作不被其他线程中断时，需要使用锁。
-     *      容器操作：当多个线程同时读写STL容器或其他非线程安全的数据结构时。
-     */
 }

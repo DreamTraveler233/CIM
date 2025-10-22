@@ -60,10 +60,6 @@ namespace sylar
         return ss.str();
     }
 
-    
-
-    
-
     void FSUtil::ListAllFile(std::vector<std::string> &files, const std::string &path, const std::string &subfix)
     {
         if (access(path.c_str(), 0) != 0)

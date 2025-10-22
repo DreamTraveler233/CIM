@@ -38,6 +38,8 @@ namespace sylar
 
     ConfigVariableBase::ptr Config::LookupBase(const std::string &name)
     {
+        SYLAR_ASSERT(!name.empty());
+
         RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
         return it == GetDatas().end() ? nullptr : it->second;
@@ -53,6 +55,8 @@ namespace sylar
      */
     void Config::LoadFromYaml(const YAML::Node &root)
     {
+        SYLAR_ASSERT(root);
+
         std::list<std::pair<std::string, const YAML::Node>> all_nodes;
         // 递归遍历YAML节点树，将所有配置项的名称和值存入列表
         ListAllMember("", root, all_nodes);

@@ -51,6 +51,7 @@ namespace sylar
             : ConfigVariableBase(name, description),
               m_val(default_value)
         {
+            SYLAR_ASSERT(!name.empty());
         }
 
         /**
@@ -90,6 +91,7 @@ namespace sylar
          */
         bool fromString(const std::string &val) override
         {
+            SYLAR_ASSERT(!val.empty());
             try
             {
                 setValue(fromStr()(val));
@@ -161,6 +163,7 @@ namespace sylar
          */
         uint64_t addListener(const ConfigChangeCb &cb)
         {
+            SYLAR_ASSERT(cb);
             static uint64_t func_id = 0;
             RWMutexType::WriteLock lock(m_mutex);
             ++func_id;
@@ -174,6 +177,7 @@ namespace sylar
          */
         void delListener(uint64_t key)
         {
+            SYLAR_ASSERT(key > 0);
             RWMutexType::WriteLock lock(m_mutex);
             if (m_cbs.find(key) != m_cbs.end())
             {
@@ -204,6 +208,7 @@ namespace sylar
          */
         ConfigChangeCb getListener(uint64_t key)
         {
+            SYLAR_ASSERT(key > 0);
             RWMutexType::ReadLock lock(m_mutex);
             auto it = m_cbs.find(key);
             return it == m_cbs.end() ? nullptr : it->second;

@@ -1,4 +1,5 @@
 #include "log_level.hpp"
+#include "macro.hpp"
 
 namespace sylar
 {
@@ -25,6 +26,7 @@ namespace sylar
 
     Level LogLevel::FromString(const std::string &str)
     {
+        SYLAR_ASSERT(!str.empty());
 #define XX(name, level) \
     if (str == #name)   \
         return Level::level;

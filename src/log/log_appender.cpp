@@ -1,11 +1,13 @@
 #include "log_appender.hpp"
 #include "yaml-cpp/yaml.h"
+#include "macro.hpp"
 
 namespace sylar
 {
     LogAppender::~LogAppender() {}
     void LogAppender::setFormatter(LogFormatter::ptr formatter)
     {
+        SYLAR_ASSERT(formatter);
         MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
     }
@@ -16,6 +18,7 @@ namespace sylar
     }
     void LogAppender::setLevel(Level level)
     {
+        SYLAR_ASSERT(level != Level::UNKNOWN);
         MutexType::Lock lock(m_mutex);
         m_level = level;
     }
@@ -27,6 +30,7 @@ namespace sylar
 
     void StdoutLogAppender::log(LogEvent::ptr event)
     {
+        SYLAR_ASSERT(event);
         if (event->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);
@@ -52,12 +56,14 @@ namespace sylar
 
     FileLogAppender::FileLogAppender(const std::string &fileName)
     {
+        SYLAR_ASSERT(!fileName.empty())
         m_logFile = LogFileManager::GetInstance()->getLogFile(fileName);
         m_logFile->openFile();
     }
 
     void FileLogAppender::log(LogEvent::ptr event)
     {
+        SYLAR_ASSERT(event);
         if (event->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);
@@ -85,7 +91,7 @@ namespace sylar
         ss << node;
         return ss.str();
     }
-    
+
     LogFile::ptr FileLogAppender::getLogFile() const
     {
         return m_logFile;

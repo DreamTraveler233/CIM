@@ -13,8 +13,24 @@
 
 namespace sylar
 {
+    /**
+     * @brief 获取当前线程的真实线程ID
+     * @return 当前线程的系统线程ID（TID）
+     *
+     * 该函数通过系统调用获取当前线程的真实线程ID，
+     * 与pthread_self()返回的pthread_t不同，该ID是系统级别的线程标识符。
+     * 主要用于日志记录、调试和线程识别等场景。
+     */
     pid_t GetThreadId();
 
+    /**
+     * @brief 获取当前协程ID
+     * @return 当前协程的唯一标识符
+     *
+     * 该函数返回当前正在运行的协程ID。
+     * 在协程编程中用于识别和跟踪不同的协程执行单元。
+     * 如果当前不在协程环境中，可能返回特定的默认值（如0表示主线程）。
+     */
     uint64_t GetCoroutineId();
 
     /**
@@ -33,10 +49,6 @@ namespace sylar
      * @return 包含堆栈信息的字符串
      */
     std::string BacktraceToString(int size = 64, int skip = 2, const std::string &prefix = "    ");
-
-    
-
-    
 
     template <class T>
     const char *TypeToName()

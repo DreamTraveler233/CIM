@@ -16,7 +16,9 @@ namespace sylar
           m_CoroutineId(coroutine_id),
           m_time(time),
           m_level(level),
-          m_logger(logger) {}
+          m_logger(logger)
+    {
+    }
     const char *LogEvent::getFileName() const { return m_fileName; }
     int32_t LogEvent::getLine() const { return m_line; }
     uint32_t LogEvent::getElapse() const { return m_elapse; }
@@ -54,6 +56,7 @@ namespace sylar
     }
     void LogEvent::format(const char *fmt, ...)
     {
+        SYLAR_ASSERT(fmt);
         va_list al;
         va_start(al, fmt);
         format(fmt, al);
@@ -61,6 +64,7 @@ namespace sylar
     }
     void LogEvent::format(const char *fmt, va_list al)
     {
+        SYLAR_ASSERT(fmt);
         char *buf = nullptr;
         int len = vasprintf(&buf, fmt, al);
         if (len != -1)
@@ -70,7 +74,10 @@ namespace sylar
         }
     }
     LogEventWrap::LogEventWrap(LogEvent::ptr event)
-        : m_event(event) {}
+        : m_event(event)
+    {
+        SYLAR_ASSERT(event);
+    }
 
     LogEventWrap::~LogEventWrap()
     {

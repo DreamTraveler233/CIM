@@ -7,6 +7,7 @@ namespace sylar
         : m_name(name),
           m_level(Level::DEBUG)
     {
+        SYLAR_ASSERT(!name.empty());
         // 时间 线程名称 线程号 协程号 [日志级别] [日志器名称] <文件名:行号> 日志信息 回车
         m_formatter = std::make_shared<LogFormatter>("%d%T%N%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n");
     }
@@ -19,6 +20,7 @@ namespace sylar
      */
     void Logger::log(Level level, LogEvent::ptr event)
     {
+        SYLAR_ASSERT(event);
         if (level >= m_level)
         {
             std::list<LogAppender::ptr> appenders;
@@ -68,6 +70,7 @@ namespace sylar
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
+        SYLAR_ASSERT(appender);
         MutexType::Lock lock(m_mutex);
         // 当appender没有自己的formatter时，则使用logger的formatter
         if (!appender->getFormatter())
@@ -79,6 +82,7 @@ namespace sylar
 
     void Logger::delAppender(LogAppender::ptr appender)
     {
+        SYLAR_ASSERT(appender);
         MutexType::Lock lock(m_mutex);
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it)
         {
@@ -102,6 +106,7 @@ namespace sylar
     }
     void Logger::setLevel(Level level)
     {
+        SYLAR_ASSERT(level != Level::UNKNOWN);
         MutexType::Lock lock(m_mutex);
         m_level = level;
     }
@@ -112,6 +117,7 @@ namespace sylar
     }
     void Logger::setFormatter(LogFormatter::ptr val)
     {
+        SYLAR_ASSERT(val);
         MutexType::Lock lock(m_mutex);
         m_formatter = val;
     }
@@ -122,6 +128,7 @@ namespace sylar
      */
     void Logger::setFormatter(const std::string &val)
     {
+        SYLAR_ASSERT(!val.empty());
         auto new_val = std::make_shared<LogFormatter>(val);
         if (new_val->isError())
         {

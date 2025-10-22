@@ -17,6 +17,7 @@ namespace sylar
 
     std::shared_ptr<Logger> LoggerManager::getLogger(const std::string &name)
     {
+        SYLAR_ASSERT(!name.empty());
         MutexType::Lock lock(m_mutex);
         auto it = m_loggers.find(name); // 查找指定名称的日志器
         if (it != m_loggers.end())

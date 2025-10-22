@@ -1,4 +1,5 @@
 #include "config_variable_base.hpp"
+#include "macro.hpp"
 #include <algorithm>
 
 namespace sylar
@@ -7,9 +8,9 @@ namespace sylar
         : m_name(name),
           m_description(description)
     {
+        SYLAR_ASSERT(!name.empty());
         std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
     }
-
 
     const std::string &ConfigVariableBase::getName() const
     {
