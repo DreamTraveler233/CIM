@@ -25,7 +25,7 @@
 #include "noncopyable.hpp"
 #include "config.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief TCP服务器配置结构体
@@ -175,12 +175,12 @@ namespace sylar
                   IOManager *accept_worker = IOManager::GetThis());
 
         /**
-         * @brief 析构函数
+         * @brief 析构函数，关闭所有套接字
          */
         virtual ~TcpServer();
 
         /**
-         * @brief 绑定地址
+         * @brief 绑定单个地址
          * @param[in] addr 需要绑定的地址
          * @param[in] ssl 是否启用SSL
          * @return 返回是否绑定成功
@@ -188,7 +188,7 @@ namespace sylar
         virtual bool bind(Address::ptr addr, bool ssl = false);
 
         /**
-         * @brief 绑定地址数组
+         * @brief 绑定一组地址
          * @param[in] addrs 需要绑定的地址数组
          * @param[out] fails 绑定失败的地址
          * @param[in] ssl 是否启用SSL
@@ -205,7 +205,7 @@ namespace sylar
         bool loadCertificates(const std::string &cert_file, const std::string &key_file);
 
         /**
-         * @brief 启动服务
+         * @brief 启动 TcpServer
          * @pre 需要bind成功后执行
          * @return 是否启动成功
          */
@@ -244,7 +244,7 @@ namespace sylar
          * @brief 是否停止
          * @return true表示服务器已停止
          */
-        bool isStop() const;
+        bool isRun() const;
 
         /**
          * @brief 获取服务器配置
@@ -279,7 +279,7 @@ namespace sylar
 
     protected:
         /**
-         * @brief 处理新连接的Socket类
+         * @brief 连接服务器后处理的业务逻辑
          * @param[in] client 客户端Socket
          * @note 子类可以重写此方法来实现具体的业务逻辑
          */
@@ -295,13 +295,12 @@ namespace sylar
         std::vector<Socket::ptr> m_socks; /// 监听Socket数组
         IOManager *m_worker;              /// 新连接的Socket工作的调度器
         IOManager *m_ioWorker;            /// IO操作的调度器
-        IOManager *m_acceptWorker;        /// 服务器Socket接收连接的调度器
+        IOManager *m_acceptWorker;        /// 服务器创建新连接的调度器
         uint64_t m_recvTimeout;           /// 接收超时时间(毫秒)
         std::string m_name;               /// 服务器名称
         std::string m_type = "tcp";       /// 服务器类型
-        bool m_isStop;                    /// 服务是否停止
+        bool m_isRun;                     /// 服务是否运行
         bool m_ssl = false;               /// 是否启用SSL
         TcpServerConf::ptr m_conf;        /// 服务器配置
     };
-
 }

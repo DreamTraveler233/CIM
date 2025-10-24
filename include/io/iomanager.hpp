@@ -1,7 +1,7 @@
 /**
  * @file iomanager.hpp
  * @brief 基于epoll的IO事件管理器实现
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了IOManager类，它是一个基于epoll的异步IO事件管理器，
  * 继承自Scheduler（协程调度器）和TimerManager（定时器管理器）。
@@ -14,7 +14,7 @@
 #include "scheduler.hpp"
 #include "timer.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief IO事件管理器

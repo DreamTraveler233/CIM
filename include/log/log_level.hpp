@@ -1,7 +1,7 @@
 /**
  * @file log_level.hpp
  * @brief 日志等级定义及转换接口
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  * 
  * 该文件定义了日志系统的日志等级枚举和相关转换函数，
@@ -13,7 +13,7 @@
 
 #include <string>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 日志等级枚举

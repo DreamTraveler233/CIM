@@ -18,7 +18,7 @@
 #include <map>
 #include <utility>
 
-namespace sylar
+namespace CIM
 {
     class IPAddress;
 

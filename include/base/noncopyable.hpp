@@ -1,6 +1,6 @@
 #pragma once
 
-namespace sylar
+namespace CIM
 {
     class Noncopyable
     {

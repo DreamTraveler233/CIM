@@ -1,7 +1,7 @@
 /**
  * @file scheduler.hpp
  * @brief 协程调度器实现
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了协程调度器Scheduler和调度切换器SchedulerSwitcher类。
  * Scheduler负责管理线程池和协程队列，实现协程的调度执行；
@@ -107,7 +107,7 @@
   从共享任务队列中竞争获取任务执行，实现了统一的工作线程模型。
  */
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 协程调度器类

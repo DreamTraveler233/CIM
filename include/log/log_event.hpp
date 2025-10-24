@@ -1,7 +1,7 @@
 /**
  * @file log_event.hpp
  * @brief 日志事件相关类定义
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 该文件定义了日志事件相关的类，包括LogEvent和LogEventWrap。
@@ -15,7 +15,7 @@
 #include <memory>
 #include <sstream>
 
-namespace sylar
+namespace CIM
 {
     class Logger;
 

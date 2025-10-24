@@ -4,16 +4,22 @@
 
 namespace sylar
 {
-    static sylar::ConfigVar<uint64_t>::ptr g_tcp_server_read_timeout =
+    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+
+    // 配置 TCP 读超时事件
+    static auto g_tcp_server_read_timeout =
         sylar::Config::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2),
                               "tcp server read timeout");
-
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     TcpServer::TcpServer(sylar::IOManager *worker,
                          sylar::IOManager *io_worker,
                          sylar::IOManager *accept_worker)
-        : m_worker(worker), m_ioWorker(io_worker), m_acceptWorker(accept_worker), m_recvTimeout(g_tcp_server_read_timeout->getValue()), m_name("sylar/1.0.0"), m_isStop(true)
+        : m_worker(worker),
+          m_ioWorker(io_worker),
+          m_acceptWorker(accept_worker),
+          m_recvTimeout(g_tcp_server_read_timeout->getValue()),
+          m_name("sylar/1.0.0"),
+          m_isRun(false)
     {
     }
 
@@ -44,7 +50,10 @@ namespace sylar
         m_ssl = ssl;
         for (auto &addr : addrs)
         {
+            // 根据是否启用ssl加密创建 Socket
             Socket::ptr sock = ssl ? SSLSocket::CreateTCP(addr) : Socket::CreateTCP(addr);
+
+            // 绑定地址
             if (!sock->bind(addr))
             {
                 SYLAR_LOG_ERROR(g_logger) << "bind fail errno="
@@ -53,6 +62,8 @@ namespace sylar
                 fails.push_back(addr);
                 continue;
             }
+
+            // 开启监听
             if (!sock->listen())
             {
                 SYLAR_LOG_ERROR(g_logger) << "listen fail errno="
@@ -80,16 +91,34 @@ namespace sylar
         return true;
     }
 
+    bool TcpServer::start()
+    {
+        if (m_isRun)
+        {
+            return false;
+        }
+        m_isRun = true;
+
+        for (auto &sock : m_socks)
+        {
+            m_acceptWorker->schedule(std::bind(&TcpServer::startAccept,
+                                               shared_from_this(), sock));
+        }
+        return true;
+    }
+
     void TcpServer::startAccept(Socket::ptr sock)
     {
-        while (!m_isStop)
+        while (m_isRun)
         {
-            Socket::ptr client = sock->accept();
-            if (client)
+            // 接受新连接
+            Socket::ptr client_fd = sock->accept();
+            if (client_fd)
             {
-                client->setRecvTimeout(m_recvTimeout);
+                // 设置读超时时间
+                client_fd->setRecvTimeout(m_recvTimeout);
                 m_ioWorker->schedule(std::bind(&TcpServer::handleClient,
-                                               shared_from_this(), client));
+                                               shared_from_this(), client_fd));
             }
             else
             {
@@ -99,24 +128,14 @@ namespace sylar
         }
     }
 
-    bool TcpServer::start()
+    void TcpServer::handleClient(Socket::ptr client)
     {
-        if (!m_isStop)
-        {
-            return true;
-        }
-        m_isStop = false;
-        for (auto &sock : m_socks)
-        {
-            m_acceptWorker->schedule(std::bind(&TcpServer::startAccept,
-                                               shared_from_this(), sock));
-        }
-        return true;
+        SYLAR_LOG_INFO(g_logger) << "handleClient: " << *client;
     }
 
     void TcpServer::stop()
     {
-        m_isStop = true;
+        m_isRun = false;
         auto self = shared_from_this();
         m_acceptWorker->schedule([this, self]()
                                  {
@@ -147,9 +166,9 @@ namespace sylar
         m_name = v;
     }
 
-    bool TcpServer::isStop() const
+    bool TcpServer::isRun() const
     {
-        return m_isStop;
+        return m_isRun;
     }
 
     TcpServerConf::ptr TcpServer::getConf() const
@@ -160,11 +179,6 @@ namespace sylar
     void TcpServer::setConf(TcpServerConf::ptr v)
     {
         m_conf = v;
-    }
-
-    void TcpServer::handleClient(Socket::ptr client)
-    {
-        SYLAR_LOG_INFO(g_logger) << "handleClient: " << *client;
     }
 
     bool TcpServer::loadCertificates(const std::string &cert_file, const std::string &key_file)

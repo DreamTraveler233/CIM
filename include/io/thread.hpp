@@ -16,7 +16,7 @@
 #include <functional>
 #include <memory>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 线程类，对pthread进行封装

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 
-namespace sylar
+namespace CIM
 {
     // 定义清理操作函数指针类型
     typedef void (*NgxPoolCleanupPt)(void *data);

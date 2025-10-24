@@ -1,7 +1,7 @@
 /**
  * @file logger.hpp
  * @brief 日志器类定义
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 该文件定义了日志器(Logger)类，负责管理日志的输出目标和日志级别的控制。
@@ -21,7 +21,7 @@
 #include <list>
 #include <memory>
 
-namespace sylar
+namespace CIM
 {
 
     class LoggerManager;

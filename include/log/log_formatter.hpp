@@ -1,7 +1,7 @@
 /**
  * @file log_formatter.hpp
  * @brief 日志格式化器头文件
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 定义了日志格式化器(LogFormatter)及相关格式化项类。
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <map>
 
-namespace sylar
+namespace CIM
 {
     class LogEvent;
 

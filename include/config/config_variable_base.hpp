@@ -1,7 +1,7 @@
 /**
  * @file config_variable_base.hpp
  * @brief 配置变量基类定义文件
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了配置系统的基类 ConfigVariableBase，所有具体的配置变量类都需要继承自该类。
  * ConfigVariableBase 提供了配置项的基本属性（名称、描述）以及序列化/反序列化接口，
@@ -13,7 +13,7 @@
 #include <string>
 #include <memory>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 配置变量基类

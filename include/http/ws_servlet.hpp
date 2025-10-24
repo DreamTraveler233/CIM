@@ -4,7 +4,7 @@
 #include "thread.hpp"
 #include "http_servlet.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     class WSServlet : public Servlet
     {
@@ -16,14 +16,14 @@ namespace sylar::http
         }
         virtual ~WSServlet() {}
 
-        virtual int32_t handle(sylar::http::HttpRequest::ptr request, sylar::http::HttpResponse::ptr response, sylar::http::HttpSession::ptr session) override
+        virtual int32_t handle(CIM::http::HttpRequest::ptr request, CIM::http::HttpResponse::ptr response, CIM::http::HttpSession::ptr session) override
         {
             return 0;
         }
 
-        virtual int32_t onConnect(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session) = 0;
-        virtual int32_t onClose(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session) = 0;
-        virtual int32_t handle(sylar::http::HttpRequest::ptr header, sylar::http::WSFrameMessage::ptr msg, sylar::http::WSSession::ptr session) = 0;
+        virtual int32_t onConnect(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session) = 0;
+        virtual int32_t onClose(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session) = 0;
+        virtual int32_t handle(CIM::http::HttpRequest::ptr header, CIM::http::WSFrameMessage::ptr msg, CIM::http::WSSession::ptr session) = 0;
         const std::string &getName() const { return m_name; }
 
     protected:
@@ -34,15 +34,15 @@ namespace sylar::http
     {
     public:
         typedef std::shared_ptr<FunctionWSServlet> ptr;
-        typedef std::function<int32_t(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session)> on_connect_cb;
-        typedef std::function<int32_t(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session)> on_close_cb;
-        typedef std::function<int32_t(sylar::http::HttpRequest::ptr header, sylar::http::WSFrameMessage::ptr msg, sylar::http::WSSession::ptr session)> callback;
+        typedef std::function<int32_t(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session)> on_connect_cb;
+        typedef std::function<int32_t(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session)> on_close_cb;
+        typedef std::function<int32_t(CIM::http::HttpRequest::ptr header, CIM::http::WSFrameMessage::ptr msg, CIM::http::WSSession::ptr session)> callback;
 
         FunctionWSServlet(callback cb, on_connect_cb connect_cb = nullptr, on_close_cb close_cb = nullptr);
 
-        virtual int32_t onConnect(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session) override;
-        virtual int32_t onClose(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session) override;
-        virtual int32_t handle(sylar::http::HttpRequest::ptr header, sylar::http::WSFrameMessage::ptr msg, sylar::http::WSSession::ptr session) override;
+        virtual int32_t onConnect(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session) override;
+        virtual int32_t onClose(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session) override;
+        virtual int32_t handle(CIM::http::HttpRequest::ptr header, CIM::http::WSFrameMessage::ptr msg, CIM::http::WSSession::ptr session) override;
 
     protected:
         callback m_callback;

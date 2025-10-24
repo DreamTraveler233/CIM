@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace sylar
+namespace CIM
 {
     uint32_t murmur3_hash(const char *str, const uint32_t &seed = 1060627423);
     uint64_t murmur3_hash64(const char *str, const uint32_t &seed = 1060627423, const uint32_t &seed2 = 1050126127);

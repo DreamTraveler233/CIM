@@ -25,7 +25,7 @@
 #include "singleton.hpp"
 #include "noncopyable.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 文件描述符上下文类

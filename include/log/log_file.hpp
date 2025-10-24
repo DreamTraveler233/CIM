@@ -1,7 +1,7 @@
 /**
  * @file log_file.hpp
  * @brief 文件日志类定义
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 该文件定义了文件日志类(LogFile)，用于封装单个日志文件的打开、写入、轮转、
@@ -13,7 +13,7 @@
 #include <string>
 #include <memory>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 日志轮转类型枚举

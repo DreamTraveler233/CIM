@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 字节数组类

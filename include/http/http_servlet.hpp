@@ -11,7 +11,7 @@
 #include "util.hpp"
 #include "lock.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     /**
      * @brief Servlet封装
@@ -244,10 +244,10 @@ namespace sylar::http
 
     private:
         /// 精准匹配servlet MAP
-        /// uri(/sylar/xxx) -> servlet
+        /// uri(/CIM/xxx) -> servlet
         std::unordered_map<std::string, IServletCreator::ptr> m_datas;
         /// 模糊匹配servlet 数组
-        /// uri(/sylar/*) -> servlet
+        /// uri(/CIM/*) -> servlet
         std::vector<std::pair<std::string, IServletCreator::ptr>> m_globs;
         Servlet::ptr m_default; /// 默认servlet，所有路径都没匹配到时使用
         RWMutexType m_mutex;    /// 读写互斥量

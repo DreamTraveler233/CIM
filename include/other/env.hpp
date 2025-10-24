@@ -16,7 +16,7 @@
 #include <map>
 #include <vector>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 环境变量管理类
@@ -142,6 +142,6 @@ namespace sylar
     };
 
     /// 环境管理器单例
-    typedef sylar::Singleton<Env> EnvMgr;
+    typedef CIM::Singleton<Env> EnvMgr;
 
 }

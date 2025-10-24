@@ -1,7 +1,7 @@
 /**
  * @file logger_manager.hpp
  * @brief 日志管理器定义文件
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 该文件定义了日志管理器(LoggerManager)及相关配置结构体，
@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-namespace sylar
+namespace CIM
 {
     class Logger;
 
@@ -64,7 +64,7 @@ namespace sylar
         MutexType m_mutex;                                        ///< 互斥锁，保证线程安全
     };
 
-    using loggerMgr = sylar::Singleton<LoggerManager>; ///< 日志管理器单例模式别名
+    using loggerMgr = CIM::Singleton<LoggerManager>; ///< 日志管理器单例模式别名
 
     /**
      * @brief 日志追加器配置项

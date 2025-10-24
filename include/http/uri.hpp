@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include "address.hpp"
 
-namespace sylar
+namespace CIM
 {
     /*
-         foo://user@sylar.com:8042/over/there?name=ferret#nose
+         foo://user@CIM.com:8042/over/there?name=ferret#nose
          \__/ \_____________/ \____________/ \_________/ \__/
           |           |            |             |        |
         scheme    authority       path         query   fragment

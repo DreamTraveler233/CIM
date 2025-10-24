@@ -12,7 +12,7 @@
 #include <thread>
 #include <unordered_map>
 
-namespace sylar
+namespace CIM
 {
     const size_t TASK_QUE_MAX_SIZE_ = 1024;
     const size_t THREAD_MAX_SIZE = 1024;

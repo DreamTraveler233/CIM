@@ -4,7 +4,7 @@
 #include "http_session.hpp"
 #include <stdint.h>
 
-namespace sylar::http
+namespace CIM::http
 {
 #pragma pack(1)
     struct WSFrameHead
@@ -74,7 +74,7 @@ namespace sylar::http
         bool handleClientShake();
     };
 
-    extern sylar::ConfigVar<uint32_t>::ptr g_websocket_message_max_size;
+    extern CIM::ConfigVar<uint32_t>::ptr g_websocket_message_max_size;
     WSFrameMessage::ptr WSRecvMessage(Stream *stream, bool client);
     int32_t WSSendMessage(Stream *stream, WSFrameMessage::ptr msg, bool client, bool fin);
     int32_t WSPing(Stream *stream);

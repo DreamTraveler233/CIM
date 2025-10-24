@@ -26,7 +26,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 日志文件管理类，负责日志文件对象的创建、轮转和管理

@@ -1,7 +1,7 @@
 /**
  * @file log_appender.hpp
  * @brief 日志追加器定义文件
- * @author sylar
+ * @author CIM
  * @date 2025-10-21
  *
  * 该文件定义了日志系统的核心组件——日志追加器(LogAppender)基类及其派生类，
@@ -18,7 +18,7 @@
 #include <fstream>
 #include <string>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 日志追加器基类

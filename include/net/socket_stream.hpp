@@ -4,7 +4,7 @@
 #include "socket.hpp"
 #include "iomanager.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief Socket流
@@ -22,13 +22,13 @@ namespace sylar
         SocketStream(Socket::ptr sock, bool owner = true);
 
         /**
-         * @brief 析构函数
+         * @brief 析构函数，负责关闭套接字
          * @details 如果m_owner=true,则close
          */
         ~SocketStream();
 
         /**
-         * @brief 读取数据
+         * @brief 从 Socket 读取数据到指定内存缓冲区
          * @param[out] buffer 待接收数据的内存
          * @param[in] length 待接收数据的内存长度
          * @return
@@ -39,7 +39,7 @@ namespace sylar
         virtual int read(void *buffer, size_t length) override;
 
         /**
-         * @brief 读取数据
+         * @brief 从 Socket 读取数据到 ByteArray
          * @param[out] ba 接收数据的ByteArray
          * @param[in] length 待接收数据的内存长度
          * @return
@@ -50,7 +50,7 @@ namespace sylar
         virtual int read(ByteArray::ptr ba, size_t length) override;
 
         /**
-         * @brief 写入数据
+         * @brief 将内存缓冲区数据写入 Socket
          * @param[in] buffer 待发送数据的内存
          * @param[in] length 待发送数据的内存长度
          * @return
@@ -61,7 +61,7 @@ namespace sylar
         virtual int write(const void *buffer, size_t length) override;
 
         /**
-         * @brief 写入数据
+         * @brief 将 ByteArray 中的数据写入 Socket
          * @param[in] ba 待发送数据的ByteArray
          * @param[in] length 待发送数据的内存长度
          * @return
@@ -79,16 +79,31 @@ namespace sylar
         /**
          * @brief 返回Socket类
          */
-        Socket::ptr getSocket() const { return m_socket; }
+        Socket::ptr getSocket() const;
 
         /**
          * @brief 返回是否连接
          */
         bool isConnected() const;
 
+        /**
+         * @brief 获取远端地址
+         */
         Address::ptr getRemoteAddress();
+
+        /**
+         * @brief 获取本地地址
+         */
         Address::ptr getLocalAddress();
+
+        /**
+         * @brief 获取远端地址字符串
+         */
         std::string getRemoteAddressString();
+
+        /**
+         * @brief 返回本地地址字符串
+         */
         std::string getLocalAddressString();
 
     protected:

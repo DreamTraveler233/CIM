@@ -4,14 +4,16 @@
 #include "ws_session.hpp"
 #include "ws_servlet.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     class WSServer : public TcpServer
     {
     public:
         typedef std::shared_ptr<WSServer> ptr;
 
-        WSServer(sylar::IOManager *worker = sylar::IOManager::GetThis(), sylar::IOManager *io_worker = sylar::IOManager::GetThis(), sylar::IOManager *accept_worker = sylar::IOManager::GetThis());
+        WSServer(IOManager *worker = IOManager::GetThis(),
+                 IOManager *io_worker = IOManager::GetThis(),
+                 IOManager *accept_worker = IOManager::GetThis());
 
         WSServletDispatch::ptr getWSServletDispatch() const { return m_dispatch; }
         void setWSServletDispatch(WSServletDispatch::ptr v) { m_dispatch = v; }

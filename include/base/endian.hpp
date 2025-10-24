@@ -7,7 +7,7 @@
 #define SYLAR_LITTLE_ENDIAN 1 // 定义小端字节序标识符
 #define SYLAR_BIG_ENDIAN 2    // 定义大端字节序标识符
 
-namespace sylar
+namespace CIM
 {
     // 根据类型大小进行字节序转换的模板函数，使用SFINAE技术选择合适的实现
     template <typename T>

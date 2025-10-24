@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace sylar
+namespace CIM
 {
     class TimeUtil
     {

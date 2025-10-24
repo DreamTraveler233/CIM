@@ -1,7 +1,7 @@
 /**
  * @file config_var.hpp
  * @brief 配置变量模板类定义文件
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了配置系统中的核心模板类 ConfigVar，用于存储和管理各种类型的配置项。
  * ConfigVar 继承自 ConfigVariableBase，提供了类型安全的配置项管理功能，
@@ -14,7 +14,7 @@
 #include "macro.hpp"
 #include "lock.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 配置变量模板类

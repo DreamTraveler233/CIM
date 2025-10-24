@@ -7,7 +7,7 @@
 #include <set>
 #include <unordered_set>
 
-namespace sylar
+namespace CIM
 {
     /**
      * 不同类型的数据转换

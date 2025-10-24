@@ -4,7 +4,7 @@
 #include <functional>
 #include "singleton.hpp"
 
-namespace sylar
+namespace CIM
 {
     /*
     工作原理总结

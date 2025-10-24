@@ -7,7 +7,7 @@
 
 #include <list>
 
-namespace sylar::http
+namespace CIM::http
 {
     /**
      * @brief HTTP响应结果

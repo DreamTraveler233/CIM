@@ -23,44 +23,44 @@
 
 #define SYLAR_LOG(logger, level)                                               \
     if (level >= logger->getLevel())                                           \
-    sylar::LogEventWrap(                                                       \
-        sylar::LogEvent::ptr(                                                  \
-            new sylar::LogEvent(logger, level, __FILE__, __LINE__, 0,          \
-                                sylar::GetThreadId(), sylar::GetCoroutineId(), \
-                                time(0), sylar::Thread::GetName())))           \
+    CIM::LogEventWrap(                                                       \
+        CIM::LogEvent::ptr(                                                  \
+            new CIM::LogEvent(logger, level, __FILE__, __LINE__, 0,          \
+                                CIM::GetThreadId(), CIM::GetCoroutineId(), \
+                                time(0), CIM::Thread::GetName())))           \
         .getSS()
 
-#define SYLAR_LOG_DEBUG(logger) SYLAR_LOG(logger, sylar::Level::DEBUG)
-#define SYLAR_LOG_INFO(logger) SYLAR_LOG(logger, sylar::Level::INFO)
-#define SYLAR_LOG_WARN(logger) SYLAR_LOG(logger, sylar::Level::WARN)
-#define SYLAR_LOG_ERROR(logger) SYLAR_LOG(logger, sylar::Level::ERROR)
-#define SYLAR_LOG_FATAL(logger) SYLAR_LOG(logger, sylar::Level::FATAL)
+#define SYLAR_LOG_DEBUG(logger) SYLAR_LOG(logger, CIM::Level::DEBUG)
+#define SYLAR_LOG_INFO(logger) SYLAR_LOG(logger, CIM::Level::INFO)
+#define SYLAR_LOG_WARN(logger) SYLAR_LOG(logger, CIM::Level::WARN)
+#define SYLAR_LOG_ERROR(logger) SYLAR_LOG(logger, CIM::Level::ERROR)
+#define SYLAR_LOG_FATAL(logger) SYLAR_LOG(logger, CIM::Level::FATAL)
 
 #define SYLAR_LOG_FMT(logger, level, fmt, ...)                                 \
     if (level >= logger->getLevel())                                           \
-    sylar::LogEventWrap(                                                       \
-        sylar::LogEvent::ptr(                                                  \
-            new sylar::LogEvent(logger, level, __FILE__, __LINE__, 0,          \
-                                sylar::GetThreadId(), sylar::GetCoroutineId(), \
-                                time(0), sylar::Thread::GetName())))           \
+    CIM::LogEventWrap(                                                       \
+        CIM::LogEvent::ptr(                                                  \
+            new CIM::LogEvent(logger, level, __FILE__, __LINE__, 0,          \
+                                CIM::GetThreadId(), CIM::GetCoroutineId(), \
+                                time(0), CIM::Thread::GetName())))           \
         .getEvent()                                                            \
         ->format(fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::Level::DEBUG, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_INFO(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::Level::INFO, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_WARN(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::Level::WARN, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::Level::ERROR, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT(logger, sylar::Level::FATAL, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::DEBUG, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_INFO(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::INFO, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_WARN(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::WARN, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::ERROR, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::FATAL, fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_ROOT() sylar::loggerMgr::GetInstance()->getRoot()
-#define SYLAR_LOG_NAME(name) sylar::loggerMgr::GetInstance()->getLogger(name)
+#define SYLAR_LOG_ROOT() CIM::loggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) CIM::loggerMgr::GetInstance()->getLogger(name)
 
 #define SYLAR_ASSERT(X)                                                                \
     if (SYLAR_UNLIKELY(!(X)))                                                          \
     {                                                                                  \
         SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\nbacktrace:\n"                          \
-                                          << sylar::BacktraceToString(100, 2, "    "); \
+                                          << CIM::BacktraceToString(100, 2, "    "); \
         assert(X);                                                                     \
     }
 
@@ -71,6 +71,6 @@
                                           << "\n"                                      \
                                           << W                                         \
                                           << "\nbacktrace:\n"                          \
-                                          << sylar::BacktraceToString(100, 2, "    "); \
+                                          << CIM::BacktraceToString(100, 2, "    "); \
         assert(X);                                                                     \
     }

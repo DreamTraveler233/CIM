@@ -8,7 +8,7 @@
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
-namespace sylar::http
+namespace CIM::http
 {
 
     // X-Macro技术（也称为"交叉宏"技术）

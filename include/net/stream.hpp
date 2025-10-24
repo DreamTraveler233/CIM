@@ -3,7 +3,7 @@
 #include <memory>
 #include "byte_array.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 抽象流接口类，定义了流的基本操作

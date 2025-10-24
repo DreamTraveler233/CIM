@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <semaphore.h>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 信号量类，对POSIX信号量进行封装

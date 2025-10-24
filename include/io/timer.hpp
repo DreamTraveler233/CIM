@@ -17,7 +17,7 @@
 #include <set>
 #include <vector>
 
-namespace sylar
+namespace CIM
 {
     class TimerManager;
 

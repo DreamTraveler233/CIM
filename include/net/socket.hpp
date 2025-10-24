@@ -1,7 +1,7 @@
 /**
  * @file socket.hpp
  * @brief Socket封装头文件
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了Socket和SSLSocket两个核心网络类，用于处理各种类型的网络通信：
  * 1. 支持TCP和UDP协议
@@ -30,7 +30,7 @@
 #include "address.hpp"
 #include "noncopyable.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief Socket封装类
@@ -73,14 +73,14 @@ namespace sylar
          * @param[in] address 地址
          * @return 返回创建的TCP Socket智能指针
          */
-        static Socket::ptr CreateTCP(sylar::Address::ptr address);
+        static Socket::ptr CreateTCP(CIM::Address::ptr address);
 
         /**
          * @brief 创建UDP Socket(满足地址类型)
          * @param[in] address 地址
          * @return 返回创建的UDP Socket智能指针
          */
-        static Socket::ptr CreateUDP(sylar::Address::ptr address);
+        static Socket::ptr CreateUDP(CIM::Address::ptr address);
 
         /**
          * @brief 创建IPv4的TCP Socket
@@ -481,7 +481,7 @@ namespace sylar
          * @param[in] address 地址
          * @return 返回创建的SSL Socket智能指针
          */
-        static SSLSocket::ptr CreateTCP(sylar::Address::ptr address);
+        static SSLSocket::ptr CreateTCP(CIM::Address::ptr address);
 
         /**
          * @brief 创建IPv4的TCP SSL Socket

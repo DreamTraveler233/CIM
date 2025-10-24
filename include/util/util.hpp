@@ -11,7 +11,7 @@
 #include <fstream>
 #include <cxxabi.h>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 获取当前线程的真实线程ID

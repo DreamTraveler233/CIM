@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace sylar
+namespace CIM
 {
     class StringUtil
     {

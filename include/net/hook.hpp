@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-namespace sylar
+namespace CIM
 {
     // 用于检查钩子功能是否启用
     bool is_hook_enable();

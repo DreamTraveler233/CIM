@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-namespace sylar
+namespace CIM
 {
     template <class T, class X = void, int N = 0>
     class Singleton

@@ -3,7 +3,7 @@
 #include "http_connection.hpp"
 #include "ws_session.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     class WSConnection : public HttpConnection
     {

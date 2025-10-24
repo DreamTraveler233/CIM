@@ -1,7 +1,7 @@
 /**
  * @file lock.hpp
  * @brief 线程同步锁封装模块
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了多种线程同步锁的封装，包括互斥锁、读写锁、自旋锁和原子锁等，
  * 并提供了RAII风格的锁管理器模板，确保锁的自动获取和释放，防止死锁和忘记释放锁的问题。
@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <atomic>
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 通用锁管理模板，RAII风格

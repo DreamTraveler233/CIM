@@ -1,7 +1,7 @@
 /**
  * @file config.hpp
  * @brief 配置管理器定义文件
- * @author sylar
+ * @author CIM
  *
  * 该文件定义了配置系统的核心管理类 Config，负责配置项的注册、查找、加载和管理。
  * Config 类提供了全局的配置管理功能，支持从 YAML 文件加载配置，并提供线程安全的
@@ -16,7 +16,7 @@
 #include "macro.hpp"
 #include "lock.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief 配置管理器类
