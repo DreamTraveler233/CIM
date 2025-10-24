@@ -11,18 +11,18 @@ void test_fiber()
     std::this_thread::sleep_for(std::chrono::seconds(1));
     if (--count>0)
     {
-        sylar::IOManager::GetThis()->schedule(test_fiber);
+        CIM::IOManager::GetThis()->schedule(test_fiber);
     }
 }
 
 int main(int argc, char **argv)
 {
-    // sylar::Scheduler sc(1,true,"test");
+    // CIM::Scheduler sc(1,true,"test");
     // sc.start();
     // sc.schedule(test_fiber);
     // sc.stop();
 
-    sylar::IOManager iom(2,true,"test");
+    CIM::IOManager iom(2,true,"test");
     iom.schedule(test_fiber);
     return 0;
 }

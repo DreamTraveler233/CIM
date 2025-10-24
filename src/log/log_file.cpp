@@ -7,7 +7,7 @@
 #include <iostream>
 #include <cstdio>
 
-namespace sylar
+namespace CIM
 {
 
     LogFile::LogFile(const std::string &filePath)

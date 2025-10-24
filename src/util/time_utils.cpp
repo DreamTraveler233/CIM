@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <ctime>
 
-namespace sylar
+namespace CIM
 {
     uint64_t TimeUtil::NowToMS()
     {

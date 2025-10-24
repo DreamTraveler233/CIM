@@ -14,7 +14,7 @@ void test_coroutine()
 
 void test1()
 {
-    sylar::IOManager iom(2, false, "test");
+    CIM::IOManager iom(2, false, "test");
     iom.schedule(test_coroutine);
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -26,16 +26,16 @@ void test1()
     inet_pton(AF_INET, "192.168.126.100", &addr.sin_addr.s_addr);
 
     connect(fd, (const sockaddr *)&addr, sizeof(addr));
-    iom.addEvent(fd, sylar::IOManager::WRITE, []()
+    iom.addEvent(fd, CIM::IOManager::WRITE, []()
                  { SYLAR_LOG_INFO(g_logger) << "write callback"; });
-    iom.addEvent(fd, sylar::IOManager::READ, []()
+    iom.addEvent(fd, CIM::IOManager::READ, []()
                  { SYLAR_LOG_INFO(g_logger) << "read callback"; });
 }
 
 void test_timer()
 {
-    static sylar::Timer::ptr timer;
-    sylar::IOManager iom(2, false, "test");
+    static CIM::Timer::ptr timer;
+    CIM::IOManager iom(2, false, "test");
     timer = iom.addTimer(
         1000, []()
         { 

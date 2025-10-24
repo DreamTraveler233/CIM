@@ -3,19 +3,19 @@
 #include "config.hpp"
 #include <string.h>
 
-namespace sylar::http
+namespace CIM::http
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     // 加载http协议解析器的配置项
     static auto g_http_request_buffer_size =
-        sylar::Config::Lookup("http.request.buffer_size", (uint64_t)(4 * 1024), "http request buffer size");
+        CIM::Config::Lookup("http.request.buffer_size", (uint64_t)(4 * 1024), "http request buffer size");
     static auto g_http_request_max_body_size =
-        sylar::Config::Lookup("http.request.max_body_size", (uint64_t)(64 * 1024 * 1024), "http request max body size");
+        CIM::Config::Lookup("http.request.max_body_size", (uint64_t)(64 * 1024 * 1024), "http request max body size");
     static auto g_http_response_buffer_size =
-        sylar::Config::Lookup("http.response.buffer_size", (uint64_t)(4 * 1024), "http response buffer size");
+        CIM::Config::Lookup("http.response.buffer_size", (uint64_t)(4 * 1024), "http response buffer size");
     static auto g_http_response_max_body_size =
-        sylar::Config::Lookup("http.response.max_body_size", (uint64_t)(64 * 1024 * 1024), "http response max body size");
+        CIM::Config::Lookup("http.response.max_body_size", (uint64_t)(64 * 1024 * 1024), "http response max body size");
 
     // 用于保存配置值，提升性能
     static uint64_t s_http_request_buffer_size = 0;
@@ -221,7 +221,7 @@ namespace sylar::http
     HttpRequestParser::HttpRequestParser()
         : m_error(0)
     {
-        m_data.reset(new sylar::http::HttpRequest);
+        m_data.reset(new CIM::http::HttpRequest);
         http_parser_init(&m_parser);
         m_parser.request_method = on_request_method;
         m_parser.request_uri = on_request_uri;
@@ -375,7 +375,7 @@ namespace sylar::http
     HttpResponseParser::HttpResponseParser()
         : m_error(0)
     {
-        m_data.reset(new sylar::http::HttpResponse);
+        m_data.reset(new CIM::http::HttpResponse);
         httpclient_parser_init(&m_parser);
         m_parser.reason_phrase = on_response_reason;
         m_parser.status_code = on_response_status;

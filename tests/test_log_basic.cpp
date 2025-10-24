@@ -25,7 +25,7 @@ void test_log_system()
     SYLAR_LOG_INFO(root_log) << "info message for root";
 
     // 测试日志管理器
-    auto logger_manager = sylar::loggerMgr::GetInstance();
+    auto logger_manager = CIM::loggerMgr::GetInstance();
     assert(logger_manager != nullptr);
 
     auto system_logger = logger_manager->getLogger("system");
@@ -42,8 +42,8 @@ void test_log_system()
 
     // 测试YAML配置加载
     std::string before_config = logger_manager->toYamlString();
-    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
-    sylar::Config::LoadFromYaml(root);
+    YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/log.yaml");
+    CIM::Config::LoadFromYaml(root);
     std::string after_config = logger_manager->toYamlString();
 
     // 配置应该发生变化
@@ -70,8 +70,8 @@ void test_logger_creation()
     assert(logger1 == logger2);
 
     // 测试日志级别设置
-    logger1->setLevel(sylar::Level::ERROR);
-    assert(logger1->getLevel() == sylar::Level::ERROR);
+    logger1->setLevel(CIM::Level::ERROR);
+    assert(logger1->getLevel() == CIM::Level::ERROR);
 
     std::cout << "日志器创建和级别设置测试通过" << std::endl;
 }
@@ -99,14 +99,14 @@ void test_log_appender()
     auto test_logger = SYLAR_LOG_NAME("appender_test");
 
     // 创建并添加文件附加器
-    auto file_appender = std::make_shared<sylar::FileLogAppender>("test_log.txt");
+    auto file_appender = std::make_shared<CIM::FileLogAppender>("test_log.txt");
     test_logger->addAppender(file_appender);
 
     // 测试日志输出到文件
     SYLAR_LOG_INFO(test_logger) << "测试文件附加器";
 
     // 创建并添加控制台附加器
-    auto stdout_appender = std::make_shared<sylar::StdoutLogAppender>();
+    auto stdout_appender = std::make_shared<CIM::StdoutLogAppender>();
     test_logger->addAppender(stdout_appender);
 
     SYLAR_LOG_DEBUG(test_logger) << "测试多个附加器";
@@ -128,15 +128,15 @@ void test_log_level()
     auto test_logger = SYLAR_LOG_NAME("level_test");
 
     // 设置日志级别为ERROR
-    test_logger->setLevel(sylar::Level::ERROR);
+    test_logger->setLevel(CIM::Level::ERROR);
 
     // DEBUG和INFO级别应该不输出（因为我们无法直接验证输出，但可以通过其他方式验证）
-    assert(test_logger->getLevel() == sylar::Level::ERROR);
+    assert(test_logger->getLevel() == CIM::Level::ERROR);
 
     // 测试不同级别的日志事件创建
-    auto event_debug = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::DEBUG,
+    auto event_debug = std::make_shared<CIM::LogEvent>(test_logger, CIM::Level::DEBUG,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0), "main");
-    auto event_error = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::ERROR,
+    auto event_error = std::make_shared<CIM::LogEvent>(test_logger, CIM::Level::ERROR,
                                                          __FILE__, __LINE__, 0, 0, 0, time(0), "main");
 
     event_debug->getSS() << "这是一条DEBUG消息";
@@ -156,7 +156,7 @@ void test_log_event()
     auto test_logger = SYLAR_LOG_NAME("event_test");
 
     // 创建日志事件
-    auto event = std::make_shared<sylar::LogEvent>(test_logger, sylar::Level::INFO,
+    auto event = std::make_shared<CIM::LogEvent>(test_logger, CIM::Level::INFO,
                                                    "test_file.cpp", 123, 1000, 12345, 1, time(0), "main");
 
     // 测试格式化功能
@@ -181,8 +181,8 @@ void test_log_rotate()
     static auto g_logger = SYLAR_LOG_ROOT();
 
     // 加载配置文件
-    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
-    sylar::Config::LoadFromYaml(root);
+    YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/log.yaml");
+    CIM::Config::LoadFromYaml(root);
 
     for (int i = 0; i < 10000; ++i)
     {
@@ -215,7 +215,7 @@ void test_log_thread_safety() {
     std::vector<std::thread> threads;
     
     auto logger = SYLAR_LOG_NAME("thread_safe_test");
-    logger->setLevel(sylar::Level::INFO);
+    logger->setLevel(CIM::Level::INFO);
     
     // 创建多个线程同时写入日志
     for (int i = 0; i < num_threads; ++i) {
@@ -237,14 +237,14 @@ void test_config_integration() {
     std::cout << "=================== 测试日志与配置集成 ===================" << std::endl;
     
     // 获取日志管理器
-    auto logger_manager = sylar::loggerMgr::GetInstance();
+    auto logger_manager = CIM::loggerMgr::GetInstance();
     
     // 保存原始配置
     std::string before_config = logger_manager->toYamlString();
     
     // 重新加载配置
-    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/log.yaml");
-    sylar::Config::LoadFromYaml(root);
+    YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/log.yaml");
+    CIM::Config::LoadFromYaml(root);
     
     // 检查配置是否发生变化
     std::string after_config = logger_manager->toYamlString();

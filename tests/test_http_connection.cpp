@@ -6,14 +6,14 @@
 #include "zlib_stream.hpp"
 #include <fstream>
 
-static sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+static CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
 void test_pool()
 {
-    sylar::http::HttpConnectionPool::ptr pool(new sylar::http::HttpConnectionPool(
+    CIM::http::HttpConnectionPool::ptr pool(new CIM::http::HttpConnectionPool(
         "www.baidu.com", "", 80, false, 10, 1000 * 30, 5));
 
-    sylar::IOManager::GetThis()->addTimer(1000, [pool]()
+    CIM::IOManager::GetThis()->addTimer(1000, [pool]()
                                           {
             auto r = pool->doGet("/", 300);
             SYLAR_LOG_INFO(g_logger) << r->toString(); }, true);
@@ -21,14 +21,14 @@ void test_pool()
 
 void run()
 {
-    // sylar::Address::ptr addr = sylar::Address::LookupAnyIpAddress("www.sylar.top:80");
+    // CIM::Address::ptr addr = CIM::Address::LookupAnyIpAddress("www.CIM.top:80");
     // if (!addr)
     // {
     //     SYLAR_LOG_INFO(g_logger) << "get addr error";
     //     return;
     // }
 
-    // sylar::Socket::ptr sock = sylar::Socket::CreateTCP(addr);
+    // CIM::Socket::ptr sock = CIM::Socket::CreateTCP(addr);
     // bool rt = sock->connect(addr);
     // if (!rt)
     // {
@@ -36,10 +36,10 @@ void run()
     //     return;
     // }
 
-    // sylar::http::HttpConnection::ptr conn(new sylar::http::HttpConnection(sock));
-    // sylar::http::HttpRequest::ptr req(new sylar::http::HttpRequest);
+    // CIM::http::HttpConnection::ptr conn(new CIM::http::HttpConnection(sock));
+    // CIM::http::HttpRequest::ptr req(new CIM::http::HttpRequest);
     // req->setPath("/blog/");
-    // req->setHeader("host", "www.sylar.top");
+    // req->setHeader("host", "www.CIM.top");
     // SYLAR_LOG_INFO(g_logger) << "req:" << std::endl
     //                          << *req;
 
@@ -59,7 +59,7 @@ void run()
 
     // SYLAR_LOG_INFO(g_logger) << "=========================";
 
-    // auto r = sylar::http::HttpConnection::DoGet("http://www.baidu.com", 300);
+    // auto r = CIM::http::HttpConnection::DoGet("http://www.baidu.com", 300);
     // SYLAR_LOG_INFO(g_logger) << "result=" << r->result
     //                          << " error=" << r->error
     //                          << " rsp=" << (r->response ? r->response->toString() : "");
@@ -70,16 +70,16 @@ void run()
 
 void test_https()
 {
-    auto r = sylar::http::HttpConnection::DoGet("http://www.baidu.com/", 300, {{"Accept-Encoding", "gzip, deflate, br"}, {"Connection", "keep-alive"}, {"User-Agent", "curl/7.29.0"}});
+    auto r = CIM::http::HttpConnection::DoGet("http://www.baidu.com/", 300, {{"Accept-Encoding", "gzip, deflate, br"}, {"Connection", "keep-alive"}, {"User-Agent", "curl/7.29.0"}});
     SYLAR_LOG_INFO(g_logger) << "result=" << r->result
                              << " error=" << r->error
                              << " rsp=" << (r->response ? r->response->toString() : "");
 
-    // sylar::http::HttpConnectionPool::ptr pool(new sylar::http::HttpConnectionPool(
+    // CIM::http::HttpConnectionPool::ptr pool(new CIM::http::HttpConnectionPool(
     //             "www.baidu.com", "", 80, false, 10, 1000 * 30, 5));
-    auto pool = sylar::http::HttpConnectionPool::Create(
+    auto pool = CIM::http::HttpConnectionPool::Create(
         "https://www.baidu.com", "", 10, 1000 * 30, 5);
-    sylar::IOManager::GetThis()->addTimer(1000, [pool]()
+    CIM::IOManager::GetThis()->addTimer(1000, [pool]()
                                           {
             auto r = pool->doGet("/", 3000, {
                         {"Accept-Encoding", "gzip, deflate, br"},
@@ -90,8 +90,8 @@ void test_https()
 
 void test_data()
 {
-    sylar::Address::ptr addr = sylar::Address::LookupAny("www.baidu.com:80");
-    auto sock = sylar::Socket::CreateTCP(addr);
+    CIM::Address::ptr addr = CIM::Address::LookupAny("www.baidu.com:80");
+    auto sock = CIM::Socket::CreateTCP(addr);
 
     sock->connect(addr);
     const char buff[] = "GET / HTTP/1.1\r\n"
@@ -131,7 +131,7 @@ void test_parser()
     }
 
     std::cout << "length: " << content.size() << " total: " << total << std::endl;
-    sylar::http::HttpResponseParser parser;
+    CIM::http::HttpResponseParser parser;
     size_t nparse = parser.execute(&content[0], content.size(), false);
     std::cout << "finish: " << parser.isFinished() << std::endl;
     content.resize(content.size() - nparse);
@@ -154,7 +154,7 @@ void test_parser()
 
     std::cout << "total: " << body.size() << " content:" << cl << std::endl;
 
-    sylar::ZlibStream::ptr stream = sylar::ZlibStream::CreateGzip(false);
+    CIM::ZlibStream::ptr stream = CIM::ZlibStream::CreateGzip(false);
     stream->write(body.c_str(), body.size());
     stream->flush();
 
@@ -166,7 +166,7 @@ void test_parser()
 
 int main(int argc, char **argv)
 {
-    sylar::IOManager iom(2);
+    CIM::IOManager iom(2);
     // iom.schedule(run);
     iom.schedule(run);
     return 0;

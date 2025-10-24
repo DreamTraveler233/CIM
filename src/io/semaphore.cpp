@@ -1,7 +1,7 @@
 #include "semaphore.hpp"
 #include <stdexcept>
 
-namespace sylar
+namespace CIM
 {
     Semaphore::Semaphore(uint32_t count)
     {

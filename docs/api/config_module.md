@@ -85,10 +85,10 @@ LexicalCast是配置值与字符串之间的转换工具，用于实现配置项
 #include "config.hpp"
 
 // 创建或查找一个int类型的配置项
-auto port_config = sylar::Config::Lookup<int>("system.port", 8080, "系统端口号");
+auto port_config = CIM::Config::Lookup<int>("system.port", 8080, "系统端口号");
 
 // 创建或查找一个string类型的配置项
-auto name_config = sylar::Config::Lookup<std::string>("system.name", "sylar", "系统名称");
+auto name_config = CIM::Config::Lookup<std::string>("system.name", "CIM", "系统名称");
 
 // 获取配置项的值
 int port = port_config->getValue();
@@ -107,7 +107,7 @@ name_config->fromString("new_name");
 #include "config.hpp"
 
 // 创建配置项
-auto config_int = sylar::Config::Lookup<int>("test.int", 100, "测试整数配置");
+auto config_int = CIM::Config::Lookup<int>("test.int", 100, "测试整数配置");
 
 // 添加变更监听器
 uint64_t listener_id = config_int->addListener([](const int& old_val, const int& new_val) {
@@ -129,7 +129,7 @@ public:
     int m_age;
 };
 
-namespace sylar {
+namespace CIM {
     // 特化字符串到Person的转换
     template<>
     class LexicalCast<std::string, Person> {
@@ -159,7 +159,7 @@ namespace sylar {
 }
 
 // 使用自定义类型配置项
-auto person_config = sylar::Config::Lookup<Person>("class.person", Person(), "人员信息");
+auto person_config = CIM::Config::Lookup<Person>("class.person", Person(), "人员信息");
 ```
 
 ### 配置文件支持
@@ -169,7 +169,7 @@ auto person_config = sylar::Config::Lookup<Person>("class.person", Person(), "�
 ```yaml
 system:
   port: 8080
-  name: "sylar"
+  name: "CIM"
   values: 
     - 1
     - 2
@@ -192,7 +192,7 @@ class:
 
 // 加载配置文件
 YAML::Node root = YAML::LoadFile("config.yaml");
-sylar::Config::LoadFromYaml(root);
+CIM::Config::LoadFromYaml(root);
 ```
 
 ### 完整示例
@@ -203,8 +203,8 @@ sylar::Config::LoadFromYaml(root);
 #include <iostream>
 
 // 定义配置项
-auto g_server_port = sylar::Config::Lookup<int>("server.port", 8080, "服务器端口");
-auto g_server_name = sylar::Config::Lookup<std::string>("server.name", "MyServer", "服务器名称");
+auto g_server_port = CIM::Config::Lookup<int>("server.port", 8080, "服务器端口");
+auto g_server_name = CIM::Config::Lookup<std::string>("server.name", "MyServer", "服务器名称");
 
 // 配置变更回调函数
 void onPortChanged(const int& old_val, const int& new_val) {
@@ -218,7 +218,7 @@ int main() {
     // 从配置文件加载配置
     try {
         YAML::Node config = YAML::LoadFile("server.yaml");
-        sylar::Config::LoadFromYaml(config);
+        CIM::Config::LoadFromYaml(config);
     } catch (...) {
         std::cout << "加载配置文件失败，使用默认配置" << std::endl;
     }
@@ -240,12 +240,12 @@ int main() {
 
 配置系统的核心设计理念之一是类型安全。传统的配置系统通常将所有配置项都存储为字符串，使用时再进行类型转换，这种方式容易出错且缺乏编译时检查。
 
-Sylar的配置系统通过模板技术实现类型安全：
+CIM的配置系统通过模板技术实现类型安全：
 
 ```cpp
 // 类型安全的配置项创建
-auto port_config = sylar::Config::Lookup<int>("system.port", 8080, "系统端口号");
-auto name_config = sylar::Config::Lookup<std::string>("system.name", "sylar", "系统名称");
+auto port_config = CIM::Config::Lookup<int>("system.port", 8080, "系统端口号");
+auto name_config = CIM::Config::Lookup<std::string>("system.name", "CIM", "系统名称");
 ```
 
 这样做的好处是：
@@ -260,7 +260,7 @@ auto name_config = sylar::Config::Lookup<std::string>("system.name", "sylar", "�
 对于自定义类型，用户只需特化LexicalCast模板即可：
 
 ```cpp
-namespace sylar {
+namespace CIM {
     template<>
     class LexicalCast<std::string, Person> {
     public:
@@ -344,7 +344,7 @@ class ConfigVar : public ConfigVariableBase {
 ```yaml
 system:
   port: 8080
-  name: "sylar"
+  name: "CIM"
   values: 
     - 1
     - 2

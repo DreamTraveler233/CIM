@@ -1,6 +1,6 @@
 #include "memory_pool.hpp"
 
-namespace sylar
+namespace CIM
 {
     /**
      * @brief NgxMemPool 类的构造函数，用于初始化内存池。

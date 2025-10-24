@@ -11,12 +11,12 @@ void testIPv4Address() {
     SYLAR_LOG_INFO(g_logger) << "=== IPv4 Address Tests ===";
     
     // 测试默认构造函数
-    sylar::IPv4Address addr1;
+    CIM::IPv4Address addr1;
     SYLAR_LOG_INFO(g_logger) << "Default IPv4 address: " << addr1.toString();
     assert(addr1.toString() == "0.0.0.0:0");
     
     // 测试带参数构造函数
-    sylar::IPv4Address addr2(0x01020304, 9999); // 1.2.3.4:9999
+    CIM::IPv4Address addr2(0x01020304, 9999); // 1.2.3.4:9999
     SYLAR_LOG_INFO(g_logger) << "IPv4 address with params: " << addr2.toString();
     assert(addr2.toString() == "1.2.3.4:9999");
     
@@ -28,7 +28,7 @@ void testIPv4Address() {
     assert(addr1.toString() == "0.0.0.0:1234");
     
     // 测试Create方法创建IPv4地址
-    auto addr3 = sylar::IPv4Address::Create("192.168.1.10", 8080);
+    auto addr3 = CIM::IPv4Address::Create("192.168.1.10", 8080);
     if (addr3) {
         SYLAR_LOG_INFO(g_logger) << "Created IPv4 address: " << addr3->toString();
         assert(addr3->toString() == "192.168.1.10:8080");
@@ -107,7 +107,7 @@ void testIPv6Address() {
     SYLAR_LOG_INFO(g_logger) << "=== IPv6 Address Tests ===";
     
     // 测试默认构造函数
-    sylar::IPv6Address addr1;
+    CIM::IPv6Address addr1;
     SYLAR_LOG_INFO(g_logger) << "Default IPv6 address: " << addr1.toString();
     assert(addr1.toString() == "[::]:0");
     
@@ -119,7 +119,7 @@ void testIPv6Address() {
     assert(addr1.toString() == "[::]:5678");
     
     // 测试Create方法创建IPv6地址
-    auto addr2 = sylar::IPv6Address::Create("::1", 8080);
+    auto addr2 = CIM::IPv6Address::Create("::1", 8080);
     if (addr2) {
         SYLAR_LOG_INFO(g_logger) << "Created IPv6 address: " << addr2->toString();
         assert(addr2->getPort() == 8080);
@@ -129,7 +129,7 @@ void testIPv6Address() {
     }
     
     // 测试Create方法创建IPv6地址（完整格式）
-    auto addr3 = sylar::IPv6Address::Create("2001:0db8:85a3:0000:0000:8a2e:0370:7334", 9999);
+    auto addr3 = CIM::IPv6Address::Create("2001:0db8:85a3:0000:0000:8a2e:0370:7334", 9999);
     if (addr3) {
         SYLAR_LOG_INFO(g_logger) << "Created IPv6 address: " << addr3->toString();
         assert(addr3->getPort() == 9999);
@@ -191,8 +191,8 @@ void testAddressLookup() {
     SYLAR_LOG_INFO(g_logger) << "=== Address Lookup Tests ===";
     
     // 测试域名解析
-    std::vector<sylar::Address::ptr> results;
-    if (sylar::Address::Lookup(results, "localhost")) {
+    std::vector<CIM::Address::ptr> results;
+    if (CIM::Address::Lookup(results, "localhost")) {
         SYLAR_LOG_INFO(g_logger) << "Lookup localhost: found " << results.size() << " addresses";
         for (size_t i = 0; i < results.size(); ++i) {
             SYLAR_LOG_INFO(g_logger) << "  [" << i << "] " << results[i]->toString();
@@ -202,19 +202,19 @@ void testAddressLookup() {
     }
     
     // 测试LookupAny
-    auto addr_any = sylar::Address::LookupAny("127.0.0.1:3000");
+    auto addr_any = CIM::Address::LookupAny("127.0.0.1:3000");
     if (addr_any) {
         SYLAR_LOG_INFO(g_logger) << "LookupAny 127.0.0.1:3000: " << addr_any->toString();
     }
     
     // 测试LookupAnyIpAddress
-    auto ip_addr = sylar::Address::LookupAnyIpAddress("127.0.0.1");
+    auto ip_addr = CIM::Address::LookupAnyIpAddress("127.0.0.1");
     if (ip_addr) {
         SYLAR_LOG_INFO(g_logger) << "LookupAnyIpAddress 127.0.0.1: " << ip_addr->toString();
     }
     
     // 测试IPv6地址解析
-    auto ipv6_addr = sylar::Address::LookupAny("[::1]:8080");
+    auto ipv6_addr = CIM::Address::LookupAny("[::1]:8080");
     if (ipv6_addr) {
         SYLAR_LOG_INFO(g_logger) << "Lookup IPv6 [::1]:8080: " << ipv6_addr->toString();
     }
@@ -223,10 +223,10 @@ void testAddressLookup() {
 void testAddressComparison() {
     SYLAR_LOG_INFO(g_logger) << "=== Address Comparison Tests ===";
     
-    auto addr1 = sylar::IPv4Address::Create("192.168.1.10", 8080);
-    auto addr2 = sylar::IPv4Address::Create("192.168.1.10", 8080);
-    auto addr3 = sylar::IPv4Address::Create("192.168.1.11", 8080);
-    auto addr4 = sylar::IPv4Address::Create("192.168.1.10", 9090);
+    auto addr1 = CIM::IPv4Address::Create("192.168.1.10", 8080);
+    auto addr2 = CIM::IPv4Address::Create("192.168.1.10", 8080);
+    auto addr3 = CIM::IPv4Address::Create("192.168.1.11", 8080);
+    auto addr4 = CIM::IPv4Address::Create("192.168.1.10", 9090);
     
     if (addr1 && addr2 && addr3 && addr4) {
         SYLAR_LOG_INFO(g_logger) << "Address1: " << addr1->toString();
@@ -250,7 +250,7 @@ void testAddressComparison() {
         SYLAR_LOG_INFO(g_logger) << "addr1 < addr3: " << (*addr1 < *addr3);
         
         // 测试IPv4与IPv6比较
-        auto ipv6_addr = sylar::IPv6Address::Create("::1", 8080);
+        auto ipv6_addr = CIM::IPv6Address::Create("::1", 8080);
         if (ipv6_addr) {
             assert(*addr1 != *ipv6_addr);
             SYLAR_LOG_INFO(g_logger) << "IPv4 != IPv6: " << (*addr1 != *ipv6_addr);
@@ -268,7 +268,7 @@ void testAddressFactory() {
     test_addr.sin_port = htons(9999);
     test_addr.sin_addr.s_addr = htonl(0x01020304); // 1.2.3.4
     
-    auto factory_addr = sylar::Address::Create((sockaddr*)&test_addr, sizeof(test_addr));
+    auto factory_addr = CIM::Address::Create((sockaddr*)&test_addr, sizeof(test_addr));
     if (factory_addr) {
         SYLAR_LOG_INFO(g_logger) << "Factory created IPv4 address: " << factory_addr->toString();
         assert(factory_addr->toString() == "1.2.3.4:9999");
@@ -281,7 +281,7 @@ void testAddressFactory() {
     test_addr6.sin6_port = htons(8888);
     test_addr6.sin6_addr = in6addr_loopback; // ::1
     
-    auto factory_addr6 = sylar::Address::Create((sockaddr*)&test_addr6, sizeof(test_addr6));
+    auto factory_addr6 = CIM::Address::Create((sockaddr*)&test_addr6, sizeof(test_addr6));
     if (factory_addr6) {
         SYLAR_LOG_INFO(g_logger) << "Factory created IPv6 address: " << factory_addr6->toString();
     }
@@ -291,7 +291,7 @@ void testAddressFactory() {
     memset(&test_unknown, 0, sizeof(test_unknown));
     test_unknown.sa_family = AF_UNIX; // 使用Unix域套接字族作为未知类型示例
     
-    auto factory_unknown = sylar::Address::Create((sockaddr*)&test_unknown, sizeof(test_unknown));
+    auto factory_unknown = CIM::Address::Create((sockaddr*)&test_unknown, sizeof(test_unknown));
     if (factory_unknown) {
         SYLAR_LOG_INFO(g_logger) << "Factory created unknown address: " << factory_unknown->toString();
     }
@@ -301,8 +301,8 @@ void testInterfaceAddresses() {
     SYLAR_LOG_INFO(g_logger) << "=== Interface Address Tests ===";
     
     // 测试获取所有接口地址
-    std::multimap<std::string, std::pair<sylar::Address::ptr, uint32_t>> all_iface_addrs;
-    if (sylar::Address::GetInterfaceAddresses(all_iface_addrs)) {
+    std::multimap<std::string, std::pair<CIM::Address::ptr, uint32_t>> all_iface_addrs;
+    if (CIM::Address::GetInterfaceAddresses(all_iface_addrs)) {
         SYLAR_LOG_INFO(g_logger) << "All interface addresses (" << all_iface_addrs.size() << " entries):";
         for (const auto& pair : all_iface_addrs) {
             SYLAR_LOG_INFO(g_logger) << "  " << pair.first << ": " << pair.second.first->toString()
@@ -313,8 +313,8 @@ void testInterfaceAddresses() {
     }
     
     // 测试获取特定接口地址 (lo)
-    std::vector<std::pair<sylar::Address::ptr, uint32_t>> iface_addrs;
-    if (sylar::Address::GetInterfaceAddresses(iface_addrs, "lo")) {
+    std::vector<std::pair<CIM::Address::ptr, uint32_t>> iface_addrs;
+    if (CIM::Address::GetInterfaceAddresses(iface_addrs, "lo")) {
         SYLAR_LOG_INFO(g_logger) << "Interface 'lo' addresses:";
         for (size_t i = 0; i < iface_addrs.size(); ++i) {
             SYLAR_LOG_INFO(g_logger) << "  [" << i << "] " << iface_addrs[i].first->toString()
@@ -325,8 +325,8 @@ void testInterfaceAddresses() {
     }
     
     // 测试获取默认接口地址
-    std::vector<std::pair<sylar::Address::ptr, uint32_t>> default_addrs;
-    if (sylar::Address::GetInterfaceAddresses(default_addrs, "")) {
+    std::vector<std::pair<CIM::Address::ptr, uint32_t>> default_addrs;
+    if (CIM::Address::GetInterfaceAddresses(default_addrs, "")) {
         SYLAR_LOG_INFO(g_logger) << "Default interface addresses:";
         for (size_t i = 0; i < default_addrs.size(); ++i) {
             SYLAR_LOG_INFO(g_logger) << "  [" << i << "] " << default_addrs[i].first->toString()
@@ -335,8 +335,8 @@ void testInterfaceAddresses() {
     }
     
     // 测试获取通配符接口地址
-    std::vector<std::pair<sylar::Address::ptr, uint32_t>> wildcard_addrs;
-    if (sylar::Address::GetInterfaceAddresses(wildcard_addrs, "*")) {
+    std::vector<std::pair<CIM::Address::ptr, uint32_t>> wildcard_addrs;
+    if (CIM::Address::GetInterfaceAddresses(wildcard_addrs, "*")) {
         SYLAR_LOG_INFO(g_logger) << "Wildcard interface addresses:";
         for (size_t i = 0; i < wildcard_addrs.size(); ++i) {
             SYLAR_LOG_INFO(g_logger) << "  [" << i << "] " << wildcard_addrs[i].first->toString()
@@ -349,14 +349,14 @@ void testIPAddressFactory() {
     SYLAR_LOG_INFO(g_logger) << "=== IPAddress Factory Tests ===";
     
     // 测试IPv4地址创建
-    auto ip_addr1 = sylar::IPAddress::Create("192.168.1.1", 1234);
+    auto ip_addr1 = CIM::IPAddress::Create("192.168.1.1", 1234);
     if (ip_addr1) {
         SYLAR_LOG_INFO(g_logger) << "IPAddress::Create IPv4: " << ip_addr1->toString();
         assert(ip_addr1->toString() == "192.168.1.1:1234");
     }
     
     // 测试IPv6地址创建
-    auto ip_addr2 = sylar::IPAddress::Create("::1", 5678);
+    auto ip_addr2 = CIM::IPAddress::Create("::1", 5678);
     if (ip_addr2) {
         SYLAR_LOG_INFO(g_logger) << "IPAddress::Create IPv6: " << ip_addr2->toString();
     }

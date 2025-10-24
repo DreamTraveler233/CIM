@@ -4,9 +4,9 @@
 #include "zlib_stream.hpp"
 #include "time_util.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     HttpResult::HttpResult(int _result, HttpResponse::ptr _response, const std::string &_error)
         : result(_result),

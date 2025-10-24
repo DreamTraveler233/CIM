@@ -5,7 +5,7 @@
 #include "util.hpp"
 #include <atomic>
 
-namespace sylar
+namespace CIM
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 

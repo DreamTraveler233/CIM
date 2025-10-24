@@ -1,7 +1,7 @@
 #include "http_servlet.hpp"
 #include <fnmatch.h>
 
-namespace sylar::http
+namespace CIM::http
 {
     Servlet::Servlet(const std::string &name)
         : m_name(name)
@@ -24,7 +24,7 @@ namespace sylar::http
     ServletDispatch::ServletDispatch()
         : Servlet("ServletDispatch")
     {
-        m_default.reset(new NotFoundServlet("sylar/1.0"));
+        m_default.reset(new NotFoundServlet("CIM/1.0"));
     }
 
     int32_t ServletDispatch::handle(HttpRequest::ptr request, http::HttpResponse::ptr response, HttpSession::ptr session)
@@ -183,7 +183,7 @@ namespace sylar::http
     int32_t NotFoundServlet::handle(HttpRequest::ptr request, HttpResponse::ptr response, HttpSession::ptr session)
     {
         response->setStatus(HttpStatus::NOT_FOUND);
-        response->setHeader("Server", "sylar/1.0.0");
+        response->setHeader("Server", "CIM/1.0.0");
         response->setHeader("Content-Type", "text/html");
         response->setBody(m_content);
         return 0;

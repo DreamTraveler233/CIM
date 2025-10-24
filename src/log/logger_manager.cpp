@@ -3,7 +3,7 @@
 #include "log_appender.hpp"
 #include "logger.hpp"
 
-namespace sylar
+namespace CIM
 {
     LoggerManager::LoggerManager()
     {

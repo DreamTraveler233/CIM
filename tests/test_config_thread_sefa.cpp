@@ -8,9 +8,9 @@
 #include <cassert>
 
 // 定义测试配置项
-auto g_config_int = sylar::Config::Lookup<int>("test.int", 0, "test int config");
-auto g_config_string = sylar::Config::Lookup<std::string>("test.string", "default", "test string config");
-auto g_config_vector = sylar::Config::Lookup<std::vector<int>>("test.vector", std::vector<int>{1, 2, 3}, "test vector config");
+auto g_config_int = CIM::Config::Lookup<int>("test.int", 0, "test int config");
+auto g_config_string = CIM::Config::Lookup<std::string>("test.string", "default", "test string config");
+auto g_config_vector = CIM::Config::Lookup<std::vector<int>>("test.vector", std::vector<int>{1, 2, 3}, "test vector config");
 
 // 原子计数器，用于统计操作次数
 std::atomic<int> g_value_changes(0);    // 统计配置值改变的次数

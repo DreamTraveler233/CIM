@@ -11,7 +11,7 @@ static auto g_logger = SYLAR_LOG_ROOT();
 void test_socket()
 {
     // 使用DNS解析将域名 "www.baidu.com" 转换为IP地址
-    sylar::IPAddress::ptr addr = sylar::Address::LookupAnyIpAddress("www.baidu.com");
+    CIM::IPAddress::ptr addr = CIM::Address::LookupAnyIpAddress("www.baidu.com");
     if (addr)
     {
         SYLAR_LOG_INFO(g_logger) << "get address: " << addr->toString();
@@ -23,7 +23,7 @@ void test_socket()
     }
 
     // 创建TCP套接字并连接到目标地址的80端口
-    sylar::Socket::ptr sock = sylar::Socket::CreateTCP(addr);
+    CIM::Socket::ptr sock = CIM::Socket::CreateTCP(addr);
     addr->setPort(80);
     if (!sock->connect(addr))
     {
@@ -67,7 +67,7 @@ void test_socket()
 
 int main(int argc, char **argv)
 {
-    sylar::IOManager iom;
+    CIM::IOManager iom;
     iom.schedule(test_socket);
     return 0;
 }

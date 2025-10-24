@@ -1,6 +1,6 @@
 #include "http.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     /**
      * @brief 将字符串表示的HTTP方法转换为HttpMethod枚举值

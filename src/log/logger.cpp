@@ -1,7 +1,7 @@
 #include "logger.hpp"
 #include "yaml-cpp/yaml.h"
 
-namespace sylar
+namespace CIM
 {
     Logger::Logger(const std::string &name)
         : m_name(name),

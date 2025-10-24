@@ -7,7 +7,7 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 
-namespace sylar
+namespace CIM
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 

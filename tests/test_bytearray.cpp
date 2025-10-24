@@ -17,7 +17,7 @@ void test_basic_types()
         {                                                                    \
             vec.push_back(rand());                                           \
         }                                                                    \
-        sylar::ByteArray::ptr ba(new sylar::ByteArray(base_len));            \
+        CIM::ByteArray::ptr ba(new CIM::ByteArray(base_len));            \
         for (auto &it : vec)                                                 \
         {                                                                    \
             ba->write_fun(it);                                               \
@@ -55,7 +55,7 @@ void test_float_types()
 {
     SYLAR_LOG_INFO(g_logger) << "Test float types";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(1));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(1));
 
     // Test float
     float f = 3.1415926f;
@@ -78,7 +78,7 @@ void test_string_types()
 {
     SYLAR_LOG_INFO(g_logger) << "Test string types";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(32));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(32));
     std::string str = "Hello, World! 你好世界！";
 
     // Test F16 string
@@ -131,7 +131,7 @@ void test_file_operations()
         {                                                                                                      \
             vec.push_back(rand());                                                                             \
         }                                                                                                      \
-        sylar::ByteArray::ptr ba(new sylar::ByteArray(base_len));                                              \
+        CIM::ByteArray::ptr ba(new CIM::ByteArray(base_len));                                              \
         for (auto &it : vec)                                                                                   \
         {                                                                                                      \
             ba->write_fun(it);                                                                                 \
@@ -144,9 +144,9 @@ void test_file_operations()
         }                                                                                                      \
         SYLAR_ASSERT(ba->getReadSize() == 0);                                                                  \
         ba->setPosition(0);                                                                                    \
-        SYLAR_ASSERT(ba->writeToFile("/home/szy/code/sylar/bin/log/" #type "_" #len "-" #read_fun ".data"));   \
-        sylar::ByteArray::ptr ba2(new sylar::ByteArray(base_len * 2));                                         \
-        SYLAR_ASSERT(ba2->readFromFile("/home/szy/code/sylar/bin/log/" #type "_" #len "-" #read_fun ".data")); \
+        SYLAR_ASSERT(ba->writeToFile("/home/szy/code/CIM/bin/log/" #type "_" #len "-" #read_fun ".data"));   \
+        CIM::ByteArray::ptr ba2(new CIM::ByteArray(base_len * 2));                                         \
+        SYLAR_ASSERT(ba2->readFromFile("/home/szy/code/CIM/bin/log/" #type "_" #len "-" #read_fun ".data")); \
         ba2->setPosition(0);                                                                                   \
         SYLAR_ASSERT(ba->toString() == ba2->toString());                                                       \
         SYLAR_ASSERT(ba->getPosition() == 0);                                                                  \
@@ -176,7 +176,7 @@ void test_buffer_operations()
 {
     SYLAR_LOG_INFO(g_logger) << "Test buffer operations";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(16));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(16));
 
     // Write some data
     for (int i = 0; i < 100; ++i)
@@ -205,7 +205,7 @@ void test_edge_cases()
 {
     SYLAR_LOG_INFO(g_logger) << "Test edge cases";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(1));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(1));
 
     // Test empty string
     ba->writeStringVint("");
@@ -269,7 +269,7 @@ void test_byte_order()
 {
     SYLAR_LOG_INFO(g_logger) << "Test byte order";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(1));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(1));
 
     // Test big endian (default)
     SYLAR_ASSERT(!ba->isLittleEndian());
@@ -290,7 +290,7 @@ void test_clear_and_positions()
 {
     SYLAR_LOG_INFO(g_logger) << "Test clear and positions";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(16));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(16));
 
     // Add some data
     for (int i = 0; i < 10; ++i)
@@ -320,7 +320,7 @@ void test_to_string_functions()
 {
     SYLAR_LOG_INFO(g_logger) << "Test to string functions";
 
-    sylar::ByteArray::ptr ba(new sylar::ByteArray(16));
+    CIM::ByteArray::ptr ba(new CIM::ByteArray(16));
     std::string test_str = "ByteArray to string test";
 
     ba->writeStringWithoutLength(test_str);

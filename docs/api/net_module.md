@@ -1,8 +1,8 @@
-# Sylar框架网络模块文档
+# CIM框架网络模块文档
 
 ## 概述
 
-Sylar框架的网络模块提供了一套完整的网络编程解决方案，包括地址封装、Socket操作、流处理、TCP服务器等核心组件。该模块设计目标是提供高性能、易用性和可扩展性，支持IPv4、IPv6和Unix域套接字，并与框架的协程系统无缝集成。
+CIM框架的网络模块提供了一套完整的网络编程解决方案，包括地址封装、Socket操作、流处理、TCP服务器等核心组件。该模块设计目标是提供高性能、易用性和可扩展性，支持IPv4、IPv6和Unix域套接字，并与框架的协程系统无缝集成。
 
 ### 整体架构层次
 
@@ -267,7 +267,7 @@ Hook模块实现了对系统调用的拦截，使其协程化，避免阻塞整�
 - 拦截常见的系统调用（sleep、socket相关、IO操作等）
 - 使阻塞操作变为协程挂起和恢复
 
-Hook机制是sylar框架协程系统的重要组成部分：
+Hook机制是CIM框架协程系统的重要组成部分：
 - 对sleep、usleep、nanosleep等睡眠函数进行hook，使其能够自动挂起和恢复协程
 - 对socket相关的系统调用（如connect、accept、read、write等）进行hook，实现非阻塞操作
 - 通过IOManager与协程调度系统集成，当I/O操作无法立即完成时自动挂起协程
@@ -356,10 +356,10 @@ ByteArray支持多种数据类型的读写操作：
 #include "net/socket.hpp"
 
 // 创建TCP服务器
-sylar::TcpServer::ptr server(new sylar::TcpServer);
+CIM::TcpServer::ptr server(new CIM::TcpServer);
 
 // 创建并绑定地址
-sylar::Address::ptr addr = sylar::Address::LookupAny("0.0.0.0:8080");
+CIM::Address::ptr addr = CIM::Address::LookupAny("0.0.0.0:8080");
 server->bind(addr);
 
 // 启动服务器
@@ -369,9 +369,9 @@ server->start();
 在实际应用中，通常需要继承TcpServer类并重写handleClient方法来处理客户端连接：
 
 ```
-class EchoServer : public sylar::TcpServer {
+class EchoServer : public CIM::TcpServer {
 public:
-    void handleClient(sylar::Socket::ptr client) override {
+    void handleClient(CIM::Socket::ptr client) override {
         // 处理客户端连接
         char buffer[1024];
         while(true) {
@@ -391,10 +391,10 @@ public:
 #include "net/socket.hpp"
 
 // 创建TCP Socket
-sylar::Socket::ptr sock = sylar::Socket::CreateTCPSocket();
+CIM::Socket::ptr sock = CIM::Socket::CreateTCPSocket();
 
 // 连接服务器
-sylar::Address::ptr addr = sylar::Address::LookupAny("127.0.0.1:8080");
+CIM::Address::ptr addr = CIM::Address::LookupAny("127.0.0.1:8080");
 sock->connect(addr);
 
 // 发送数据
@@ -409,7 +409,7 @@ int len = sock->recv(buffer, sizeof(buffer));
 在实际应用中，可能需要添加错误处理和超时控制：
 
 ```
-sylar::Socket::ptr sock = sylar::Socket::CreateTCPSocket();
+CIM::Socket::ptr sock = CIM::Socket::CreateTCPSocket();
 sock->setRecvTimeout(5000); // 设置接收超时为5秒
 sock->setSendTimeout(5000); // 设置发送超时为5秒
 
@@ -425,7 +425,7 @@ if(!sock->connect(addr, 3000)) { // 连接超时3秒
 #include "net/byte_array.hpp"
 
 // 创建ByteArray
-sylar::ByteArray::ptr ba(new sylar::ByteArray);
+CIM::ByteArray::ptr ba(new CIM::ByteArray);
 
 // 写入数据
 ba->writeFint32(12345);
@@ -446,13 +446,13 @@ struct Person {
     double salary;
 };
 
-void serializePerson(sylar::ByteArray::ptr ba, const Person& p) {
+void serializePerson(CIM::ByteArray::ptr ba, const Person& p) {
     ba->writeStringF16(p.name);
     ba->writeFint32(p.age);
     ba->writeFdouble(p.salary);
 }
 
-Person deserializePerson(sylar::ByteArray::ptr ba) {
+Person deserializePerson(CIM::ByteArray::ptr ba) {
     Person p;
     p.name = ba->readStringF16();
     p.age = ba->readFint32();
@@ -467,11 +467,11 @@ Person deserializePerson(sylar::ByteArray::ptr ba) {
 #include "net/socket_stream.hpp"
 
 // 创建Socket
-sylar::Socket::ptr sock = sylar::Socket::CreateTCPSocket();
-sock->connect(sylar::Address::LookupAny("127.0.0.1:8080"));
+CIM::Socket::ptr sock = CIM::Socket::CreateTCPSocket();
+sock->connect(CIM::Address::LookupAny("127.0.0.1:8080"));
 
 // 创建SocketStream
-sylar::SocketStream::ptr stream(new sylar::SocketStream(sock));
+CIM::SocketStream::ptr stream(new CIM::SocketStream(sock));
 
 // 使用流接口进行操作
 char buffer[1024];
@@ -487,27 +487,27 @@ if(n > 0) {
 #include "net/address.hpp"
 
 // 解析域名
-std::vector<sylar::Address::ptr> results;
-sylar::Address::Lookup(results, "www.google.com", AF_INET);
+std::vector<CIM::Address::ptr> results;
+CIM::Address::Lookup(results, "www.google.com", AF_INET);
 
 // 创建IP地址
-sylar::IPAddress::ptr addr = sylar::IPAddress::Create("192.168.1.1", 8080);
+CIM::IPAddress::ptr addr = CIM::IPAddress::Create("192.168.1.1", 8080);
 
 // 获取本地网络接口地址
-std::multimap<std::string, std::pair<sylar::Address::ptr, uint32_t>> interfaces;
-sylar::Address::GetInterfaceAddresses(interfaces);
+std::multimap<std::string, std::pair<CIM::Address::ptr, uint32_t>> interfaces;
+CIM::Address::GetInterfaceAddresses(interfaces);
 ```
 
 ## 协程集成
 
-网络模块与Sylar框架的协程系统深度集成：
+网络模块与CIM框架的协程系统深度集成：
 
 1. Socket操作支持协程挂起和恢复
 2. Hook机制使系统调用协程化
 3. IOManager调度网络事件
 4. 超时控制支持协程友好的实现
 
-协程集成是sylar网络模块的核心特性之一：
+协程集成是CIM网络模块的核心特性之一：
 - 当网络I/O操作无法立即完成时，协程会自动挂起，不会阻塞线程
 - 通过IOManager监听文件描述符事件，当条件满足时自动恢复协程执行
 - 实现了同步编程模型下的异步性能，大大简化了异步网络编程的复杂性
@@ -544,7 +544,7 @@ sylar::Address::GetInterfaceAddresses(interfaces);
 
 ## 总结
 
-Sylar框架的网络模块提供了一套完整、高性能、易用的网络编程解决方案。通过面向对象的设计和协程的集成，大大简化了网络编程的复杂性，同时保持了良好的性能和可扩展性。开发者可以基于这些组件快速构建各种网络应用。
+CIM框架的网络模块提供了一套完整、高性能、易用的网络编程解决方案。通过面向对象的设计和协程的集成，大大简化了网络编程的复杂性，同时保持了良好的性能和可扩展性。开发者可以基于这些组件快速构建各种网络应用。
 
 网络模块的主要优势包括：
 - 完整的网络编程抽象，涵盖从地址解析到数据传输的各个环节

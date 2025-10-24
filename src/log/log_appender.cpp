@@ -2,7 +2,7 @@
 #include "yaml-cpp/yaml.h"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     LogAppender::~LogAppender() {}
     void LogAppender::setFormatter(LogFormatter::ptr formatter)

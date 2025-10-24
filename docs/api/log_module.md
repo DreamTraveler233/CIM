@@ -177,17 +177,17 @@ LogFileManager是一个单例类，负责日志文件（LogFile）管理类，�
         appenders: StdoutLogAppender
 
 */
-auto g_logger = SYLAR_LOG_ROOT();
+auto g_logger = CIM_LOG_ROOT();
 
 // 使用基本日志宏
-SYLAR_LOG_DEBUG(g_logger) << "这是一条DEBUG级别的日志";
-SYLAR_LOG_INFO(g_logger) << "这是一条INFO级别的日志";
-SYLAR_LOG_WARN(g_logger) << "这是一条WARN级别的日志";
+CIM_LOG_DEBUG(g_logger) << "这是一条DEBUG级别的日志";
+CIM_LOG_INFO(g_logger) << "这是一条INFO级别的日志";
+CIM_LOG_WARN(g_logger) << "这是一条WARN级别的日志";
 
 // 使用格式化日志宏
-SYLAR_LOG_FMT_INFO(g_logger, "用户 %s 登录成功，IP地址: %s", username.c_str(), ip.c_str());
-SYLAR_LOG_FMT_ERROR(g_logger, "数据库连接失败，错误码: %d, 错误信息: %s", err_code, err_msg.c_str());
-SYLAR_LOG_FMT_DEBUG(g_logger, "处理完成，耗时: %ld 毫秒，处理数据量: %d 条", time_used, data_count);
+CIM_LOG_FMT_INFO(g_logger, "用户 %s 登录成功，IP地址: %s", username.c_str(), ip.c_str());
+CIM_LOG_FMT_ERROR(g_logger, "数据库连接失败，错误码: %d, 错误信息: %s", err_code, err_msg.c_str());
+CIM_LOG_FMT_DEBUG(g_logger, "处理完成，耗时: %ld 毫秒，处理数据量: %d 条", time_used, data_count);
 ```
 
 ### 自定义日志器
@@ -202,22 +202,22 @@ SYLAR_LOG_FMT_DEBUG(g_logger, "处理完成，耗时: %ld 毫秒，处理数据�
 */
 
 // 创建自定义日志器，并设置全局配置
-auto g_logger = SYLAR_LOG_NAME("my_logger");
-g_logger->setFormatter(std::make_shared<sylar::LogFormatter>("%d%T%t%T%m%n"));
+auto g_logger = CIM_LOG_NAME("my_logger");
+g_logger->setFormatter(std::make_shared<CIM::LogFormatter>("%d%T%t%T%m%n"));
 g_logger->setLevel(Level::INFO);
 
 // 添加文件输出器，并设置单独的配置
-auto file_appender = std::make_shared<sylar::FileLogAppender>("my_logger.log");
-file_appender->setFormatter(std::make_shared<sylar::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%l%T%m%n"));
+auto file_appender = std::make_shared<CIM::FileLogAppender>("my_logger.log");
+file_appender->setFormatter(std::make_shared<CIM::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%l%T%m%n"));
 g_logger->setLevel(Level::DEBUG);
 g_logger->addAppender(file_appender);
 
 // 添加控制台输出器，没有单独配置，则采用全局配置
-auto stdout_appender = std::make_shared<sylar::StdoutLogAppender>();
+auto stdout_appender = std::make_shared<CIM::StdoutLogAppender>();
 g_logger->addAppender(stdout_appender);
 
 // 记录日志
-SYLAR_LOG_INFO(g_logger) << "这是一条自定义日志";
+CIM_LOG_INFO(g_logger) << "这是一条自定义日志";
 ```
 
 ### 完整示例
@@ -227,31 +227,31 @@ SYLAR_LOG_INFO(g_logger) << "这是一条自定义日志";
 
 void setupLogger() {
     // 获取根日志器
-    auto root_logger = SYLAR_LOG_ROOT();
+    auto root_logger = CIM_LOG_ROOT();
     
     // 创建并配置控制台输出器
-    auto console_appender = std::make_shared<sylar::StdoutLogAppender>();
-    console_appender->setLevel(sylar::Level::INFO);
+    auto console_appender = std::make_shared<CIM::StdoutLogAppender>();
+    console_appender->setLevel(CIM::Level::INFO);
     console_appender->setFormatter(
-        std::make_shared<sylar::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T[%p]%T[%c]%T%f:%l%T%m%n")
+        std::make_shared<CIM::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T[%p]%T[%c]%T%f:%l%T%m%n")
     );
     
     // 创建并配置文件输出器
-    auto file_appender = std::make_shared<sylar::FileLogAppender>("logs/app.log");
-    file_appender->setLevel(sylar::Level::DEBUG);
+    auto file_appender = std::make_shared<CIM::FileLogAppender>("logs/app.log");
+    file_appender->setLevel(CIM::Level::DEBUG);
     file_appender->setFormatter(
-        std::make_shared<sylar::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T[%p]%T[%c]%T%f:%l%T%m%n")
+        std::make_shared<CIM::LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T[%p]%T[%c]%T%f:%l%T%m%n")
     );
     
     // 设置日志轮转类型
-    file_appender->getLogFile()->setRotateType(sylar::RotateType::HOUR);
+    file_appender->getLogFile()->setRotateType(CIM::RotateType::HOUR);
     
     // 添加输出器到日志器
     root_logger->addAppender(console_appender);
     root_logger->addAppender(file_appender);
     
     // 设置日志器级别
-    root_logger->setLevel(sylar::Level::DEBUG);
+    root_logger->setLevel(CIM::Level::DEBUG);
 }
 
 int main() {
@@ -259,13 +259,13 @@ int main() {
     setupLogger();
     
     // 获取日志器
-    auto logger = SYLAR_LOG_ROOT();
+    auto logger = CIM_LOG_ROOT();
     
     // 记录不同级别的日志
-    SYLAR_LOG_DEBUG(logger) << "Debug message";
-    SYLAR_LOG_INFO(logger) << "Info message";
-    SYLAR_LOG_WARN(logger) << "Warning message";
-    SYLAR_LOG_ERROR(logger) << "Error message";
+    CIM_LOG_DEBUG(logger) << "Debug message";
+    CIM_LOG_INFO(logger) << "Info message";
+    CIM_LOG_WARN(logger) << "Warning message";
+    CIM_LOG_ERROR(logger) << "Error message";
     
     return 0;
 }
@@ -279,13 +279,13 @@ int main() {
 
 ```cpp
 // 创建日志器
-auto g_logger = SYLAR_LOG_ROOT();
+auto g_logger = CIM_LOG_ROOT();
 
 // 从配置文件加载配置
 YAML::Node config = YAML::LoadFile("log.yaml");
-sylar::Config::LoadFromYaml(config);
+CIM::Config::LoadFromYaml(config);
 
-SYLAR_LOG_INFO(g_logger) << "通过配置文件设置日志器";
+CIM_LOG_INFO(g_logger) << "通过配置文件设置日志器";
 ```
 
 日志模块支持通过YAML配置文件进行配置：
@@ -297,7 +297,7 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        path: /home/szy/code/sylar/bin/log/root.log
+        path: /home/szy/code/CIM/bin/log/root.log
         formatter: "%d%T%t%T%m%n"
         rotate_type: minute
       - type: StdoutLogAppender
@@ -308,7 +308,7 @@ logs:
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
-        path: /home/szy/code/sylar/bin/log/system.log
+        path: /home/szy/code/CIM/bin/log/system.log
         level: DEBUG
         formatter: "%d%T<%f:%l>%m%n"
         rotate_type: Hour
@@ -317,7 +317,7 @@ logs:
 
 ### 日志轮转功能
 
-Sylar日志模块支持自动日志轮转功能，可以按照时间单位自动分割日志文件，避免单个日志文件过大。
+CIM日志模块支持自动日志轮转功能，可以按照时间单位自动分割日志文件，避免单个日志文件过大。
 
 #### 轮转类型
 
@@ -336,8 +336,8 @@ Sylar日志模块支持自动日志轮转功能，可以按照时间单位自动
 
 ```cpp
 // 设置轮转类型
-auto file_appender = std::make_shared<sylar::FileLogAppender>("app.log");
-file_appender->getLogFile()->setRotateType(sylar::RotateType::DAY);
+auto file_appender = std::make_shared<CIM::FileLogAppender>("app.log");
+file_appender->getLogFile()->setRotateType(CIM::RotateType::DAY);
 
 // 或者通过配置文件设置 rotate_type 字段
 ```

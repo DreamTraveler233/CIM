@@ -1,7 +1,7 @@
 #include "http_session.hpp"
 #include "http_parser.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     HttpSession::HttpSession(Socket::ptr sock, bool owner)
         : SocketStream(sock, owner)

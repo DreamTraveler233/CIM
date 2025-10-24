@@ -1,7 +1,7 @@
 #include "uri.hpp"
 #include <sstream>
 
-namespace sylar {
+namespace CIM {
 %%{
     # See RFC 3986: http://www.ietf.org/rfc/rfc3986.txt
 

@@ -1,7 +1,7 @@
 #include "socket_stream.hpp"
 #include "util.hpp"
 
-namespace sylar
+namespace CIM
 {
     SocketStream::SocketStream(Socket::ptr sock, bool owner)
         : m_socket(sock),
@@ -81,6 +81,11 @@ namespace sylar
         {
             m_socket->close();
         }
+    }
+
+    Socket::ptr SocketStream::getSocket() const
+    {
+        return m_socket;
     }
 
     Address::ptr SocketStream::getRemoteAddress()

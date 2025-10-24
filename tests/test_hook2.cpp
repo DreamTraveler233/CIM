@@ -10,7 +10,7 @@ auto g_logger = SYLAR_LOG_ROOT();
 
 void test_hook_with_coroutine()
 {
-    sylar::IOManager iom(1, false, "test");
+    CIM::IOManager iom(1, false, "test");
 
     SYLAR_LOG_INFO(g_logger) << "test_hook_with_coroutine begin";
 
@@ -85,7 +85,7 @@ void test_socket_hook()
 int main(int argc, char **argv)
 {
     // test_hook_with_coroutine();
-    sylar::IOManager iom;
+    CIM::IOManager iom;
     iom.schedule(test_socket_hook);
     return 0;
 }

@@ -2,23 +2,23 @@
 #include "config.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     // 配置 TCP 读超时事件
     static auto g_tcp_server_read_timeout =
-        sylar::Config::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2),
+        CIM::Config::Lookup("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2),
                               "tcp server read timeout");
 
-    TcpServer::TcpServer(sylar::IOManager *worker,
-                         sylar::IOManager *io_worker,
-                         sylar::IOManager *accept_worker)
+    TcpServer::TcpServer(CIM::IOManager *worker,
+                         CIM::IOManager *io_worker,
+                         CIM::IOManager *accept_worker)
         : m_worker(worker),
           m_ioWorker(io_worker),
           m_acceptWorker(accept_worker),
           m_recvTimeout(g_tcp_server_read_timeout->getValue()),
-          m_name("sylar/1.0.0"),
+          m_name("CIM/1.0.0"),
           m_isRun(false)
     {
     }
@@ -37,7 +37,7 @@ namespace sylar
         m_conf.reset(new TcpServerConf(v));
     }
 
-    bool TcpServer::bind(sylar::Address::ptr addr, bool ssl)
+    bool TcpServer::bind(CIM::Address::ptr addr, bool ssl)
     {
         std::vector<Address::ptr> addrs;
         std::vector<Address::ptr> fails;

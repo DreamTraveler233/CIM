@@ -1,6 +1,6 @@
 #include "string_util.hpp"
 
-namespace sylar
+namespace CIM
 {
     bool StringUtil::StartsWith(const std::string &str, const std::string &sub)
     {

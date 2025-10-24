@@ -2,7 +2,7 @@
 #include "logger.hpp"
 #include <cstdarg>
 
-namespace sylar
+namespace CIM
 {
     LogEvent::LogEvent(std::shared_ptr<Logger> logger, Level level,
                        const char *file_name, int32_t line, uint32_t elapse,
@@ -43,13 +43,13 @@ namespace sylar
         size_t pos = file_name.find_last_of('/');
         if (pos != std::string::npos)
         {
-            // 查找 "sylar/" 子字符串
-            size_t sylar_pos = file_name.find("sylar/");
+            // 查找 "CIM/" 子字符串
+            size_t sylar_pos = file_name.find("CIM/");
             if (sylar_pos != std::string::npos)
             {
                 return file_name.substr(sylar_pos + 6);
             }
-            // 如果没有找到 "sylar/"，则返回文件名部分
+            // 如果没有找到 "CIM/"，则返回文件名部分
             return file_name.substr(pos + 1);
         }
         return file_name;

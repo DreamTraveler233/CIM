@@ -1,6 +1,6 @@
 #include "lock.hpp"
 
-namespace sylar
+namespace CIM
 {
     Mutex::Mutex()
     {

@@ -2,19 +2,19 @@
 #include "iomanager.hpp"
 #include "macro.hpp"
 
-sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
 void run()
 {
-    auto addr = sylar::Address::LookupAny("0.0.0.0:8033");
+    auto addr = CIM::Address::LookupAny("0.0.0.0:8033");
     SYLAR_LOG_INFO(g_logger) << *addr;
-    //auto addr2 = sylar::UnixAddress::ptr(new sylar::UnixAddress("/tmp/unix_addr"));
-    std::vector<sylar::Address::ptr> addrs;
+    //auto addr2 = CIM::UnixAddress::ptr(new CIM::UnixAddress("/tmp/unix_addr"));
+    std::vector<CIM::Address::ptr> addrs;
     addrs.push_back(addr);
     //addrs.push_back(addr2);
 
-    sylar::TcpServer::ptr tcp_server(new sylar::TcpServer);
-    std::vector<sylar::Address::ptr> fails;
+    CIM::TcpServer::ptr tcp_server(new CIM::TcpServer);
+    std::vector<CIM::Address::ptr> fails;
     while (!tcp_server->bind(addrs, fails))
     {
         sleep(2);
@@ -23,7 +23,7 @@ void run()
 }
 int main(int argc, char **argv)
 {
-    sylar::IOManager iom(2);
+    CIM::IOManager iom(2);
     iom.schedule(run);
     return 0;
 }

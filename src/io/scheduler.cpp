@@ -2,7 +2,7 @@
 #include "macro.hpp"
 #include "hook.hpp"
 
-namespace sylar
+namespace CIM
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 
@@ -168,7 +168,7 @@ namespace sylar
         SYLAR_ASSERT(Scheduler::GetThis() != nullptr);
         if (Scheduler::GetThis() == this)
         {
-            if (thread == -1 || thread == sylar::GetThreadId())
+            if (thread == -1 || thread == CIM::GetThreadId())
             {
                 return;
             }
@@ -200,7 +200,7 @@ namespace sylar
     void Scheduler::run()
     {
         // 启动HOOK
-        sylar::set_hook_enable(true);
+        CIM::set_hook_enable(true);
 
         setThis(); // 设置当前线程的调度器实例
 

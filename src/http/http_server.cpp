@@ -3,9 +3,9 @@
 // #include "config_servlet.hpp"
 // #include "status_servlet.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     HttpServer::HttpServer(bool keepalive, IOManager *worker, IOManager *accept_worker)
         : TcpServer(worker, accept_worker),

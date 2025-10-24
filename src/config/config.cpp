@@ -2,7 +2,7 @@
 #include "env.hpp"
 #include <sys/stat.h>
 
-namespace sylar
+namespace CIM
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 
@@ -46,7 +46,7 @@ namespace sylar
     }
 
     static std::map<std::string, uint64_t> s_file2modifytime;
-    static sylar::Mutex s_mutex;
+    static CIM::Mutex s_mutex;
 
     void Config::LoadFromConfDir(const std::string &path, bool force)
     {

@@ -10,7 +10,7 @@ static auto g_logger = SYLAR_LOG_ROOT();
 
 void test_request()
 {
-    sylar::http::HttpRequestParser::ptr parser(new sylar::http::HttpRequestParser);
+    CIM::http::HttpRequestParser::ptr parser(new CIM::http::HttpRequestParser);
     std::string tmp = test_request_data;
     size_t size = parser->execute(&tmp[0], tmp.size());
     SYLAR_LOG_INFO(g_logger) << "execute rt=" << size
@@ -39,7 +39,7 @@ const char test_response_data[] = "HTTP/1.1 200 OK\r\n"
 
 void test_response()
 {
-    sylar::http::HttpResponseParser parser;
+    CIM::http::HttpResponseParser parser;
     std::string tmp = test_response_data;
     size_t s = parser.execute(&tmp[0], tmp.size(), true);
     SYLAR_LOG_ERROR(g_logger) << "execute rt=" << s

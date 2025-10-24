@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-namespace sylar
+namespace CIM
 {
     Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 

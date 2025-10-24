@@ -1,11 +1,11 @@
 #include "ws_server.hpp"
 #include "macro.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-    WSServer::WSServer(sylar::IOManager *worker, sylar::IOManager *io_worker, sylar::IOManager *accept_worker)
+    WSServer::WSServer(CIM::IOManager *worker, CIM::IOManager *io_worker, CIM::IOManager *accept_worker)
         : TcpServer(worker, io_worker, accept_worker)
     {
         m_dispatch.reset(new WSServletDispatch);

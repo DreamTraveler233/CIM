@@ -1,7 +1,7 @@
 #include "ws_connection.hpp"
 #include "hash_util.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     WSConnection::WSConnection(Socket::ptr sock, bool owner)
         : HttpConnection(sock, owner)
@@ -66,7 +66,7 @@ namespace sylar::http
         }
         req->setHeader("Upgrade", "websocket");
         req->setHeader("Sec-webSocket-Version", "13");
-        req->setHeader("Sec-webSocket-Key", sylar::base64encode(random_string(16)));
+        req->setHeader("Sec-webSocket-Key", CIM::base64encode(random_string(16)));
         if (!has_host)
         {
             req->setHeader("Host", uri->getHost());

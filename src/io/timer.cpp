@@ -2,7 +2,7 @@
 #include "time_util.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     Timer::Timer(uint64_t ms, std::function<void()> cb, bool recurring, TimerManager *manager)
         : m_recurring(recurring),

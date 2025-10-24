@@ -2,10 +2,10 @@
 #include "logger_manager.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     // 用于存储所有的日志定义
-    auto g_log_defines = sylar::Config::Lookup("logs", std::set<LogDefine>(), "logs config");
+    auto g_log_defines = CIM::Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
     // 静态变量初始化在main函数之前
     struct LogInit

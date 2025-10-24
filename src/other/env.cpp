@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-namespace sylar
+namespace CIM
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     bool Env::init(int argc, char **argv)
     {
@@ -165,8 +165,8 @@ namespace sylar
         {
             return path;
         }
-        static sylar::ConfigVar<std::string>::ptr g_server_work_path =
-            sylar::Config::Lookup<std::string>("server.work_path");
+        static CIM::ConfigVar<std::string>::ptr g_server_work_path =
+            CIM::Config::Lookup<std::string>("server.work_path");
         return g_server_work_path->getValue() + "/" + path;
     }
 

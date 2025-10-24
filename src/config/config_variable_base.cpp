@@ -2,7 +2,7 @@
 #include "macro.hpp"
 #include <algorithm>
 
-namespace sylar
+namespace CIM
 {
     ConfigVariableBase::ConfigVariableBase(const std::string &name, const std::string &description)
         : m_name(name),

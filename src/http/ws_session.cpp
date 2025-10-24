@@ -4,11 +4,11 @@
 #include "hash_util.hpp"
 #include <string.h>
 
-namespace sylar::http
+namespace CIM::http
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-    sylar::ConfigVar<uint32_t>::ptr g_websocket_message_max_size = sylar::Config::Lookup("websocket.message.max_size", (uint32_t)1024 * 1024 * 32, "websocket message max size");
+    CIM::ConfigVar<uint32_t>::ptr g_websocket_message_max_size = CIM::Config::Lookup("websocket.message.max_size", (uint32_t)1024 * 1024 * 32, "websocket message max size");
 
     WSSession::WSSession(Socket::ptr sock, bool owner)
         : HttpSession(sock, owner)
@@ -49,7 +49,7 @@ namespace sylar::http
             }
 
             std::string v = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-            v = sylar::base64encode(sylar::sha1sum(v));
+            v = CIM::base64encode(CIM::sha1sum(v));
             req->setWebsocket(true);
 
             auto rsp = req->createResponse();
@@ -151,7 +151,7 @@ namespace sylar::http
                     {
                         break;
                     }
-                    length = sylar::byteswap(len);
+                    length = CIM::byteswap(len);
                 }
                 else if (ws_head.payload == 127)
                 {
@@ -160,7 +160,7 @@ namespace sylar::http
                     {
                         break;
                     }
-                    length = sylar::byteswap(len);
+                    length = CIM::byteswap(len);
                 }
                 else
                 {
@@ -247,7 +247,7 @@ namespace sylar::http
             if (ws_head.payload == 126)
             {
                 uint16_t len = size;
-                len = sylar::byteswap(len);
+                len = CIM::byteswap(len);
                 if (stream->writeFixSize(&len, sizeof(len)) <= 0)
                 {
                     break;
@@ -255,7 +255,7 @@ namespace sylar::http
             }
             else if (ws_head.payload == 127)
             {
-                uint64_t len = sylar::byteswap(size);
+                uint64_t len = CIM::byteswap(size);
                 if (stream->writeFixSize(&len, sizeof(len)) <= 0)
                 {
                     break;

@@ -1,7 +1,7 @@
 #include "zlib_stream.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     ZlibStream::ptr ZlibStream::CreateGzip(bool encode, uint32_t buff_size)
     {
@@ -250,9 +250,9 @@ namespace sylar
         return rt;
     }
 
-    sylar::ByteArray::ptr ZlibStream::getByteArray()
+    CIM::ByteArray::ptr ZlibStream::getByteArray()
     {
-        sylar::ByteArray::ptr ba(new sylar::ByteArray);
+        CIM::ByteArray::ptr ba(new CIM::ByteArray);
         for (auto &i : m_buffs)
         {
             ba->write(i.iov_base, i.iov_len);

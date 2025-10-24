@@ -1,13 +1,13 @@
 #include "ws_servlet.hpp"
 
-namespace sylar::http
+namespace CIM::http
 {
     FunctionWSServlet::FunctionWSServlet(callback cb, on_connect_cb connect_cb, on_close_cb close_cb)
         : WSServlet("FunctionWSServlet"), m_callback(cb), m_onConnect(connect_cb), m_onClose(close_cb)
     {
     }
 
-    int32_t FunctionWSServlet::onConnect(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session)
+    int32_t FunctionWSServlet::onConnect(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session)
     {
         if (m_onConnect)
         {
@@ -16,7 +16,7 @@ namespace sylar::http
         return 0;
     }
 
-    int32_t FunctionWSServlet::onClose(sylar::http::HttpRequest::ptr header, sylar::http::WSSession::ptr session)
+    int32_t FunctionWSServlet::onClose(CIM::http::HttpRequest::ptr header, CIM::http::WSSession::ptr session)
     {
         if (m_onClose)
         {
@@ -25,7 +25,7 @@ namespace sylar::http
         return 0;
     }
 
-    int32_t FunctionWSServlet::handle(sylar::http::HttpRequest::ptr header, sylar::http::WSFrameMessage::ptr msg, sylar::http::WSSession::ptr session)
+    int32_t FunctionWSServlet::handle(CIM::http::HttpRequest::ptr header, CIM::http::WSFrameMessage::ptr msg, CIM::http::WSSession::ptr session)
     {
         if (m_callback)
         {

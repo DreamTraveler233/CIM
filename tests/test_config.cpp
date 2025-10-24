@@ -8,15 +8,15 @@
  * 如果不存在则创建该配置项，并设默认值为 8080，配置项描述为 system port number
  */
 // 定义配置项
-auto config_int = sylar::Config::Lookup<int>("system.port", 8080, "system port number");
-auto config_float = sylar::Config::Lookup<float>("system.value", 10.5f, "system value");
-auto config_string = sylar::Config::Lookup<std::string>("system.name", "sylar", "system name");
-auto config_int_vector = sylar::Config::Lookup<std::vector<int>>("system.int_ver", std::vector<int>{1, 2}, "system int vec");
-auto config_int_list = sylar::Config::Lookup<std::list<int>>("system.int_list", std::list<int>{4, 5, 6}, "system int list");
-auto config_int_set = sylar::Config::Lookup<std::set<int>>("system.int_set", std::set<int>{99, 100, 101}, "system int set");
-auto config_int_unordered_set = sylar::Config::Lookup<std::unordered_set<int>>("system.int_unordered_set", std::unordered_set<int>{233, 244, 255}, "system int unordered_set");
-auto config_int_map = sylar::Config::Lookup<std::map<std::string, int>>("system.int_map", std::map<std::string, int>{{"k", 2}}, "system int map");
-auto config_int_unordered_map = sylar::Config::Lookup<std::unordered_map<std::string, int>>("system.int_unordered_map", std::unordered_map<std::string, int>{{"k1", 1}, {"k2", 2}, {"k3", 3}}, "system int unordered_map");
+auto config_int = CIM::Config::Lookup<int>("system.port", 8080, "system port number");
+auto config_float = CIM::Config::Lookup<float>("system.value", 10.5f, "system value");
+auto config_string = CIM::Config::Lookup<std::string>("system.name", "CIM", "system name");
+auto config_int_vector = CIM::Config::Lookup<std::vector<int>>("system.int_ver", std::vector<int>{1, 2}, "system int vec");
+auto config_int_list = CIM::Config::Lookup<std::list<int>>("system.int_list", std::list<int>{4, 5, 6}, "system int list");
+auto config_int_set = CIM::Config::Lookup<std::set<int>>("system.int_set", std::set<int>{99, 100, 101}, "system int set");
+auto config_int_unordered_set = CIM::Config::Lookup<std::unordered_set<int>>("system.int_unordered_set", std::unordered_set<int>{233, 244, 255}, "system int unordered_set");
+auto config_int_map = CIM::Config::Lookup<std::map<std::string, int>>("system.int_map", std::map<std::string, int>{{"k", 2}}, "system int map");
+auto config_int_unordered_map = CIM::Config::Lookup<std::unordered_map<std::string, int>>("system.int_unordered_map", std::unordered_map<std::string, int>{{"k1", 1}, {"k2", 2}, {"k3", 3}}, "system int unordered_map");
 
 // 测试配置项的基本功能
 void test_config_basic()
@@ -26,14 +26,14 @@ void test_config_basic()
     // 测试配置项的初始值
     assert(config_int->getValue() == 8080);
     assert(config_float->getValue() == 10.5f);
-    assert(config_string->getValue() == "sylar");
+    assert(config_string->getValue() == "CIM");
 
     std::cout << "配置项初始值测试通过" << std::endl;
 
     // 测试配置项的toString功能
     assert(config_int->toString() == "8080");
     assert(config_float->toString() == "10.5");
-    assert(config_string->toString() == "sylar");
+    assert(config_string->toString() == "CIM");
 
     std::cout << "配置项toString功能测试通过" << std::endl;
 
@@ -49,7 +49,7 @@ void test_config_basic()
     // 测试重复名称但不同类型的情况
     try
     {
-        auto config_int_error = sylar::Config::Lookup<float>("system.port", 8080.0f, "error config");
+        auto config_int_error = CIM::Config::Lookup<float>("system.port", 8080.0f, "error config");
         assert(false); // 不应该执行到这里
     }
     catch (...)
@@ -157,8 +157,8 @@ void test_yaml_load()
     // int original_port = config_int->getValue();
 
     // 加载配置
-    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/test.yaml");
-    sylar::Config::LoadFromYaml(root);
+    YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/test.yaml");
+    CIM::Config::LoadFromYaml(root);
 
     // 检查值是否正确更新
     assert(config_int->getValue() == 9999);
@@ -203,7 +203,7 @@ public:
     bool m_sex = 0;
 };
 
-namespace sylar
+namespace CIM
 {
     template <>
     class LexicalCast<std::string, Person>
@@ -237,7 +237,7 @@ namespace sylar
     };
 }
 
-auto person = sylar::Config::Lookup("class.person", Person(), "person");
+auto person = CIM::Config::Lookup("class.person", Person(), "person");
 
 // 测试自定义类型配置
 void test_custom_type()
@@ -248,8 +248,8 @@ void test_custom_type()
     // assert(person->getValue() == Person()); // 初始值为空
 
     // 加载配置
-    YAML::Node root = YAML::LoadFile("/home/szy/code/sylar/bin/config/test.yaml");
-    sylar::Config::LoadFromYaml(root);
+    YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/test.yaml");
+    CIM::Config::LoadFromYaml(root);
 
     auto loaded_person = person->getValue();
     assert(loaded_person.m_name == "zhangsan");

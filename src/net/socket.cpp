@@ -5,18 +5,17 @@
 #include "hook.hpp"
 #include <limits.h>
 
-namespace sylar
+namespace CIM
 {
+    static auto g_logger = SYLAR_LOG_NAME("system");
 
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
-
-    Socket::ptr Socket::CreateTCP(sylar::Address::ptr address)
+    Socket::ptr Socket::CreateTCP(CIM::Address::ptr address)
     {
         Socket::ptr sock(new Socket(address->getFamily(), TCP, 0));
         return sock;
     }
 
-    Socket::ptr Socket::CreateUDP(sylar::Address::ptr address)
+    Socket::ptr Socket::CreateUDP(CIM::Address::ptr address)
     {
         Socket::ptr sock(new Socket(address->getFamily(), UDP, 0));
         sock->newSock();
@@ -187,7 +186,7 @@ namespace sylar
             }
             else
             {
-                sylar::FSUtil::Unlink(uaddr->getPath(), true);
+                CIM::FSUtil::Unlink(uaddr->getPath(), true);
             }
         }
 
@@ -198,7 +197,7 @@ namespace sylar
                                       << " errstr=" << strerror(errno);
             return false;
         }
-        
+
         getLocalAddress();
         return true;
     }
@@ -577,17 +576,17 @@ namespace sylar
 
     bool Socket::cancelRead()
     {
-        return IOManager::GetThis()->cancelEvent(m_sock, sylar::IOManager::READ);
+        return IOManager::GetThis()->cancelEvent(m_sock, CIM::IOManager::READ);
     }
 
     bool Socket::cancelWrite()
     {
-        return IOManager::GetThis()->cancelEvent(m_sock, sylar::IOManager::WRITE);
+        return IOManager::GetThis()->cancelEvent(m_sock, CIM::IOManager::WRITE);
     }
 
     bool Socket::cancelAccept()
     {
-        return IOManager::GetThis()->cancelEvent(m_sock, sylar::IOManager::READ);
+        return IOManager::GetThis()->cancelEvent(m_sock, CIM::IOManager::READ);
     }
 
     bool Socket::cancelAll()
@@ -802,7 +801,7 @@ namespace sylar
         return true;
     }
 
-    SSLSocket::ptr SSLSocket::CreateTCP(sylar::Address::ptr address)
+    SSLSocket::ptr SSLSocket::CreateTCP(CIM::Address::ptr address)
     {
         SSLSocket::ptr sock(new SSLSocket(address->getFamily(), TCP, 0));
         return sock;

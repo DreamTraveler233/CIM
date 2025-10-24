@@ -11,9 +11,9 @@ auto g_logger = SYLAR_LOG_ROOT();
 
 void test_sleep()
 {
-    sylar::IOManager iom(1, false, "test");
+    CIM::IOManager iom(1, false, "test");
 
-    sylar::set_hook_enable(true);
+    CIM::set_hook_enable(true);
     
     SYLAR_LOG_INFO(g_logger) << "test_sleep begin";
     time_t start = time(nullptr);

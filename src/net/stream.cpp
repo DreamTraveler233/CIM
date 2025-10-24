@@ -1,6 +1,6 @@
 #include "stream.hpp"
 
-namespace sylar
+namespace CIM
 {
     int Stream::readFixSize(void *buffer, size_t length)
     {

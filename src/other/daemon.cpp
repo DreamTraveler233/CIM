@@ -8,11 +8,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-namespace sylar
+namespace CIM
 {
-    static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
-    static sylar::ConfigVar<uint32_t>::ptr g_daemon_restart_interval =
-        sylar::Config::Lookup("daemon.restart_interval", (uint32_t)5, "daemon restart interval");
+    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::ConfigVar<uint32_t>::ptr g_daemon_restart_interval =
+        CIM::Config::Lookup("daemon.restart_interval", (uint32_t)5, "daemon restart interval");
 
     std::string ProcessInfo::toString() const
     {

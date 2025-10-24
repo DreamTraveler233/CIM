@@ -1,7 +1,7 @@
 #include "thread.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     // 当前线程的线程对象
     static thread_local Thread *t_thread = nullptr;
@@ -72,7 +72,7 @@ namespace sylar
         t_thread_name = thread->m_name;
 
         // 获取并设置当前线程的真实系统线程ID
-        thread->m_id = sylar::GetThreadId();
+        thread->m_id = CIM::GetThreadId();
         // 设置线程的名称，限制在15个字符以内
         pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
 

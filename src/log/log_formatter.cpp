@@ -4,7 +4,7 @@
 #include <functional>
 #include <sstream>
 
-namespace sylar
+namespace CIM
 {
     LogFormatter::LogFormatter(const std::string &pattern)
         : m_pattern(pattern),

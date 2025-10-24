@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <cerrno>
 
-namespace sylar
+namespace CIM
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 

@@ -4,13 +4,13 @@
 #include "byte_array.hpp"
 #include "address.hpp"
 
-static sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+static CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
-class EchoServer : public sylar::TcpServer
+class EchoServer : public CIM::TcpServer
 {
 public:
     EchoServer(int type);
-    void handleClient(sylar::Socket::ptr client);
+    void handleClient(CIM::Socket::ptr client);
 
 private:
     int m_type = 0;
@@ -21,10 +21,10 @@ EchoServer::EchoServer(int type)
 {
 }
 
-void EchoServer::handleClient(sylar::Socket::ptr client)
+void EchoServer::handleClient(CIM::Socket::ptr client)
 {
     SYLAR_LOG_INFO(g_logger) << "handleClient " << *client;
-    sylar::ByteArray::ptr ba(new sylar::ByteArray);
+    CIM::ByteArray::ptr ba(new CIM::ByteArray);
     while (true)
     {
         ba->clear();
@@ -64,7 +64,7 @@ void run()
 {
     SYLAR_LOG_INFO(g_logger) << "server type=" << type;
     EchoServer::ptr es(new EchoServer(type));
-    auto addr = sylar::Address::LookupAny("0.0.0.0:8020");
+    auto addr = CIM::Address::LookupAny("0.0.0.0:8020");
     while (!es->bind(addr))
     {
         sleep(2);
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         type = 2;
     }
 
-    sylar::IOManager iom(2);
+    CIM::IOManager iom(2);
     iom.schedule(run);
     return 0;
 }

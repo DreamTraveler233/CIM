@@ -10,7 +10,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-namespace sylar
+namespace CIM
 {
 
 #define ROTL(x, r) ((x << r) | (x >> (32 - r)))

@@ -1,7 +1,7 @@
 #include "log_level.hpp"
 #include "macro.hpp"
 
-namespace sylar
+namespace CIM
 {
     const char *LogLevel::ToString(Level level)
     {
