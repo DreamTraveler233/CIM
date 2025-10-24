@@ -46,7 +46,7 @@ namespace sylar
         /**
          * @brief 析构函数
          */
-        ~FdCtx();
+        ~FdCtx()=default;
 
         /**
          * @brief 初始化文件描述符上下文

@@ -19,10 +19,6 @@ namespace sylar
         init();
     }
 
-    FdCtx::~FdCtx()
-    {
-    }
-
     /**
      * @brief 初始化文件描述符上下文
      * @details 检查文件描述符的有效性，判断是否为socket，
@@ -42,6 +38,7 @@ namespace sylar
         {
             return true;
         }
+
         // 设置接收和发送超时为-1（无限等待）
         m_recvTimeout = -1;
         m_sendTimeout = -1;
@@ -59,6 +56,7 @@ namespace sylar
             m_isSocket = S_ISSOCK(fd_stat.st_mode); // 判断是否为socket类型
         }
 
+        // 检查文件描述符是否为非阻塞模式，如果不是，则设置为非阻塞模式
         if (m_isSocket)
         {
             int flags = fcntl_f(m_fd, F_GETFL, 0);
@@ -92,26 +90,32 @@ namespace sylar
     {
         return m_isClosed;
     }
+
     bool FdCtx::close()
     {
         return false;
     }
+
     void FdCtx::setUserNonBlock(bool v)
     {
         m_userNonBlock = v;
     }
+
     bool FdCtx::getUserNonBlock() const
     {
         return m_userNonBlock;
     }
+
     void FdCtx::setSysNonBlock(bool v)
     {
         m_sysNonBlock = v;
     }
+
     bool FdCtx::getSysNonBlock() const
     {
         return m_sysNonBlock;
     }
+
     void FdCtx::setTimeout(int type, uint64_t v)
     {
         if (type == SO_RCVTIMEO)
@@ -123,6 +127,7 @@ namespace sylar
             m_sendTimeout = v;
         }
     }
+
     uint64_t FdCtx::getTimeout(int type) const
     {
         if (type == SO_RCVTIMEO)
@@ -135,10 +140,12 @@ namespace sylar
         }
         return -1;
     }
+
     FdManager::FdManager()
     {
         m_fdCtxs.resize(64);
     }
+
     FdCtx::ptr FdManager::get(int fd, bool auto_create)
     {
         if (fd < 0)
@@ -171,6 +178,7 @@ namespace sylar
         m_fdCtxs[fd] = ctx;
         return ctx;
     }
+    
     void FdManager::del(int fd)
     {
         RWMutexType::WriteLock lock(m_mutex);

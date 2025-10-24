@@ -37,8 +37,11 @@ namespace sylar
         {
             return -1;
         }
+
+        // 获取可写缓冲区
         std::vector<iovec> iovs;
         ba->getWriteBuffers(iovs, length);
+
         int rt = m_socket->recv(&iovs[0], iovs.size());
         if (rt > 0)
         {

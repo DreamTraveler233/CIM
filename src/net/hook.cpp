@@ -13,11 +13,11 @@
 
 namespace sylar
 {
-    sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     // TCP 超时时间
     static auto g_tcp_connect_timeout =
-        sylar::Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
+        Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
     // hook 是否启用
     static thread_local bool t_hook_enable = false;
@@ -46,7 +46,12 @@ namespace sylar
     XX(getsockopt)   \
     XX(setsockopt)
 
-    // 初始化hook，保存原始函数地址
+    /**
+     * @brief 初始化hook系统，通过dlsym获取原始系统函数地址
+     *
+     * @details 该函数只会被调用一次，用于获取所有需要hook的系统函数的原始地址，
+     *          并保存在对应的函数指针变量中，以便后续在hook函数中调用原始函数。
+     */
     void hook_init()
     {
         // 保证只初始化一次
@@ -83,17 +88,26 @@ namespace sylar
 
     static HookIniter s_hook_initer;
 
+    /**
+     * @brief 检查当前线程是否启用了hook功能
+     * @return bool true表示启用，false表示未启用
+     */
     bool is_hook_enable()
     {
         return t_hook_enable;
     }
 
+    /**
+     * @brief 设置当前线程的hook启用状态
+     * @param[in] flag true表示启用hook，false表示禁用hook
+     */
     void set_hook_enable(bool flag)
     {
         t_hook_enable = flag;
     }
 
     // 用于跟踪定时器的状态
+    // cancelled值为0表示未取消，ETIMEDOUT表示超时取消
     struct timer_info
     {
         int cancelled = 0;
@@ -149,7 +163,7 @@ namespace sylar
         }
 
         // 获取超时设置
-        uint64_t to = ctx->getTimeout(timeout_so);
+        uint64_t timeout = ctx->getTimeout(timeout_so);
         std::shared_ptr<timer_info> tinfo(new timer_info);
 
     // 重试标签，用于IO操作被中断或需要重试的情况
@@ -169,18 +183,21 @@ namespace sylar
             Timer::ptr timer;
             std::weak_ptr<timer_info> winfo(tinfo);
 
-            // 如果设置了超时时间，则添加条件定时器
-            if (to != (uint64_t)-1)
+            if (timeout != (uint64_t)-1) // 判断是否设置了超时时间
             {
-                timer = iom->addConditionTimer(to, [winfo, fd, iom, event]()
+                // 设置一个条件定时器来实现超时控制
+                timer = iom->addConditionTimer(timeout, [winfo, fd, iom, event]()
                                                { 
-                                            auto t = winfo.lock();
-                                            if(!t||t->cancelled)
-                                            {
-                                                return;
-                                            } 
-                                            t->cancelled = ETIMEDOUT;
-                                            iom->cancelEvent(fd,(IOManager::Event)event); }, winfo);
+                                                auto t = winfo.lock();
+                                                // 如果转换失败或者cancelled已被设置，直接返回
+                                                if(!t||t->cancelled)
+                                                {
+                                                    return;
+                                                } 
+                                                // 记录超时标准
+                                                t->cancelled = ETIMEDOUT;
+                                                // 通知 IOManager 取消对指定文件描述符上特定事件的监听
+                                                iom->cancelEvent(fd,(IOManager::Event)event); }, winfo);
             }
 
             // 添加IO事件监听
@@ -199,10 +216,13 @@ namespace sylar
             {
                 // 成功添加事件，让出当前协程控制权
                 Coroutine::YieldToHold();
+
+                // 协程重新被调度时，首先取消定时器（因为不再需要超时控制）
                 if (timer)
                 {
                     timer->cancel();
                 }
+
                 // 如果定时器触发（超时），设置错误码并返回
                 if (tinfo->cancelled)
                 {
@@ -237,21 +257,21 @@ namespace sylar
          */
         unsigned int sleep(unsigned int seconds)
         {
-            if (!sylar::is_hook_enable())
+            if (!is_hook_enable())
             {
                 return sleep_f(seconds);
             }
 
-            sylar::IOManager *io_manager = sylar::IOManager::GetThis();
+            IOManager *io_manager = IOManager::GetThis();
             if (!io_manager)
             {
                 return sleep_f(seconds);
             }
 
-            sylar::Coroutine::ptr co = sylar::Coroutine::GetThis();
+            Coroutine::ptr co = Coroutine::GetThis();
             io_manager->addTimer(seconds * 1000, [io_manager, co]()
                                  { io_manager->schedule(co); });
-            sylar::Coroutine::YieldToHold();
+            Coroutine::YieldToHold();
 
             return 0;
         }
@@ -270,21 +290,21 @@ namespace sylar
          */
         int usleep(useconds_t usec)
         {
-            if (!sylar::is_hook_enable())
+            if (!is_hook_enable())
             {
                 return usleep_f(usec);
             }
 
-            sylar::IOManager *io_manager = sylar::IOManager::GetThis();
+            IOManager *io_manager = IOManager::GetThis();
             if (!io_manager)
             {
                 return usleep_f(usec);
             }
 
-            sylar::Coroutine::ptr co = sylar::Coroutine::GetThis();
+            Coroutine::ptr co = Coroutine::GetThis();
             io_manager->addTimer(usec / 1000, [io_manager, co]()
                                  { io_manager->schedule(co); });
-            sylar::Coroutine::YieldToHold();
+            Coroutine::YieldToHold();
 
             return 0;
         }
@@ -305,102 +325,142 @@ namespace sylar
          */
         int nanosleep(const struct timespec *req, struct timespec *rem)
         {
-            if (!sylar::is_hook_enable())
+            if (!is_hook_enable())
             {
                 return nanosleep_f(req, rem);
             }
 
-            sylar::IOManager *io_manager = sylar::IOManager::GetThis();
+            IOManager *io_manager = IOManager::GetThis();
             if (!io_manager)
             {
                 return nanosleep_f(req, rem);
             }
 
-            sylar::Coroutine::ptr co = sylar::Coroutine::GetThis();
+            Coroutine::ptr co = Coroutine::GetThis();
             // 将纳秒转换为毫秒
             uint64_t timeout_ms = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
             io_manager->addTimer(timeout_ms, [io_manager, co]()
                                  { io_manager->schedule(co); });
-            sylar::Coroutine::YieldToHold();
+            Coroutine::YieldToHold();
 
             return 0;
         }
 
-        // socket相关函数将在后续实现
+        /**
+         * @brief 创建socket并将其纳入hook系统管理
+         * @param[in] domain 协议域，决定socket的地址类型，如AF_INET、AF_UNIX等
+         * @param[in] type socket类型，如SOCK_STREAM、SOCK_DGRAM等
+         * @param[in] protocol 具体协议，通常设为0使用默认协议
+         * @return 成功时返回文件描述符，失败时返回-1并设置errno
+         */
         int socket(int domain, int type, int protocol)
         {
-            if (!sylar::is_hook_enable())
+            // 未开启 hook 则使用系统调用
+            if (!is_hook_enable())
             {
                 return socket_f(domain, type, protocol);
             }
 
+            // 调用系统调用，创建套接字
             int fd = socket_f(domain, type, protocol);
             if (-1 == fd)
             {
                 return fd;
             }
-            sylar::FdMgr::GetInstance()->get(fd, true);
+
+            // 将 fd 注册到FdManager中进行统一管理
+            FdMgr::GetInstance()->get(fd, true);
             return fd;
         }
 
+        /**
+         * @brief 带超时的连接函数
+         * @param[in] fd 文件描述符
+         * @param[in] addr 目标地址结构体指针
+         * @param[in] addrlen 地址结构体长度
+         * @param[in] timeout_ms 超时时间(毫秒)，-1表示无限等待
+         * @return 连接成功返回0，失败返回-1，并设置相应的errno
+         *
+         * @details 该函数在原始connect基础上增加了超时控制功能。
+         *          如果hook未启用、文件描述符不是socket或设置了用户非阻塞模式，则直接调用原始connect函数。
+         *          否则通过IOManager实现异步连接，在指定超时时间内等待连接结果。
+         */
         int connect_with_timeout(int fd, const struct sockaddr *addr, socklen_t addrlen, uint64_t timeout_ms)
         {
-            if (!sylar::t_hook_enable)
+            // 如果hook未启用，直接调用原始connect函数
+            if (!t_hook_enable)
             {
                 return connect_f(fd, addr, addrlen);
             }
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+
+            // 获取文件描述符上下文
+            FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
             if (!ctx || ctx->isClose())
             {
                 errno = EBADF;
                 return -1;
             }
 
+            // 如果不是socket类型，直接调用原始connect函数
             if (!ctx->isSocket())
             {
                 return connect_f(fd, addr, addrlen);
             }
 
+            // 如果用户设置了非阻塞模式，直接调用原始connect函数
             if (ctx->getUserNonBlock())
             {
                 return connect_f(fd, addr, addrlen);
             }
 
+            // 尝试连接
             int n = connect_f(fd, addr, addrlen);
             if (n == 0)
             {
+                // 连接立即成功
                 return 0;
             }
             else if (n != -1 || errno != EINPROGRESS)
             {
+                // 连接出现错误或其他情况
                 return n;
             }
 
-            sylar::IOManager *iom = sylar::IOManager::GetThis();
-            sylar::Timer::ptr timer;
+            // 获取当前IO管理器
+            IOManager *iom = IOManager::GetThis();
+            Timer::ptr timer;
             std::shared_ptr<timer_info> tinfo(new timer_info);
             std::weak_ptr<timer_info> winfo(tinfo);
 
+            // 如果设置了超时时间，则添加超时定时器，如果在规定时间内未完成连接，则设置错误表示，以返回连接错误
             if (timeout_ms != (uint64_t)-1)
             {
                 timer = iom->addConditionTimer(timeout_ms, [winfo, fd, iom]()
                                                {
-                auto t = winfo.lock();
-                if(!t || t->cancelled) {
-                    return;
-                }
-                t->cancelled = ETIMEDOUT;
-                iom->cancelEvent(fd, sylar::IOManager::WRITE); }, winfo);
+                                                auto t = winfo.lock();
+                                                if(!t || t->cancelled) {
+                                                    return;
+                                                }
+                                                // 设置错误标识
+                                                t->cancelled = ETIMEDOUT;
+                                                // 取消监听事件
+                                                iom->cancelEvent(fd, IOManager::WRITE); }, winfo);
             }
 
-            int rt = iom->addEvent(fd, sylar::IOManager::WRITE);
+            // 添加写事件监听（连接完成时socket可写）
+            int rt = iom->addEvent(fd, IOManager::WRITE);
             if (rt == 0)
             {
-                sylar::Coroutine::YieldToHold();
+                // 事件添加成功，让出协程控制权
+                Coroutine::YieldToHold();
+
+                // 取消定时器
                 if (timer)
                 {
                     timer->cancel();
                 }
+
+                // 检查是否因超时取消
                 if (tinfo->cancelled)
                 {
                     errno = tinfo->cancelled;
@@ -409,6 +469,7 @@ namespace sylar
             }
             else
             {
+                // 事件添加失败，取消定时器并记录日志
                 if (timer)
                 {
                     timer->cancel();
@@ -416,12 +477,15 @@ namespace sylar
                 SYLAR_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
             }
 
+            // 检查socket错误状态
             int error = 0;
             socklen_t len = sizeof(int);
             if (-1 == getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len))
             {
                 return -1;
             }
+
+            // 根据错误状态返回结果
             if (!error)
             {
                 return 0;
@@ -433,105 +497,263 @@ namespace sylar
             }
         }
 
+        /**
+         * @brief 连接指定的socket地址
+         * @param[in] sockfd socket文件描述符
+         * @param[in] addr 目标地址结构体指针
+         * @param[in] addrlen 地址结构体长度
+         * @return 连接成功返回0，失败返回-1，并设置相应的errno
+         *
+         * @details 该函数是对系统connect函数的hook封装，增加了超时控制功能。
+         *          实际调用connect_with_timeout函数实现连接，超时时间使用全局配置的tcp连接超时时间。
+         */
         int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
         {
-            return connect_with_timeout(sockfd, addr, addrlen, sylar::s_connect_timeout);
+            return connect_with_timeout(sockfd, addr, addrlen, s_connect_timeout);
         }
 
+        /**
+         * @brief 重写的accept函数，支持协程调度
+         * @param[in] sockfd 监听套接字文件描述符
+         * @param[out] addr 返回连接方的地址信息
+         * @param[out] addrlen 返回地址结构体的长度
+         * @return 成功返回新的连接套接字文件描述符，失败返回-1，并设置相应的errno
+         *
+         * @details 该函数是对系统accept函数的hook封装，具有以下特点：
+         *          1. 使用do_io函数处理IO操作，在阻塞时让出协程控制权
+         *          2. 对于新建立的连接套接字，通过FdMgr管理其上下文信息
+         *          3. 支持超时控制，超时时间由SO_RCVTIMEO选项决定
+         */
         int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
         {
-            int fd = do_io(sockfd, accept_f, "accept", sylar::IOManager::READ, SO_RCVTIMEO, addr, addrlen);
+            int fd = do_io(sockfd, accept_f, "accept", IOManager::READ, SO_RCVTIMEO, addr, addrlen);
             if (fd >= 0)
             {
-                sylar::FdMgr::GetInstance()->get(fd, true);
+                FdMgr::GetInstance()->get(fd, true);
             }
             return fd;
         }
 
+        /**
+         * @brief 重写的read函数，支持协程调度
+         * @param[in] fd 文件描述符
+         * @param[out] buf 数据缓冲区
+         * @param[in] count 要读取的字节数
+         * @return 成功返回实际读取的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的读操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_RCVTIMEO选项决定。
+         */
         ssize_t read(int fd, void *buf, size_t count)
         {
-            return do_io(fd, read_f, "read", sylar::IOManager::READ, SO_RCVTIMEO, buf, count);
+            return do_io(fd, read_f, "read", IOManager::READ, SO_RCVTIMEO, buf, count);
         }
 
+        /**
+         * @brief 重写的readv函数，支持协程调度
+         * @param[in] fd 文件描述符
+         * @param[in] iov 分散/聚集I/O向量
+         * @param[in] iovcnt 向量元素个数
+         * @return 成功返回实际读取的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的分散读操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_RCVTIMEO选项决定。
+         */
         ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
         {
-            return do_io(fd, readv_f, "readv", sylar::IOManager::READ, SO_RCVTIMEO, iov, iovcnt);
+            return do_io(fd, readv_f, "readv", IOManager::READ, SO_RCVTIMEO, iov, iovcnt);
         }
 
+        /**
+         * @brief 重写的recv函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[out] buf 数据缓冲区
+         * @param[in] len 缓冲区长度
+         * @param[in] flags 标志位
+         * @return 成功返回实际接收的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的socket接收操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_RCVTIMEO选项决定。
+         */
         ssize_t recv(int sockfd, void *buf, size_t len, int flags)
         {
-            return do_io(sockfd, recv_f, "recv", sylar::IOManager::READ, SO_RCVTIMEO, buf, len, flags);
+            return do_io(sockfd, recv_f, "recv", IOManager::READ, SO_RCVTIMEO, buf, len, flags);
         }
 
+        /**
+         * @brief 重写的recvfrom函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[out] buf 数据缓冲区
+         * @param[in] len 缓冲区长度
+         * @param[in] flags 标志位
+         * @param[out] src_addr 发送方地址信息
+         * @param[out] addrlen 地址信息长度
+         * @return 成功返回实际接收的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的带地址信息的socket接收操作，
+         *          在阻塞时能够自动让出协程控制权。超时时间由文件描述符的SO_RCVTIMEO选项决定。
+         */
         ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
                          struct sockaddr *src_addr, socklen_t *addrlen)
         {
-            return do_io(sockfd, recvfrom_f, "recvfrom", sylar::IOManager::READ, SO_RCVTIMEO, buf, len, flags, src_addr, addrlen);
+            return do_io(sockfd, recvfrom_f, "recvfrom", IOManager::READ, SO_RCVTIMEO, buf, len, flags, src_addr, addrlen);
         }
 
+        /**
+         * @brief 重写的recvmsg函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[out] msg 消息头结构体
+         * @param[in] flags 标志位
+         * @return 成功返回实际接收的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的消息接收操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_RCVTIMEO选项决定。
+         */
         ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)
         {
-            return do_io(sockfd, recvmsg_f, "recvmsg", sylar::IOManager::READ, SO_RCVTIMEO, msg, flags);
+            return do_io(sockfd, recvmsg_f, "recvmsg", IOManager::READ, SO_RCVTIMEO, msg, flags);
         }
 
+        /**
+         * @brief 重写的write函数，支持协程调度
+         * @param[in] fd 文件描述符
+         * @param[in] buf 要写入的数据缓冲区
+         * @param[in] count 要写入的字节数
+         * @return 成功返回实际写入的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的写操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_SNDTIMEO选项决定。
+         */
         ssize_t write(int fd, const void *buf, size_t count)
         {
-            return do_io(fd, write_f, "write", sylar::IOManager::WRITE, SO_SNDTIMEO, buf, count);
+            return do_io(fd, write_f, "write", IOManager::WRITE, SO_SNDTIMEO, buf, count);
         }
 
+        /**
+         * @brief 重写的writev函数，支持协程调度
+         * @param[in] fd 文件描述符
+         * @param[in] iov 分散/聚集I/O向量
+         * @param[in] iovcnt 向量元素个数
+         * @return 成功返回实际写入的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的分散写操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_SNDTIMEO选项决定。
+         */
         ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
         {
-            return do_io(fd, writev_f, "writev", sylar::IOManager::WRITE, SO_SNDTIMEO, iov, iovcnt);
+            return do_io(fd, writev_f, "writev", IOManager::WRITE, SO_SNDTIMEO, iov, iovcnt);
         }
 
+        /**
+         * @brief 重写的send函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[in] buf 要发送的数据缓冲区
+         * @param[in] len 缓冲区长度
+         * @param[in] flags 标志位
+         * @return 成功返回实际发送的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的socket发送操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_SNDTIMEO选项决定。
+         */
         ssize_t send(int sockfd, const void *buf, size_t len, int flags)
         {
-            return do_io(sockfd, send_f, "send", sylar::IOManager::WRITE, SO_SNDTIMEO, buf, len, flags);
+            return do_io(sockfd, send_f, "send", IOManager::WRITE, SO_SNDTIMEO, buf, len, flags);
         }
 
+        /**
+         * @brief 重写的sendto函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[in] buf 要发送的数据缓冲区
+         * @param[in] len 缓冲区长度
+         * @param[in] flags 标志位
+         * @param[in] dest_addr 目标地址信息
+         * @param[in] addrlen 地址信息长度
+         * @return 成功返回实际发送的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的带地址信息的socket发送操作，
+         *          在阻塞时能够自动让出协程控制权。超时时间由文件描述符的SO_SNDTIMEO选项决定。
+         */
         ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                        const struct sockaddr *dest_addr, socklen_t addrlen)
         {
-            return do_io(sockfd, sendto_f, "sendto", sylar::IOManager::WRITE, SO_SNDTIMEO, buf, len, flags, dest_addr, addrlen);
+            return do_io(sockfd, sendto_f, "sendto", IOManager::WRITE, SO_SNDTIMEO, buf, len, flags, dest_addr, addrlen);
         }
 
+        /**
+         * @brief 重写的sendmsg函数，支持协程调度
+         * @param[in] sockfd socket文件描述符
+         * @param[in] msg 消息头结构体
+         * @param[in] flags 标志位
+         * @return 成功返回实际发送的字节数，失败返回-1并设置errno
+         *
+         * @details 使用do_io模板函数处理实际的消息发送操作，在阻塞时能够自动让出协程控制权。
+         *          超时时间由文件描述符的SO_SNDTIMEO选项决定。
+         */
         ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags)
         {
-            return do_io(sockfd, sendmsg_f, "sendmsg", sylar::IOManager::WRITE, SO_SNDTIMEO, msg, flags);
+            return do_io(sockfd, sendmsg_f, "sendmsg", IOManager::WRITE, SO_SNDTIMEO, msg, flags);
         }
 
+        /**
+         * @brief 关闭文件描述符
+         * @param[in] fd 需要关闭的文件描述符
+         * @return int 成功返回0，失败返回-1并设置errno
+         *
+         * @details 该函数是系统close函数的hook版本，在关闭文件描述符前会先清理相关的IO事件监听。
+         *          如果hook功能未启用，则直接调用原始的close函数。
+         *          如果文件描述符存在上下文管理对象，则会取消该fd上的所有IO事件监听并删除上下文。
+         */
         int close(int fd)
         {
-            if (!sylar::is_hook_enable())
+            if (!is_hook_enable())
             {
                 return close_f(fd);
             }
 
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+            FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
             if (ctx)
             {
-                auto iom = sylar::IOManager::GetThis();
+                auto iom = IOManager::GetThis();
                 if (iom)
                 {
+                    // 取消该文件描述符上所有IO事件监听
                     iom->cancelAll(fd);
                 }
-                sylar::FdMgr::GetInstance()->del(fd);
+                // 从管理器中删除该文件描述符的上下文
+                FdMgr::GetInstance()->del(fd);
             }
+            // 调用原始的close函数关闭文件描述符
             return close_f(fd);
         }
 
-        // fcntl相关函数将在后续实现
+        /**
+         * @brief 重写的fcntl函数，支持协程调度
+         * @param[in] fd 文件描述符
+         * @param[in] cmd 控制命令
+         * @param[in] ... 可变参数，根据cmd的不同而不同
+         * @return 根据cmd的不同，返回不同的值
+         *
+         * @details 该函数是对系统fcntl函数的hook封装，主要处理与非阻塞I/O相关的标志位。
+         *          对于socket类型的文件描述符，会区分系统设置的非阻塞标记和用户设置的非阻塞标记，
+         *          确保在协程环境中正确处理阻塞/非阻塞行为。
+         *
+         *          支持的主要命令包括：
+         *          - F_SETFL: 设置文件状态标志
+         *          - F_GETFL: 获取文件状态标志
+         *          - F_DUPFD, F_DUPFD_CLOEXEC等其他命令直接转发给系统调用
+         */
         int fcntl(int fd, int cmd, ...)
         {
             va_list args;
             va_start(args, cmd);
             switch (cmd)
             {
+            // 设置文件状态标志
             case F_SETFL:
             {
                 int arg = va_arg(args, int);
                 va_end(args);
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
                 if (!ctx || !ctx->isSocket() || ctx->isClose())
                 {
                     return fcntl_f(fd, cmd, arg);
@@ -548,11 +770,12 @@ namespace sylar
                 return fcntl_f(fd, cmd, arg);
             }
             break;
+            // 获取文件状态标志
             case F_GETFL:
             {
                 va_end(args);
                 int arg = fcntl_f(fd, cmd);
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
                 if (!ctx || !ctx->isSocket() || ctx->isClose())
                 {
                     return arg;
@@ -567,6 +790,7 @@ namespace sylar
                 }
             }
             break;
+            // 处理需要一个整型参数的命令，直接转发给系统调用
             case F_DUPFD:
             case F_DUPFD_CLOEXEC:
             case F_SETFD:
@@ -582,6 +806,7 @@ namespace sylar
             }
             break;
 
+            // 处理不需要额外参数的命令，直接转发给系统调用
             case F_GETFD:
 
             case F_GETOWN:
@@ -594,6 +819,7 @@ namespace sylar
             }
             break;
 
+            // 处理文件锁定相关命令，直接转发给系统调用
             case F_SETLK:
             case F_SETLKW:
             case F_GETLK:
@@ -604,6 +830,7 @@ namespace sylar
             }
             break;
 
+            // 处理文件所有者扩展结构命令，直接转发给系统调用
             case F_GETOWN_EX:
             case F_SETOWN_EX:
             {
@@ -612,6 +839,7 @@ namespace sylar
                 return fcntl_f(fd, cmd, arg);
             }
             break;
+            // 其他未处理的命令，直接转发给系统调用
             default:
             {
                 va_end(args);
@@ -619,36 +847,70 @@ namespace sylar
             }
             }
         }
-    }
 
-    int ioctl(int fd, unsigned long request, ...)
-    {
-        va_list args;
-        va_start(args, request);
-        void *arg = va_arg(args, void *);
-        va_end(args);
-
-        if (FIONBIO == request)
+        /**
+         * @brief ioctl系统调用的hook函数，用于控制套接字的I/O模式和其他属性
+         * @param[in] fd 文件描述符
+         * @param[in] request 操作命令，如FIONBIO等
+         * @param[in] ... 可变参数，根据request的不同而不同
+         * @return 成功返回0，失败返回-1并设置errno
+         *
+         * @details 该函数主要处理FIONBIO命令，用于设置或清除套接字的非阻塞I/O模式。
+         *          对于其他命令，直接转发给系统原始的ioctl函数处理。
+         */
+        int ioctl(int fd, unsigned long request, ...)
         {
-            bool user_nonblock = !!(*(int *)arg);
-            sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
-            if (!ctx || !ctx->isSocket() || ctx->isClose())
+            va_list args;
+            va_start(args, request);
+            void *arg = va_arg(args, void *);
+            va_end(args);
+
+            // 处理FIONBIO命令，设置或清除套接字的非阻塞I/O模式
+            if (FIONBIO == request)
             {
-                return ioctl_f(fd, request, arg);
+                bool user_nonblock = !!(*(int *)arg);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
+                if (!ctx || !ctx->isSocket() || ctx->isClose())
+                {
+                    return ioctl_f(fd, request, arg);
+                }
+                ctx->setSysNonBlock(user_nonblock);
             }
-            ctx->setSysNonBlock(user_nonblock);
+            return ioctl_f(fd, request, arg);
         }
-        return ioctl_f(fd, request, arg);
     }
 
+    /**
+     * @brief 重写的getsockopt函数
+     * @param[in] sockfd socket文件描述符
+     * @param[in] level 选项定义层次
+     * @param[in] optname 需要查询的选项名
+     * @param[out] optval 用于存放选项值的缓冲区
+     * @param[in,out] optlen optval缓冲区长度，返回时为实际数据长度
+     * @return 成功返回0，失败返回-1并设置errno
+     *
+     * @details 该函数目前直接转发给系统原始函数，未做特殊处理。
+     */
     int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen)
     {
         return getsockopt_f(sockfd, level, optname, optval, optlen);
     }
 
+    /**
+     * @brief 重写的setsockopt函数
+     * @param[in] sockfd socket文件描述符
+     * @param[in] level 选项定义层次
+     * @param[in] optname 需要设置的选项名
+     * @param[in] optval 包含选项值的缓冲区
+     * @param[in] optlen optval缓冲区长度
+     * @return 成功返回0，失败返回-1并设置errno
+     *
+     * @details 该函数在原始setsockopt基础上增加了对超时选项的处理。
+     *          当设置SO_RCVTIMEO或SO_SNDTIMEO选项时，会同时更新FdCtx中的超时设置。
+     */
     int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
     {
-        if (!sylar::is_hook_enable())
+        if (!is_hook_enable())
         {
             return setsockopt_f(sockfd, level, optname, optval, optlen);
         }
@@ -657,9 +919,10 @@ namespace sylar
         {
             if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)
             {
-                sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(sockfd);
+                FdCtx::ptr ctx = FdMgr::GetInstance()->get(sockfd);
                 if (ctx)
                 {
+                    // 将传入的timeval结构体转换为毫秒数，并设置到上下文中的超时时间
                     const timeval *tv = (const timeval *)optval;
                     ctx->setTimeout(optname, tv->tv_sec * 1000 + tv->tv_usec / 1000);
                 }

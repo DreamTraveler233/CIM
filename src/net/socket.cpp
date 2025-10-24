@@ -65,7 +65,11 @@ namespace sylar
     }
 
     Socket::Socket(int family, int type, int protocol)
-        : m_sock(-1), m_family(family), m_type(type), m_protocol(protocol), m_isConnected(false)
+        : m_sock(-1),
+          m_family(family),
+          m_type(type),
+          m_protocol(protocol),
+          m_isConnected(false)
     {
     }
 
@@ -133,7 +137,10 @@ namespace sylar
 
     Socket::ptr Socket::accept()
     {
+        // 创建套接字对象，此时 sock.m_fd = -1
         Socket::ptr sock(new Socket(m_family, m_type, m_protocol));
+
+        // 接受新连接，使用 hook 后的 accept
         int newsock = ::accept(m_sock, nullptr, nullptr);
         if (newsock == -1)
         {
@@ -141,6 +148,8 @@ namespace sylar
                                       << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
+
+        // 初始化套接字，将 newsock 用 Socket 封装
         if (sock->init(newsock))
         {
             return sock;
@@ -148,24 +157,8 @@ namespace sylar
         return nullptr;
     }
 
-    bool Socket::init(int sock)
-    {
-        FdCtx::ptr ctx = FdMgr::GetInstance()->get(sock);
-        if (ctx && ctx->isSocket() && !ctx->isClose())
-        {
-            m_sock = sock;
-            m_isConnected = true;
-            initSock();
-            getLocalAddress();
-            getRemoteAddress();
-            return true;
-        }
-        return false;
-    }
-
     bool Socket::bind(const Address::ptr addr)
     {
-        // m_localAddress = addr;
         if (!isValid())
         {
             newSock();
@@ -183,6 +176,7 @@ namespace sylar
             return false;
         }
 
+        // Unix域地址特殊处理
         UnixAddress::ptr uaddr = std::dynamic_pointer_cast<UnixAddress>(addr);
         if (uaddr)
         {
@@ -197,12 +191,14 @@ namespace sylar
             }
         }
 
+        // 绑定地址
         if (::bind(m_sock, addr->getAddr(), addr->getAddrLen()))
         {
             SYLAR_LOG_ERROR(g_logger) << "bind error errrno=" << errno
                                       << " errstr=" << strerror(errno);
             return false;
         }
+        
         getLocalAddress();
         return true;
     }
@@ -279,6 +275,129 @@ namespace sylar
             return false;
         }
         return true;
+    }
+
+    bool Socket::init(int sock)
+    {
+        // 在fd管理器中注册该套接字，方便统一管理
+        FdCtx::ptr ctx = FdMgr::GetInstance()->get(sock);
+        if (ctx && ctx->isSocket() && !ctx->isClose())
+        {
+            // 初始化成员变量
+            m_sock = sock;
+            m_isConnected = true;
+            // 设置默认选项
+            setDefaultOptions();
+            // 设置服务器地址
+            getLocalAddress();
+            // 设置客户端地址
+            getRemoteAddress();
+            return true;
+        }
+        return false;
+    }
+
+    void Socket::setDefaultOptions()
+    {
+        int val = 1;
+        // 设置 SO_REUSEADDR 允许地址重用
+        setOption(SOL_SOCKET, SO_REUSEADDR, val);
+
+        // 如果是 TCP 协议，禁止 Nagle 算法
+        if (m_type == SOCK_STREAM)
+        {
+            setOption(IPPROTO_TCP, TCP_NODELAY, val);
+        }
+    }
+
+    Address::ptr Socket::getRemoteAddress()
+    {
+        if (m_remoteAddress)
+        {
+            return m_remoteAddress;
+        }
+
+        // 创建对应协议的地址
+        Address::ptr result;
+        switch (m_family)
+        {
+        case AF_INET: // IPv4
+            result.reset(new IPv4Address());
+            break;
+        case AF_INET6: // IPv6
+            result.reset(new IPv6Address());
+            break;
+        case AF_UNIX: // Unix
+            result.reset(new UnixAddress());
+            break;
+        default:
+            result.reset(new UnknownAddress(m_family));
+            break;
+        }
+
+        // 获取远端地址
+        socklen_t addrlen = result->getAddrLen();
+        if (getpeername(m_sock, result->getAddr(), &addrlen))
+        {
+            SYLAR_LOG_ERROR(g_logger) << "getpeername error sock=" << m_sock
+                                      << " errno=" << errno << " errstr=" << strerror(errno);
+            return Address::ptr(new UnknownAddress(m_family));
+        }
+
+        // 特殊处理
+        if (m_family == AF_UNIX)
+        {
+            UnixAddress::ptr addr = std::dynamic_pointer_cast<UnixAddress>(result);
+            addr->setAddrLen(addrlen);
+        }
+
+        m_remoteAddress = result;
+        return m_remoteAddress;
+    }
+
+    Address::ptr Socket::getLocalAddress()
+    {
+        if (m_localAddress)
+        {
+            return m_localAddress;
+        }
+
+        // 创建对应协议的地址
+        Address::ptr result;
+        switch (m_family)
+        {
+        case AF_INET: // IPv4
+            result.reset(new IPv4Address());
+            break;
+        case AF_INET6: // IPv6
+            result.reset(new IPv6Address());
+            break;
+        case AF_UNIX: // Unix
+            result.reset(new UnixAddress());
+            break;
+        default:
+            result.reset(new UnknownAddress(m_family));
+            break;
+        }
+
+        // 获取本地地址
+        socklen_t addrlen = result->getAddrLen();
+        if (getsockname(m_sock, result->getAddr(), &addrlen))
+        {
+            SYLAR_LOG_ERROR(g_logger) << "getsockname error sock=" << m_sock
+                                      << " errno=" << errno << " errstr=" << strerror(errno);
+            return Address::ptr(new UnknownAddress(m_family));
+        }
+
+        // 特殊处理
+        if (m_family == AF_UNIX)
+        {
+            UnixAddress::ptr addr = std::dynamic_pointer_cast<UnixAddress>(result);
+            addr->setAddrLen(addrlen);
+        }
+
+        m_localAddress = result;
+        return m_localAddress;
     }
 
     bool Socket::close()
@@ -389,82 +508,24 @@ namespace sylar
         return -1;
     }
 
-    Address::ptr Socket::getRemoteAddress()
+    int Socket::getFamily() const
     {
-        if (m_remoteAddress)
-        {
-            return m_remoteAddress;
-        }
-
-        Address::ptr result;
-        switch (m_family)
-        {
-        case AF_INET:
-            result.reset(new IPv4Address());
-            break;
-        case AF_INET6:
-            result.reset(new IPv6Address());
-            break;
-        case AF_UNIX:
-            result.reset(new UnixAddress());
-            break;
-        default:
-            result.reset(new UnknownAddress(m_family));
-            break;
-        }
-        socklen_t addrlen = result->getAddrLen();
-        if (getpeername(m_sock, result->getAddr(), &addrlen))
-        {
-            // SYLAR_LOG_ERROR(g_logger) << "getpeername error sock=" << m_sock
-            //     << " errno=" << errno << " errstr=" << strerror(errno);
-            return Address::ptr(new UnknownAddress(m_family));
-        }
-        if (m_family == AF_UNIX)
-        {
-            UnixAddress::ptr addr = std::dynamic_pointer_cast<UnixAddress>(result);
-            addr->setAddrLen(addrlen);
-        }
-        m_remoteAddress = result;
-        return m_remoteAddress;
+        return m_family;
     }
 
-    Address::ptr Socket::getLocalAddress()
+    int Socket::getType() const
     {
-        if (m_localAddress)
-        {
-            return m_localAddress;
-        }
+        return m_type;
+    }
 
-        Address::ptr result;
-        switch (m_family)
-        {
-        case AF_INET:
-            result.reset(new IPv4Address());
-            break;
-        case AF_INET6:
-            result.reset(new IPv6Address());
-            break;
-        case AF_UNIX:
-            result.reset(new UnixAddress());
-            break;
-        default:
-            result.reset(new UnknownAddress(m_family));
-            break;
-        }
-        socklen_t addrlen = result->getAddrLen();
-        if (getsockname(m_sock, result->getAddr(), &addrlen))
-        {
-            SYLAR_LOG_ERROR(g_logger) << "getsockname error sock=" << m_sock
-                                      << " errno=" << errno << " errstr=" << strerror(errno);
-            return Address::ptr(new UnknownAddress(m_family));
-        }
-        if (m_family == AF_UNIX)
-        {
-            UnixAddress::ptr addr = std::dynamic_pointer_cast<UnixAddress>(result);
-            addr->setAddrLen(addrlen);
-        }
-        m_localAddress = result;
-        return m_localAddress;
+    int Socket::getProtocol() const
+    {
+        return m_protocol;
+    }
+
+    bool Socket::isConnected() const
+    {
+        return m_isConnected;
     }
 
     bool Socket::isValid() const
@@ -509,6 +570,11 @@ namespace sylar
         return ss.str();
     }
 
+    int Socket::getSocket() const
+    {
+        return m_sock;
+    }
+
     bool Socket::cancelRead()
     {
         return IOManager::GetThis()->cancelEvent(m_sock, sylar::IOManager::READ);
@@ -529,22 +595,12 @@ namespace sylar
         return IOManager::GetThis()->cancelAll(m_sock);
     }
 
-    void Socket::initSock()
-    {
-        int val = 1;
-        setOption(SOL_SOCKET, SO_REUSEADDR, val);
-        if (m_type == SOCK_STREAM)
-        {
-            setOption(IPPROTO_TCP, TCP_NODELAY, val);
-        }
-    }
-
     void Socket::newSock()
     {
         m_sock = socket(m_family, m_type, m_protocol);
         if (SYLAR_LIKELY(m_sock != -1))
         {
-            initSock();
+            setDefaultOptions();
         }
         else
         {

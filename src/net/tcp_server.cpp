@@ -127,6 +127,41 @@ namespace sylar
         m_socks.clear(); });
     }
 
+    uint64_t TcpServer::getRecvTimeout() const
+    {
+        return m_recvTimeout;
+    }
+
+    std::string TcpServer::getName() const
+    {
+        return m_name;
+    }
+
+    void TcpServer::setRecvTimeout(uint64_t v)
+    {
+        m_recvTimeout = v;
+    }
+
+    void TcpServer::setName(const std::string &v)
+    {
+        m_name = v;
+    }
+
+    bool TcpServer::isStop() const
+    {
+        return m_isStop;
+    }
+
+    TcpServerConf::ptr TcpServer::getConf() const
+    {
+        return m_conf;
+    }
+
+    void TcpServer::setConf(TcpServerConf::ptr v)
+    {
+        m_conf = v;
+    }
+
     void TcpServer::handleClient(Socket::ptr client)
     {
         SYLAR_LOG_INFO(g_logger) << "handleClient: " << *client;
@@ -164,4 +199,8 @@ namespace sylar
         return ss.str();
     }
 
+    std::vector<Socket::ptr> TcpServer::getSocks() const
+    {
+        return m_socks;
+    }
 }

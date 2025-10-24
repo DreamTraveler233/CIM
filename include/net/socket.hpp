@@ -2,13 +2,13 @@
  * @file socket.hpp
  * @brief Socket封装头文件
  * @author sylar
- * 
+ *
  * 该文件定义了Socket和SSLSocket两个核心网络类，用于处理各种类型的网络通信：
  * 1. 支持TCP和UDP协议
  * 2. 支持IPv4、IPv6和Unix域套接字
  * 3. 提供SSL/TLS加密通信支持
  * 4. 集成协程友好的异步I/O操作
- * 
+ *
  * 主要特性：
  * - 面向对象设计：通过Socket类封装底层socket操作
  * - 工厂模式：提供多种静态方法创建不同类型的Socket实例
@@ -348,6 +348,19 @@ namespace sylar
         virtual int recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags = 0);
 
         /**
+         * @brief 输出信息到流中
+         * @param[in,out] os 输出流
+         * @return 输出流引用
+         */
+        virtual std::ostream &dump(std::ostream &os) const;
+
+        /**
+         * @brief 转换为字符串
+         * @return 字符串表示
+         */
+        virtual std::string toString() const;
+
+        /**
          * @brief 获取远端地址
          * @return 返回远端地址
          */
@@ -363,25 +376,25 @@ namespace sylar
          * @brief 获取协议簇
          * @return 返回协议簇
          */
-        int getFamily() const { return m_family; }
+        int getFamily() const;
 
         /**
          * @brief 获取类型
          * @return 返回类型
          */
-        int getType() const { return m_type; }
+        int getType() const;
 
         /**
          * @brief 获取协议
          * @return 返回协议
          */
-        int getProtocol() const { return m_protocol; }
+        int getProtocol() const;
 
         /**
          * @brief 返回是否连接
          * @return 是否已连接
          */
-        bool isConnected() const { return m_isConnected; }
+        bool isConnected() const;
 
         /**
          * @brief 是否有效(m_sock != -1)
@@ -396,23 +409,10 @@ namespace sylar
         int getError();
 
         /**
-         * @brief 输出信息到流中
-         * @param[in,out] os 输出流
-         * @return 输出流引用
-         */
-        virtual std::ostream &dump(std::ostream &os) const;
-
-        /**
-         * @brief 转换为字符串
-         * @return 字符串表示
-         */
-        virtual std::string toString() const;
-
-        /**
          * @brief 返回socket句柄
          * @return socket描述符
          */
-        int getSocket() const { return m_sock; }
+        int getSocket() const;
 
         /**
          * @brief 取消读
@@ -441,36 +441,29 @@ namespace sylar
     protected:
         /**
          * @brief 初始化socket
+         * @param[in] sock socket描述符
+         * @return 是否初始化成功
          */
-        void initSock();
+        virtual bool init(int sock);
+
+        /**
+         * @brief 设置socket的默认选项，以优化性能
+         */
+        void setDefaultOptions();
 
         /**
          * @brief 创建socket
          */
         void newSock();
 
-        /**
-         * @brief 初始化sock
-         * @param[in] sock socket描述符
-         * @return 是否初始化成功
-         */
-        virtual bool init(int sock);
-
     protected:
-        /// socket句柄
-        int m_sock;
-        /// 协议簇
-        int m_family;
-        /// 类型
-        int m_type;
-        /// 协议
-        int m_protocol;
-        /// 是否连接
-        bool m_isConnected;
-        /// 本地地址
-        Address::ptr m_localAddress;
-        /// 远端地址
-        Address::ptr m_remoteAddress;
+        int m_sock;                   /// socket句柄
+        int m_family;                 /// 协议簇(TCP/UDP)
+        int m_type;                   /// 类型(IPv4/IPv6)
+        int m_protocol;               /// 协议
+        bool m_isConnected;           /// 是否连接
+        Address::ptr m_localAddress;  /// 本地地址
+        Address::ptr m_remoteAddress; /// 远端地址
     };
 
     /**
@@ -515,14 +508,14 @@ namespace sylar
          * @return 成功返回新连接的socket,失败返回nullptr
          * @pre Socket必须 bind , listen  成功
          */
-        virtual Socket::ptr accept() override;
+        Socket::ptr accept() override;
 
         /**
          * @brief 绑定地址
          * @param[in] addr 地址
          * @return 是否绑定成功
          */
-        virtual bool bind(const Address::ptr addr) override;
+        bool bind(const Address::ptr addr) override;
 
         /**
          * @brief 连接地址
@@ -530,7 +523,7 @@ namespace sylar
          * @param[in] timeout_ms 超时时间(毫秒)
          * @return 是否连接成功
          */
-        virtual bool connect(const Address::ptr addr, uint64_t timeout_ms = -1) override;
+        bool connect(const Address::ptr addr, uint64_t timeout_ms = -1) override;
 
         /**
          * @brief 监听socket
@@ -538,13 +531,13 @@ namespace sylar
          * @result 返回监听是否成功
          * @pre 必须先 bind 成功
          */
-        virtual bool listen(int backlog = SOMAXCONN) override;
+        bool listen(int backlog = SOMAXCONN) override;
 
         /**
          * @brief 关闭socket
          * @return 是否关闭成功
          */
-        virtual bool close() override;
+        bool close() override;
 
         /**
          * @brief 发送数据
@@ -556,7 +549,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int send(const void *buffer, size_t length, int flags = 0) override;
+        int send(const void *buffer, size_t length, int flags = 0) override;
 
         /**
          * @brief 发送数据
@@ -568,7 +561,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int send(const iovec *buffers, size_t length, int flags = 0) override;
+        int send(const iovec *buffers, size_t length, int flags = 0) override;
 
         /**
          * @brief 发送数据到指定地址
@@ -581,7 +574,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0) override;
+        int sendTo(const void *buffer, size_t length, const Address::ptr to, int flags = 0) override;
 
         /**
          * @brief 发送数据到指定地址
@@ -594,7 +587,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0) override;
+        int sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags = 0) override;
 
         /**
          * @brief 接受数据
@@ -606,7 +599,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int recv(void *buffer, size_t length, int flags = 0) override;
+        int recv(void *buffer, size_t length, int flags = 0) override;
 
         /**
          * @brief 接受数据
@@ -618,7 +611,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int recv(iovec *buffers, size_t length, int flags = 0) override;
+        int recv(iovec *buffers, size_t length, int flags = 0) override;
 
         /**
          * @brief 接受来自指定地址的数据
@@ -631,7 +624,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int recvFrom(void *buffer, size_t length, Address::ptr from, int flags = 0) override;
+        int recvFrom(void *buffer, size_t length, Address::ptr from, int flags = 0) override;
 
         /**
          * @brief 接受来自指定地址的数据
@@ -644,7 +637,7 @@ namespace sylar
          *      @retval =0 socket被关闭
          *      @retval <0 socket出错
          */
-        virtual int recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags = 0) override;
+        int recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags = 0) override;
 
         /**
          * @brief 加载证书
@@ -659,7 +652,7 @@ namespace sylar
          * @param[in,out] os 输出流
          * @return 输出流引用
          */
-        virtual std::ostream &dump(std::ostream &os) const override;
+        std::ostream &dump(std::ostream &os) const override;
 
     protected:
         /**
@@ -667,13 +660,11 @@ namespace sylar
          * @param[in] sock socket描述符
          * @return 是否初始化成功
          */
-        virtual bool init(int sock) override;
+        bool init(int sock) override;
 
     private:
-        /// SSL上下文
-        std::shared_ptr<SSL_CTX> m_ctx;
-        /// SSL对象
-        std::shared_ptr<SSL> m_ssl;
+        std::shared_ptr<SSL_CTX> m_ctx; /// SSL上下文
+        std::shared_ptr<SSL> m_ssl;     /// SSL对象
     };
 
     /**

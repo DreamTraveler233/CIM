@@ -4,15 +4,18 @@ namespace sylar
 {
     int Stream::readFixSize(void *buffer, size_t length)
     {
-        size_t offset = 0;
+        size_t offset = 0; // 偏移量
         int64_t left = length;
         while (left > 0)
         {
             int64_t len = read((char *)buffer + offset, left);
+
+            // 如果读取失败（len<0）或流关闭（len=0），不再继续读
             if (len <= 0)
             {
                 return len;
             }
+            
             offset += len;
             left -= len;
         }
