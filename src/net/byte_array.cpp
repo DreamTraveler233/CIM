@@ -996,9 +996,28 @@ namespace sylar
         }
     }
 
-    size_t ByteArray::getDataSize() const { return m_data_size; }
-    size_t ByteArray::getRemainingCapacity() const { return m_capacity - m_position; }
-    size_t ByteArray::getBaseSize() const { return m_base_size; }
-    size_t ByteArray::getReadSize() const { return m_data_size - m_position; }
-    bool ByteArray::isLittleEndian() const { return m_endian == SYLAR_LITTLE_ENDIAN; }
+    size_t ByteArray::getDataSize() const
+    {
+        return m_data_size;
+    }
+
+    size_t ByteArray::getRemainingCapacity() const
+    {
+        return m_capacity - m_position;
+    }
+
+    size_t ByteArray::getBaseSize() const
+    {
+        return m_base_size;
+    }
+
+    size_t ByteArray::getReadSize() const
+    {
+        return m_data_size - m_position;
+    }
+    
+    bool ByteArray::isLittleEndian() const
+    {
+        return m_endian == SYLAR_LITTLE_ENDIAN;
+    }
 }

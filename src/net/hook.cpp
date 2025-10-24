@@ -11,25 +11,15 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-/*
-整体工作原理：
-
-    系统启动时调用hook_init()函数
-    该函数使用dlsym(RTLD_NEXT, "sleep")找到系统原始的sleep函数地址，并保存到sleep_f变量中
-    同样地，找到系统原始的usleep函数地址，并保存到usleep_f变量中
-    后续当程序中调用sleep或usleep时，实际会调用框架提供的替代函数
-    替代函数执行完自定义逻辑（如协程调度）后，通过sleep_f或usleep_f调用原始的系统函数
-    这种技术叫做"函数拦截"或"API hooking"，允许框架在不修改用户代码的情况下，改变系统函数的行为，
-    这对于实现协程调度特别有用——可以让协程在"睡眠"时主动让出执行权给其他协程，而不是阻塞整个线程。
-*/
-
 namespace sylar
 {
     sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-    static sylar::ConfigVar<int>::ptr g_tcp_connect_timeout =
+    // TCP 超时时间
+    static auto g_tcp_connect_timeout =
         sylar::Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
 
+    // hook 是否启用
     static thread_local bool t_hook_enable = false;
 
     // 定义需要hook的函数列表
@@ -59,18 +49,20 @@ namespace sylar
     // 初始化hook，保存原始函数地址
     void hook_init()
     {
+        // 保证只初始化一次
         static bool is_inited = false;
         if (is_inited)
         {
             return;
         }
+
         // 获取原始函数地址
 #define XX(name) name##_f = (name##_fun)dlsym(RTLD_NEXT, #name);
         HOOK_FUN(XX)
 #undef XX
     }
 
-    static uint64_t s_connect_timeout = -1;
+    static uint64_t s_connect_timeout = 0;
     // 静态初始化器，确保程序启动时就完成hook初始化
     struct HookIniter
     {
@@ -79,11 +71,13 @@ namespace sylar
             hook_init();
             s_connect_timeout = g_tcp_connect_timeout->getValue();
 
-            g_tcp_connect_timeout->addListener([](const int &old_value, const int &new_value)
-                                               {
-                                                SYLAR_LOG_INFO(g_logger)<<"tcp connect timeout changed from "
-                                                                        <<old_value<<" to "<<new_value;
-                                                s_connect_timeout = new_value; });
+            g_tcp_connect_timeout->addListener(
+                [](const int &old_value, const int &new_value)
+                {
+                    SYLAR_LOG_INFO(g_logger) << "tcp connect timeout changed from "
+                                             << old_value << " to " << new_value;
+                    s_connect_timeout = new_value;
+                });
         }
     };
 
@@ -99,6 +93,7 @@ namespace sylar
         t_hook_enable = flag;
     }
 
+    // 用于跟踪定时器的状态
     struct timer_info
     {
         int cancelled = 0;
@@ -127,29 +122,29 @@ namespace sylar
     static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name,
                          uint32_t event, int timeout_so, Args &&...args)
     {
-        // 如果未启用hook，则直接调用原始函数
+        // ==========判断是否启用hook==========
         if (!is_hook_enable())
         {
             return fun(fd, std::forward<Args>(args)...);
         }
 
-        // 获取文件描述符上下文
+        // ==========获取文件描述符上下文==========
         FdCtx::ptr ctx = FdMgr::GetInstance()->get(fd);
         if (!ctx)
         {
             return fun(fd, std::forward<Args>(args)...);
         }
 
-        // 如果文件描述符已经关闭，设置错误码并返回
         if (ctx->isClose())
         {
+            // 如果文件描述符已经关闭，设置错误码并返回
             errno = EBADF;
             return -1;
         }
 
-        // 如果不是套接字或者用户设置了非阻塞模式，则直接调用原始函数
         if (!ctx->isSocket() || ctx->getUserNonBlock())
         {
+            // 如果不是套接字或者用户设置了非阻塞模式，则直接调用原始函数
             return fun(fd, std::forward<Args>(args)...);
         }
 

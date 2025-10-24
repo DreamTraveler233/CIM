@@ -78,19 +78,40 @@ namespace sylar
         return m_isInit;
     }
 
-    bool FdCtx::isInit() const { return m_isInit; }
+    bool FdCtx::isInit() const
+    {
+        return m_isInit;
+    }
 
-    bool FdCtx::isSocket() const { return m_isSocket; }
+    bool FdCtx::isSocket() const
+    {
+        return m_isSocket;
+    }
 
-    bool FdCtx::isClose() const { return m_isClosed; }
+    bool FdCtx::isClose() const
+    {
+        return m_isClosed;
+    }
     bool FdCtx::close()
     {
         return false;
     }
-    void FdCtx::setUserNonBlock(bool v) { m_userNonBlock = v; }
-    bool FdCtx::getUserNonBlock() const { return m_userNonBlock; }
-    void FdCtx::setSysNonBlock(bool v) { m_sysNonBlock = v; }
-    bool FdCtx::getSysNonBlock() const { return m_sysNonBlock; }
+    void FdCtx::setUserNonBlock(bool v)
+    {
+        m_userNonBlock = v;
+    }
+    bool FdCtx::getUserNonBlock() const
+    {
+        return m_userNonBlock;
+    }
+    void FdCtx::setSysNonBlock(bool v)
+    {
+        m_sysNonBlock = v;
+    }
+    bool FdCtx::getSysNonBlock() const
+    {
+        return m_sysNonBlock;
+    }
     void FdCtx::setTimeout(int type, uint64_t v)
     {
         if (type == SO_RCVTIMEO)
@@ -198,7 +219,7 @@ namespace sylar
     {
         return m_fd != -1;
     }
-    
+
     FileDescriptor::FileDescriptor(FileDescriptor &&other) noexcept
         : m_fd(other.release())
     {
