@@ -8,15 +8,16 @@ namespace sylar::http
     static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     // 加载http协议解析器的配置项
-    static sylar::ConfigVar<uint64_t>::ptr g_http_request_buffer_size =
+    static auto g_http_request_buffer_size =
         sylar::Config::Lookup("http.request.buffer_size", (uint64_t)(4 * 1024), "http request buffer size");
-    static sylar::ConfigVar<uint64_t>::ptr g_http_request_max_body_size =
+    static auto g_http_request_max_body_size =
         sylar::Config::Lookup("http.request.max_body_size", (uint64_t)(64 * 1024 * 1024), "http request max body size");
-    static sylar::ConfigVar<uint64_t>::ptr g_http_response_buffer_size =
+    static auto g_http_response_buffer_size =
         sylar::Config::Lookup("http.response.buffer_size", (uint64_t)(4 * 1024), "http response buffer size");
-    static sylar::ConfigVar<uint64_t>::ptr g_http_response_max_body_size =
+    static auto g_http_response_max_body_size =
         sylar::Config::Lookup("http.response.max_body_size", (uint64_t)(64 * 1024 * 1024), "http response max body size");
 
+    // 用于保存配置值，提升性能
     static uint64_t s_http_request_buffer_size = 0;
     static uint64_t s_http_request_max_body_size = 0;
     static uint64_t s_http_response_buffer_size = 0;
@@ -57,27 +58,27 @@ namespace sylar::http
 
                 // 设置配置修改时的回调函数
                 g_http_request_buffer_size->addListener(
-                    [](const uint64_t &ov, const uint64_t &nv)
+                    [](const uint64_t &old_val, const uint64_t &new_val)
                     {
-                        s_http_request_buffer_size = nv;
+                        s_http_request_buffer_size = new_val;
                     });
 
                 g_http_request_max_body_size->addListener(
-                    [](const uint64_t &ov, const uint64_t &nv)
+                    [](const uint64_t &old_val, const uint64_t &new_val)
                     {
-                        s_http_request_max_body_size = nv;
+                        s_http_request_max_body_size = new_val;
                     });
 
                 g_http_response_buffer_size->addListener(
-                    [](const uint64_t &ov, const uint64_t &nv)
+                    [](const uint64_t &old_val, const uint64_t &new_val)
                     {
-                        s_http_response_buffer_size = nv;
+                        s_http_response_buffer_size = new_val;
                     });
 
                 g_http_response_max_body_size->addListener(
-                    [](const uint64_t &ov, const uint64_t &nv)
+                    [](const uint64_t &old_val, const uint64_t &new_val)
                     {
-                        s_http_response_max_body_size = nv;
+                        s_http_response_max_body_size = new_val;
                     });
             }
         };

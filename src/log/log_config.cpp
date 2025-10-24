@@ -8,7 +8,7 @@ namespace sylar
     auto g_log_defines = sylar::Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
     // 静态变量初始化在main函数之前
-    struct LogIniter
+    struct LogInit
     {
         /**
          * @brief 日志配置变更监听回调函数
@@ -19,7 +19,7 @@ namespace sylar
          * @param old_val 变更前的日志配置集合
          * @param new_val 变更后的日志配置集合
          */
-        LogIniter()
+        LogInit()
         {
             g_log_defines->addListener([](const std::set<LogDefine> &old_val,
                                           const std::set<LogDefine> &new_val)
@@ -114,5 +114,5 @@ namespace sylar
         }
     };
 
-    static LogIniter __log_init;
+    static LogInit __log_init;
 }

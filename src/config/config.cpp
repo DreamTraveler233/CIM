@@ -1,4 +1,6 @@
 #include "config.hpp"
+#include "env.hpp"
+#include <sys/stat.h>
 
 namespace sylar
 {
@@ -38,11 +40,46 @@ namespace sylar
 
     ConfigVariableBase::ptr Config::LookupBase(const std::string &name)
     {
-        SYLAR_ASSERT(!name.empty());
-
         RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
         return it == GetDatas().end() ? nullptr : it->second;
+    }
+
+    static std::map<std::string, uint64_t> s_file2modifytime;
+    static sylar::Mutex s_mutex;
+
+    void Config::LoadFromConfDir(const std::string &path, bool force)
+    {
+        SYLAR_ASSERT(!path.empty());
+        std::string absoulte_path = EnvMgr::GetInstance()->getAbsolutePath(path);
+        std::vector<std::string> files;
+        FSUtil::ListAllFile(files, absoulte_path, ".yml");
+
+        for (auto &i : files)
+        {
+            {
+                struct stat st;
+                lstat(i.c_str(), &st);
+                Mutex::Lock lock(s_mutex);
+                if (!force && s_file2modifytime[i] == (uint64_t)st.st_mtime)
+                {
+                    continue;
+                }
+                s_file2modifytime[i] = st.st_mtime;
+            }
+            try
+            {
+                YAML::Node root = YAML::LoadFile(i);
+                LoadFromYaml(root);
+                SYLAR_LOG_INFO(g_logger) << "LoadConfFile file="
+                                         << i << " ok";
+            }
+            catch (...)
+            {
+                SYLAR_LOG_ERROR(g_logger) << "LoadConfFile file="
+                                          << i << " failed";
+            }
+        }
     }
 
     /**
@@ -63,7 +100,7 @@ namespace sylar
 
         for (auto &i : all_nodes)
         {
-            std::string key = i.first;
+            std::string key = i.first; // 配置项名称
             if (key.empty())
             {
                 continue;
@@ -89,6 +126,18 @@ namespace sylar
             }
             SYLAR_LOG_DEBUG(g_logger) << std::endl
                                       << loggerMgr::GetInstance()->toYamlString();
+        }
+    }
+
+    void Config::Visit(std::function<void(ConfigVariableBase::ptr)> cb)
+    {
+        SYLAR_ASSERT(cb);
+        RWMutexType::ReadLock lock(GetMutex());
+        ConfigVarMap &m = GetDatas();
+        for (auto it = m.begin();
+             it != m.end(); ++it)
+        {
+            cb(it->second);
         }
     }
 }

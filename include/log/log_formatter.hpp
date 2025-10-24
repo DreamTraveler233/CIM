@@ -120,7 +120,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -142,7 +142,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -164,7 +164,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -186,7 +186,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -208,7 +208,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -230,7 +230,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -252,7 +252,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
 
     private:
         std::string m_format; ///< 时间格式字符串
@@ -277,7 +277,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -299,7 +299,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -321,7 +321,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -343,7 +343,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -365,7 +365,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
     };
 
     /**
@@ -388,7 +388,7 @@ namespace sylar
          * @param[in] os 输出流
          * @param[in] event 日志事件智能指针
          */
-        virtual void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
+        void format(std::ostream &os, std::shared_ptr<LogEvent> event) override;
 
     private:
         std::string m_string; ///< 字符串内容

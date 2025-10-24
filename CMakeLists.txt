@@ -31,13 +31,12 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/base
     ${PROJECT_SOURCE_DIR}/include/config
-    ${PROJECT_SOURCE_DIR}/include/coroutine
     ${PROJECT_SOURCE_DIR}/include/http
     ${PROJECT_SOURCE_DIR}/include/log
     ${PROJECT_SOURCE_DIR}/include/net
     ${PROJECT_SOURCE_DIR}/include/other
-    ${PROJECT_SOURCE_DIR}/include/thread
     ${PROJECT_SOURCE_DIR}/include/util
+    ${PROJECT_SOURCE_DIR}/include/io
 )
 
 # 定义测试可执行文件列表

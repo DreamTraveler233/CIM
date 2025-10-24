@@ -93,13 +93,13 @@ namespace sylar
          * @brief 写入日志事件到标准输出
          * @param[in] event 日志事件
          */
-        virtual void log(LogEvent::ptr event) override;
+        void log(LogEvent::ptr event) override;
 
         /**
          * @brief 将追加器配置转换为YAML字符串
          * @return YAML格式的配置字符串
          */
-        virtual std::string toYamlString() override;
+        std::string toYamlString() override;
     };
 
     /**
@@ -127,17 +127,17 @@ namespace sylar
          * @brief 写入日志事件到文件
          * @param[in] event 日志事件
          */
-        virtual void log(LogEvent::ptr event) override;
+        void log(LogEvent::ptr event) override;
 
         /**
          * @brief 将追加器配置转换为YAML字符串
          * @return YAML格式的配置字符串
          */
-        virtual std::string toYamlString() override;
+        std::string toYamlString() override;
 
         LogFile::ptr getLogFile() const;
 
     private:
-        LogFile::ptr m_logFile;  ///< 文件对象
+        LogFile::ptr m_logFile; ///< 文件对象
     };
 }

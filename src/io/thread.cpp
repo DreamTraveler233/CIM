@@ -56,7 +56,6 @@ namespace sylar
 
     void Thread::SetName(const std::string &name)
     {
-        SYLAR_ASSERT(!name.empty());
         if (t_thread)
         {
             t_thread->m_name = name;

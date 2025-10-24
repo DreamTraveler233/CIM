@@ -4,6 +4,7 @@
 #include "lock.hpp"
 #include "iomanager.hpp"
 #include "singleton.hpp"
+#include "noncopyable.hpp"
 
 namespace sylar
 {
@@ -57,4 +58,54 @@ namespace sylar
     };
 
     using FdMgr = Singleton<FdManager>;
+
+    /**
+     * @brief RAII文件描述符管理类
+     * @details 自动管理文件描述符的生命周期，在对象析构时自动关闭文件描述符
+     */
+    class FileDescriptor : public Noncopyable
+    {
+    public:
+        /**
+         * @brief 构造函数
+         * @param fd 文件描述符
+         */
+        explicit FileDescriptor(int fd = -1);
+
+        /**
+         * @brief 析构函数，自动关闭文件描述符
+         */
+        ~FileDescriptor();
+
+        /**
+         * @brief 获取文件描述符
+         * @return int 文件描述符
+         */
+        int get() const;
+
+        /**
+         * @brief 重置文件描述符
+         * @param fd 新的文件描述符
+         */
+        void reset(int fd = -1);
+
+        /**
+         * @brief 释放文件描述符所有权
+         * @return int 文件描述符
+         */
+        int release();
+
+        /**
+         * @brief 检查文件描述符是否有效
+         * @return bool 文件描述符是否有效
+         */
+        bool isValid() const;
+
+        // 支持移动
+        FileDescriptor(FileDescriptor &&other) noexcept;
+        FileDescriptor &operator=(FileDescriptor &&other) noexcept;
+
+    private:
+        int m_fd;
+    };
 }

@@ -1,48 +1,67 @@
 #include "iomanager.hpp"
 #include "macro.hpp"
+#include "fd_manager.hpp"
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 namespace sylar
 {
     static auto g_logger = SYLAR_LOG_NAME("system");
 
-    /**
-     * @brief IOManager 构造函数，初始化 I/O 管理器。
-     *
-     * @param threads 线程池的线程数量。指定调度器使用的线程数，通常与 CPU 核心数相关。
-     * @param use_caller 是否将当前调用线程加入调度器线程池。如果为 true，则当前线程也会参与任务调度。
-     * @param name 调度器名称。用于标识调度器实例。
-     *
-     * 初始化流程：
-     * 1. 创建 epoll 实例，并设置管道以支持唤醒机制；
-     * 2. 配置管道读端为非阻塞模式，并将其添加到 epoll 监听中；
-     * 3. 初始化上下文容量并启动调度器。
-     */
     IOManager::IOManager(size_t threads, bool use_caller, const std::string &name)
         : Scheduler(threads, use_caller, name)
     {
+        int saved_errno;
         // 创建 epoll 实例，用于监听文件描述符事件
-        m_epfd = epoll_create(1);
-        SYLAR_ASSERT(m_epfd > 0);
+        FileDescriptor epfd(epoll_create1(EPOLL_CLOEXEC)); // 避免在子进程中继承文件描述符
+        if (!epfd.isValid())
+        {
+            saved_errno = errno;
+            SYLAR_LOG_ERROR(g_logger) << "epoll_create1 failed: " << strerror(saved_errno);
+            throw std::runtime_error("IOManager initialization failed");
+        }
 
         // 创建管道，用于唤醒调度器
-        int rt = pipe(m_tickleFds);
-        SYLAR_ASSERT(!rt);
+        int pipe_fd[2];
+        int rt = pipe(pipe_fd);
+        if (-1 == rt)
+        {
+            saved_errno = errno;
+            SYLAR_LOG_ERROR(g_logger) << "pipe failed: " << strerror(saved_errno);
+            throw std::runtime_error("IOManager initialization failed");
+        }
+
+        FileDescriptor pipe_read_fd(pipe_fd[0]);
+        FileDescriptor pipe_write_fd(pipe_fd[1]);
 
         epoll_event ev = {};
-        ev.events = EPOLLIN | EPOLLET; // 监听读事件，使用边缘触发
-        ev.data.fd = m_tickleFds[0];   // 设置监听的文件描述符为管道的读端
+        ev.events = EPOLLIN | EPOLLET;   // 使用 ET 模式监听读事件
+        ev.data.fd = pipe_read_fd.get(); // 关联管道的读端
 
         // 将管道的读端设置为非阻塞模式，避免在读取时发生阻塞（若无数据可读或者是无法写入则立即返回）
-        rt = fcntl(m_tickleFds[0], F_SETFL, O_NONBLOCK);
-        SYLAR_ASSERT(!rt);
+        rt = fcntl(pipe_read_fd.get(), F_SETFL, O_NONBLOCK);
+        if (-1 == rt)
+        {
+            saved_errno = errno;
+            SYLAR_LOG_ERROR(g_logger) << "fcntl failed: " << strerror(saved_errno);
+            throw std::runtime_error("IOManager initialization failed");
+        }
 
         // 将管道的读端添加到 epoll 实例中，以监听其事件
-        rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_tickleFds[0], &ev);
-        SYLAR_ASSERT(!rt);
+        rt = epoll_ctl(epfd.get(), EPOLL_CTL_ADD, pipe_read_fd.get(), &ev);
+        if (-1 == rt)
+        {
+            saved_errno = errno;
+            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl failed: " << strerror(saved_errno);
+            throw std::runtime_error("IOManager initialization failed");
+        }
+
+        // 所有资源初始化成功，释放所有权并保存到成员变量中
+        m_epfd = epfd.release();
+        m_tickleFds[0] = pipe_read_fd.release();
+        m_tickleFds[1] = pipe_write_fd.release();
 
         // 初始化上下文存储容量，确保可以容纳足够的上下文对象
         contextResize(64);
@@ -51,14 +70,6 @@ namespace sylar
         start();
     }
 
-    /**
-     * @brief 析构函数，用于清理 IOManager 实例所管理的资源。
-     *
-     * 该析构函数主要负责以下操作：
-     * 1. 调用 stop() 方法停止事件循环；
-     * 2. 关闭 epoll 文件描述符 m_epfd 和管道文件描述符 m_tickleFds；
-     * 3. 遍历 m_fdContexts 容器，释放所有动态分配的 FdContext 对象。
-     */
     IOManager::~IOManager()
     {
         stop();
@@ -78,50 +89,39 @@ namespace sylar
         }
     }
 
-    /**
-     * @brief 向 I/O 管理器添加一个指定的事件。
-     *
-     * 该函数为指定文件描述符 `fd` 添加一个事件类型 `event`，并绑定回调函数 `cb`。
-     * 如果文件描述符上下文数组不足，则会进行扩容操作。同时，该函数还确保不会重复添加相同类型的事件。
-     * 最后，它通过 epoll_ctl 将事件注册到 epoll 实例中，并更新相关的上下文信息。
-     *
-     * @param fd 文件描述符，用于标识要监控的文件或套接字。
-     * @param event 要添加的事件类型，来自 Event 枚举（如读、写等）。
-     * @param cb 可选的回调函数，当事件触发时执行。如果未提供回调函数，则使用当前协程作为事件处理逻辑。
-     * @return bool 返回 true 表示成功添加事件；返回 false 表示添加失败。
-     */
     bool IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     {
+        SYLAR_ASSERT(fd >= 0)
+        SYLAR_ASSERT(event == READ || event == WRITE);
+        SYLAR_ASSERT(cb);
+
         FdContext *fd_ctx = nullptr;
 
-        // ====================取出对应fd上下文====================
-        // 加读锁访问 m_fdContexts，检查是否已存在对应 fd 的上下文
+        // ====================取出对应 fd 的上下文====================
         RWMutexType::ReadLock lock(m_mutex);
         if ((int)m_fdContexts.size() > fd) // 空间够
         {
             fd_ctx = m_fdContexts[fd];
-            lock.unlock(); // 防止和第二个lock2冲突
+            lock.unlock();
         }
-        else
+        else // 空间不足，进行扩容，再取出对应fd上下文
         {
-            lock.unlock(); // 防止和第一个lock2冲突
+            lock.unlock();
 
-            // 若上下文数组不足，加写锁进行扩容
             RWMutexType::WriteLock lock2(m_mutex);
             contextResize(fd * 1.5);
             fd_ctx = m_fdContexts[fd];
         }
 
         // ====================将事件注册到epoll实例中====================
-        // 锁定 fd 上下文以修改其事件状态
         FdContext::MutexType::Lock lock2(fd_ctx->mutex);
         if (fd_ctx->events & event)
         {
-            // 确保不会重复添加相同的事件类型
-            SYLAR_LOG_ERROR(g_logger) << "addEvent assert fd=" << fd
+            // 如果事件已经存在，则直接返回true，避免重复添加相同的事件类型
+            SYLAR_LOG_DEBUG(g_logger) << "addEvent assert fd=" << fd
                                       << " event=" << event
                                       << " fd_ctx.event=" << fd_ctx->events;
-            SYLAR_ASSERT(!(fd_ctx->events & event));
+            return true;
         }
 
         // 根据已有事件决定是新增还是修改 epoll 监控
@@ -130,14 +130,16 @@ namespace sylar
         ev.events = fd_ctx->events | event | EPOLLET; // 设置边缘触发模式
         ev.data.ptr = fd_ctx;
 
-        // 使用 epoll_ctl 注册事件
+        int saved_errno;
+        // 调用 epoll_ctl 更新事件监听
         int rt = epoll_ctl(m_epfd, op, fd, &ev);
         if (rt)
         {
-            // 记录错误日志并返回失败
+            saved_errno = errno;
+            // 如果 epoll_ctl 失败，记录错误日志并返回失败
             SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << errno << ") (" << strerror(errno) << ")";
-            return -1;
+                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+            return false;
         }
 
         // ====================更新上下文信息====================
@@ -148,12 +150,12 @@ namespace sylar
         // 初始化事件上下文
         FdContext::EventContext &event_ctx = fd_ctx->getContext(event);
 
-        if (event_ctx.coroutine)
-        {
-            // SYLAR_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
-            //                          << fd << " event=" << event;
-            fd_ctx->resetContext(event_ctx);
-        }
+        // if (event_ctx.coroutine)
+        // {
+        //     SYLAR_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
+        //                              << fd << " event=" << event;
+        //     fd_ctx->resetContext(event_ctx);
+        // }
         SYLAR_ASSERT(!event_ctx.scheduler);
         SYLAR_ASSERT(!event_ctx.coroutine);
         SYLAR_ASSERT(!event_ctx.cb);
@@ -174,30 +176,26 @@ namespace sylar
         return 0;
     }
 
-    /**
-     * @brief 删除指定文件描述符的事件监听
-     *
-     * 该函数用于从 I/O 管理器中删除指定文件描述符的特定事件监听。如果事件删除成功，
-     * 则返回 true；否则返回 false。
-     *
-     * @param fd 文件描述符，表示需要操作的文件或套接字
-     * @param event 要删除的事件类型 (Event)，例如读事件、写事件等
-     * @return bool 返回是否成功删除事件监听：
-     *              - true 表示事件删除成功
-     *              - false 表示事件删除失败（如文件描述符无效或事件未注册）
-     */
     bool IOManager::delEvent(int fd, Event event)
     {
-        // ====================获取文件描述符对应的 FdContext====================
-        // 加读锁以保护 m_fdContexts 的并发访问
-        RWMutexType::ReadLock lock(m_mutex);
-        if ((int)m_fdContexts.size() <= fd)
-        {
-            return false; // 文件描述符超出范围，直接返回失败
-        }
+        SYLAR_ASSERT(fd >= 0)
+        SYLAR_ASSERT(event == READ || event == WRITE);
 
-        FdContext *fd_ctx = m_fdContexts[fd];
-        lock.unlock();
+        FdContext *fd_ctx = nullptr;
+
+        // ====================获取文件描述符对应的 FdContext====================
+        {
+            // 加读锁以保护 m_fdContexts 的并发访问
+            RWMutexType::ReadLock lock(m_mutex);
+            if ((int)m_fdContexts.size() <= fd)
+            {
+                SYLAR_LOG_ERROR(g_logger) << "delEvent: fd=" << fd
+                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                return false; // 文件描述符超出范围，直接返回失败
+            }
+
+            fd_ctx = m_fdContexts[fd];
+        }
 
         // ====================判断删除的事件是否存在====================
         // 对 fd_ctx 加锁，确保对其事件的修改是线程安全的
@@ -215,13 +213,15 @@ namespace sylar
         ev.events = new_events | EPOLLET; // 设置边缘触发模式
         ev.data.ptr = fd_ctx;
 
+        int saved_errno;
         // 调用 epoll_ctl 更新事件监听
         int rt = epoll_ctl(m_epfd, op, fd, &ev);
         if (rt)
         {
+            saved_errno = errno;
             // 如果 epoll_ctl 失败，记录错误日志并返回失败
             SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << errno << ") (" << strerror(errno) << ")";
+                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
 
@@ -235,29 +235,24 @@ namespace sylar
         return true; // 成功删除事件
     }
 
-    /**
-     * @brief 取消指定文件描述符上的事件监听。
-     *
-     * 该函数通过epoll机制取消对指定文件描述符(fd)上特定事件(event)的监听。
-     * 如果对应的文件描述符不存在，或者没有对应的事件被监听，则返回false表示操作失败。
-     * 否则，会根据新事件集合更新epoll的监听行为(修改或删除)，并在成功后减少待处理事件计数。
-     *
-     * @param fd 文件描述符，表示需要取消监听的文件。
-     * @param event 要取消监听的事件类型。
-     * @return true 如果事件取消成功。
-     * @return false 如果事件取消失败（例如fd无效，或事件未注册）。
-     */
     bool IOManager::cancelEvent(int fd, Event event)
     {
-        // 加读锁以保护m_fdContexts容器的并发访问
-        RWMutexType::ReadLock lock(m_mutex);
-        if ((int)m_fdContexts.size() <= fd)
-        {
-            return false; // 文件描述符超出范围，直接返回false
-        }
+        SYLAR_ASSERT(fd >= 0)
+        SYLAR_ASSERT(event == READ || event == WRITE);
 
-        FdContext *fd_ctx = m_fdContexts[fd];
-        lock.unlock();
+        FdContext *fd_ctx = nullptr;
+        {
+            // 加读锁以保护m_fdContexts容器的并发访问
+            RWMutexType::ReadLock lock(m_mutex);
+            if ((int)m_fdContexts.size() <= fd)
+            {
+                SYLAR_LOG_ERROR(g_logger) << "cancelEvent: fd=" << fd
+                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                return false; // 文件描述符超出范围，直接返回false
+            }
+
+            fd_ctx = m_fdContexts[fd];
+        }
 
         // 对文件描述符上下文加锁，确保对其事件掩码的安全访问
         FdContext::MutexType::Lock lock2(fd_ctx->mutex);
@@ -273,12 +268,14 @@ namespace sylar
         ev.events = new_events | EPOLLET;
         ev.data.ptr = fd_ctx;
 
+        int saved_errno;
         // 使用epoll_ctl修改或删除事件监听
         int rt = epoll_ctl(m_epfd, op, fd, &ev);
         if (rt)
         {
+            saved_errno = errno;
             SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << errno << ") (" << strerror(errno) << ")";
+                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false; // epoll_ctl调用失败时记录错误日志并返回false
         }
 
@@ -289,27 +286,23 @@ namespace sylar
         return true; // 返回true表示事件已成功取消
     }
 
-    /**
-     * @brief 取消指定文件描述符上的所有事件。
-     *
-     * 该函数会取消指定文件描述符 fd 上注册的所有事件，并清理相关的上下文信息。
-     * 如果文件描述符上没有注册任何事件，或者文件描述符超出范围，则直接返回 false。
-     * 否则，它会从 epoll 实例中删除该文件描述符的事件监听，并触发相应的回调函数（如果有）。
-     *
-     * @param fd 文件描述符，表示需要取消事件的目标。
-     * @return bool 返回是否成功取消了 fd 上的所有事件。如果成功取消，返回 true；否则返回 false。
-     */
     bool IOManager::cancelAll(int fd)
     {
-        RWMutexType::ReadLock lock(m_mutex);
-        // 检查 fd 是否在合法范围内
-        if ((int)m_fdContexts.size() <= fd)
-        {
-            return false;
-        }
+        SYLAR_ASSERT(fd >= 0)
 
-        FdContext *fd_ctx = m_fdContexts[fd];
-        lock.unlock();
+        FdContext *fd_ctx = nullptr;
+        {
+            RWMutexType::ReadLock lock(m_mutex);
+            // 检查 fd 是否在合法范围内
+            if ((int)m_fdContexts.size() <= fd)
+            {
+                SYLAR_LOG_ERROR(g_logger) << "cancelAll: fd=" << fd
+                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                return false;
+            }
+
+            fd_ctx = m_fdContexts[fd];
+        }
 
         FdContext::MutexType::Lock lock2(fd_ctx->mutex);
         // 如果 fd 上未注册任何事件，直接返回 false
@@ -324,11 +317,13 @@ namespace sylar
         ev.events = 0;
         ev.data.ptr = fd_ctx;
 
+        int saved_errno;
         int rt = epoll_ctl(m_epfd, op, fd, &ev);
         if (rt)
         {
+            saved_errno = errno;
             SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << errno << ") (" << strerror(errno) << ")";
+                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
 
@@ -356,23 +351,8 @@ namespace sylar
         return dynamic_cast<IOManager *>(Scheduler::GetThis());
     }
 
-    /**
-     * @brief 触发 IOManager 的调度器以唤醒一个空闲线程。
-     *
-     * 此函数用于通知 IOManager 中的一个空闲线程进行任务调度。
-     * 如果当前没有空闲线程，则直接返回，不执行任何操作。
-     *
-     * 主要逻辑：
-     * - 首先检查是否存在空闲线程。如果不存在空闲线程，函数立即返回。
-     * - 若存在空闲线程，通过管道写入一个字节 "T" 来触发调度器。
-     *   - 这里的 m_tickleFds 是一个管道文件描述符对，其中 [1] 是写端。
-     *   - 写入成功后，使用断言确保写入的字节数为 1。
-     *
-     * @note 该函数无参数，也无返回值。
-     */
     void IOManager::tickle()
     {
-        // SYLAR_LOG_DEBUG(g_logger) << "tickle begin";
         //  检查是否有空闲线程，若无则直接返回
         if (!hasIdleThreads())
         {
@@ -381,12 +361,12 @@ namespace sylar
         // 通过管道写入一个字节 "T" 以触发调度器
         int rt = write(m_tickleFds[1], "T", 1);
         SYLAR_ASSERT(rt == 1)
-        // SYLAR_LOG_DEBUG(g_logger) << "tickle end";
     }
 
     bool IOManager::stopping(uint64_t &timeout)
     {
         timeout = getNextTimer();
+        // ~0ull表示没有定时器或者无限超时
         return timeout == ~0ull && m_pendingEventCount == 0 && Scheduler::stopping();
     }
 
@@ -396,23 +376,11 @@ namespace sylar
         return stopping(timeout);
     }
 
-    /**
-     * @brief 空闲循环，用于管理I/O事件。
-     *
-     * 该函数使用epoll_wait持续监控文件描述符的I/O事件。
-     * 它处理停止条件、处理唤醒事件（tickle event）并为受监控的文件描述符触发适当的读写回调。
-     *
-     * 函数会根据活动的I/O事件动态调整epoll事件设置，并高效地管理待处理事件计数。
-     *
-     * 参数：
-     * - 无显式参数（使用IOManager的成员变量）
-     *
-     * 返回值：
-     * - void: 在正常情况下不会返回；无限循环运行直到被停止。
-     */
     void IOManager::idle()
     {
+        // ==========初始化阶段==========
         SYLAR_LOG_DEBUG(g_logger) << "idle";
+
         // 分配 epoll_event 数组并使用智能指针管理内存，用于存储 epoll 等待到的事件
         epoll_event *events = new epoll_event[64]();
         std::shared_ptr<epoll_event> shared_event(events, [](epoll_event *ptr)
@@ -421,53 +389,49 @@ namespace sylar
         // 主空闲循环，持续运行直到满足停止条件
         while (true)
         {
+            // ==========停止条件检查==========
+            // 检查是否应该停止，并获取下一个定时器超时时间
             uint64_t next_timeout = 0;
-            if (stopping(next_timeout)) // 停止监听
+            if (stopping(next_timeout))
             {
                 SYLAR_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
                 break;
             }
 
+            // ==========epoll_wait 等待事件==========
             int rt = 0;
-            // 使用最大超时时间等待epoll事件
             do
             {
-                static const int MAX_TIMEOUT = 3000;
-                if (next_timeout != ~0ull)
+                static const int MAX_TIMEOUT = 3000; // 设置最大超时时间为3秒
+                if (next_timeout != ~0ull)           // 如果有定时器
                 {
+                    // 限制超时时间不超过 MAX_TIMEOUT 毫秒
                     next_timeout = (int)next_timeout > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout;
                 }
                 else
                 {
                     next_timeout = MAX_TIMEOUT;
                 }
+                // 等待 epoll 事件，超时时间为 next_timeout 毫秒，确保定时任务能够及时执行
                 rt = epoll_wait(m_epfd, events, 64, (int)next_timeout);
-                if (rt < 0 && errno == EINTR)
-                {
-                    // SYLAR_LOG_DEBUG(g_logger) << "epoll_wait error";
-                }
-                else
-                {
-                    // SYLAR_LOG_DEBUG(g_logger) << "epoll wait rt=" << rt;
-                    break;
-                }
-            } while (true);
+            } while (rt < 0 && errno == EINTR);
 
+            // ==========处理到期定时器==========
             std::vector<std::function<void()>> cbs;
             listExpiredCb(cbs);
             if (!cbs.empty())
             {
-                // SYLAR_LOG_DEBUG(g_logger) << "on timer cbs.size=" << cbs.size();
+                // 将到期的定时器回调加入调度队列
                 schedule(cbs.begin(), cbs.end());
                 cbs.clear();
             }
 
-            // 处理由epoll_wait触发的事件
+            // ==========处理 epoll 事件==========
             for (int i = 0; i < rt; ++i)
             {
                 epoll_event &event = events[i];
 
-                // 如果事件来自用于唤醒调度器的管道，读取并清空管道中的数据
+                // 如果事件来自用于唤醒调度器的管道，清空管道中的数据
                 if (event.data.fd == m_tickleFds[0])
                 {
                     uint8_t dummy;
@@ -489,9 +453,8 @@ namespace sylar
                     event.events |= (EPOLLIN | EPOLLOUT) & fd_ctx->events;
                 }
 
+                // 确定实际发生的事件类型（读/写）
                 int real_events = NONE;
-
-                // 确定实际发生的事件
                 if (event.events & EPOLLIN)
                 {
                     real_events |= READ;
@@ -507,17 +470,19 @@ namespace sylar
                     continue;
                 }
 
-                // 调整剩余事件并相应更新epoll设置
+                // 更新 epoll 监听事件：如果有剩余事件则修改(MOD)，否则删除(DEL)
                 int left_events = (fd_ctx->events & ~real_events);
                 int op = left_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
                 event.events = left_events | EPOLLET;
 
+                // 更新 epoll 对该文件描述符的监听设置
                 int rt2 = epoll_ctl(m_epfd, op, fd_ctx->fd, &event);
                 if (rt2)
                 {
+                    int saved_errno = errno;
                     SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", "
                                               << fd_ctx->fd << ", " << event.events << "): "
-                                              << rt2 << " (" << errno << ") (" << strerror(errno) << ")";
+                                              << rt2 << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
                     continue;
                 }
 
@@ -536,11 +501,11 @@ namespace sylar
                 }
             }
 
-            // 将控制权交回协程调度器
+            // ==========协程切换==========
+            // 将控制权交回协程调度器，当前协程让出执行权
             Coroutine::ptr cur = Coroutine::GetThis();
             auto raw_ptr = cur.get();
-            cur.reset();
-
+            cur.reset(); // 引用计数减一
             raw_ptr->swapOut();
         }
     }
@@ -550,14 +515,6 @@ namespace sylar
         tickle();
     }
 
-    /**
-     * @brief 调整文件描述符上下文数组的大小。
-     *
-     * 此函数将 m_fdContexts 数组调整为指定的大小。对于新添加的每个元素，
-     * 如果对应的上下文为空，将分配新的 FdContext 对象并初始化其文件描述符。
-     *
-     * @param size 要调整的目标大小。
-     */
     void IOManager::contextResize(size_t size)
     {
         m_fdContexts.resize(size);
@@ -573,20 +530,6 @@ namespace sylar
         }
     }
 
-    /**
-     * @brief 获取指定事件类型的上下文对象。
-     *
-     * 根据传入的事件类型，返回对应的事件上下文（EventContext）对象。
-     *
-     * @param event 事件类型，取值为 Event 枚举值，包括 READ 和 WRITE。
-     *              - Event::READ: 表示读事件。
-     *              - Event::WRITE: 表示写事件。
-     * @return IOManager::FdContext::EventContext&
-     *         返回与事件类型对应的 EventContext 引用：
-     *         - 如果 event 是 Event::READ，则返回 read 上下文。
-     *         - 如果 event 是 Event::WRITE，则返回 write 上下文。
-     *         - 如果 event 是其他值，将触发断言错误。
-     */
     IOManager::FdContext::EventContext &IOManager::FdContext::getContext(Event event)
     {
         switch (event)
@@ -600,46 +543,16 @@ namespace sylar
         default:
             SYLAR_ASSERT2(false, "getContext");
         }
+        throw std::invalid_argument("getContext invalid event");
     }
 
-    /**
-     * @brief 重置指定的 EventContext 对象的状态。
-     *
-     * 该函数会将传入的 EventContext 对象的所有成员变量重置为初始状态，
-     * 包括清空调度器指针、重置协程上下文以及清空回调函数。
-     *
-     * @param event 引用类型的 EventContext 对象，表示需要被重置的事件上下文。
-     *              - scheduler: 指向调度器的指针，会被设置为 nullptr。
-     *              - coroutine: 协程上下文的智能指针，会调用其 reset 方法进行重置。
-     *              - cb: 回调函数指针，会被设置为 nullptr。
-     */
     void IOManager::FdContext::resetContext(EventContext &event)
     {
-        // 将调度器指针重置为 nullptr，表示该事件不再绑定到任何调度器。
-        event.scheduler = nullptr;
-
-        // 重置协程上下文，释放与其关联的资源。
-        event.coroutine.reset();
-
-        // 清空回调函数指针，确保不会保留任何旧的回调逻辑。
-        event.cb = nullptr;
+        event.scheduler = nullptr; // 将调度器指针重置为 nullptr，表示该事件不再绑定到任何调度器。
+        event.coroutine.reset();   // 重置协程上下文，释放与其关联的资源。
+        event.cb = nullptr;        // 清空回调函数指针，确保不会保留任何旧的回调逻辑。
     }
 
-    /**
-     * @brief 触发指定的事件类型，并根据事件上下文调度相应的回调或协程。
-     *
-     * 此函数会触发指定的事件，清除已经处理的事件标志位，
-     * 并根据事件上下文中存储的回调函数或协程进行调度。
-     *
-     * @param event 要触发的事件类型（读、写或其他）。
-     *              必须是当前 FdContext 已注册的事件之一。
-     *
-     * 详细流程：
-     * 1. 验证传入的事件是否为当前已注册的事件；
-     * 2. 清除已触发事件的标志位；
-     * 3. 获取事件上下文，并根据上下文内容调度回调函数或协程；
-     * 4. 清空事件上下文中的调度器指针。
-     */
     void IOManager::FdContext::triggerEvent(Event event)
     {
         // 确保传入的事件是当前已注册的事件之一
@@ -665,6 +578,7 @@ namespace sylar
 
         // 清空事件上下文中的调度器指针
         event_ctx.scheduler = nullptr;
+        // event_ctx.coroutine.reset();
 
         return;
     }

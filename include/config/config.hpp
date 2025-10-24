@@ -126,10 +126,21 @@ namespace sylar
         static ConfigVariableBase::ptr LookupBase(const std::string &name);
 
         /**
+         * @brief 加载path文件夹里面的配置文件
+         */
+        static void LoadFromConfDir(const std::string &path, bool force = false);
+
+        /**
          * @brief 从YAML配置文件中加载配置项
          * @param root YAML配置文件的根节点
          */
         static void LoadFromYaml(const YAML::Node &root);
+
+        /**
+         * @brief 遍历配置模块里面所有配置项
+         * @param[in] cb 配置项回调函数
+         */
+        static void Visit(std::function<void(ConfigVariableBase::ptr)> cb);
 
     private:
         /**

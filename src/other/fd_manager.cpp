@@ -159,4 +159,57 @@ namespace sylar
         }
         m_fdCtxs[fd].reset();
     }
+
+    FileDescriptor::FileDescriptor(int fd)
+        : m_fd(fd)
+    {
+    }
+
+    FileDescriptor::~FileDescriptor()
+    {
+        if (m_fd != -1)
+        {
+            close(m_fd);
+        }
+    }
+
+    int FileDescriptor::get() const
+    {
+        return m_fd;
+    }
+
+    void FileDescriptor::reset(int fd)
+    {
+        if (m_fd != -1)
+        {
+            close(m_fd);
+        }
+        m_fd = fd;
+    }
+
+    int FileDescriptor::release()
+    {
+        int fd = m_fd;
+        m_fd = -1;
+        return fd;
+    }
+
+    bool FileDescriptor::isValid() const
+    {
+        return m_fd != -1;
+    }
+    
+    FileDescriptor::FileDescriptor(FileDescriptor &&other) noexcept
+        : m_fd(other.release())
+    {
+    }
+
+    FileDescriptor &FileDescriptor::operator=(FileDescriptor &&other) noexcept
+    {
+        if (this != &other)
+        {
+            reset(other.release());
+        }
+        return *this;
+    }
 }

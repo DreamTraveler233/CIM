@@ -1,7 +1,7 @@
 /**
  * @file coroutine.hpp
  * @brief 协程实现模块
- * 
+ *
  * 该文件提供了协程的实现，包括协程的创建、切换、状态管理等功能。
  * 基于ucontext实现协程上下文切换，支持协程的挂起、恢复等操作。
  */
@@ -17,11 +17,11 @@ namespace sylar
 {
     /**
      * @brief 协程类
-     * 
+     *
      * 实现了协程的基本功能，包括创建、执行、挂起、恢复等操作。
      * 使用ucontext_t保存和恢复协程上下文，通过状态机管理协程生命周期。
      */
-    class Coroutine : public std::enable_shared_from_this<Coroutine>
+    class Coroutine : public std::enable_shared_from_this<Coroutine>, Noncopyable
     {
     public:
         /// 智能指针类型定义
@@ -160,7 +160,7 @@ namespace sylar
 
     /**
      * @brief 协程栈分配器
-     * 
+     *
      * 提供协程栈空间的分配和释放功能。
      */
     class MallocStackAllocator : public Noncopyable
