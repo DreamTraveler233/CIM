@@ -305,13 +305,13 @@ namespace CIM
     };
 
     class Scheduler;
-    class FiberSemaphore : Noncopyable
+    class CoroutineSemaphore : Noncopyable
     {
     public:
         typedef SpinLock MutexType;
 
-        FiberSemaphore(size_t initial_concurrency = 0);
-        ~FiberSemaphore();
+        CoroutineSemaphore(size_t initial_concurrency = 0);
+        ~CoroutineSemaphore();
 
         bool tryWait();
         void wait();

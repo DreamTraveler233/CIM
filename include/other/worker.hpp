@@ -30,7 +30,7 @@ namespace CIM
         uint32_t m_batchSize;
         bool m_finish;
         Scheduler *m_scheduler;
-        FiberSemaphore m_sem;
+        CoroutineSemaphore m_sem;
     };
 
     class WorkerManager

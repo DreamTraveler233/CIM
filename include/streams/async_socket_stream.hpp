@@ -130,8 +130,8 @@ namespace CIM
         bool waitFiber();
 
     protected:
-        FiberSemaphore m_sem;
-        FiberSemaphore m_waitSem;
+        CoroutineSemaphore m_sem;
+        CoroutineSemaphore m_waitSem;
         RWMutexType m_queueMutex;
         std::list<SendCtx::ptr> m_queue;
         RWMutexType m_mutex;

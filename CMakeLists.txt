@@ -18,8 +18,11 @@ pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 pkg_check_modules(MYSQL REQUIRED mysqlclient)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 pkg_check_modules(LIBEVENT REQUIRED libevent)
-pkg_check_modules(HIREDIS REQUIRED hiredis)
-pkg_check_modules(ZOOKEEPER REQUIRED zookeeper)
+pkg_check_modules(HIREDIS_VIP REQUIRED hiredis_vip)
+# pkg_check_modules(ZOOKEEPER REQUIRED libzookeeper-mt)
+
+# 查找 yaml-cpp 库
+find_package(yaml-cpp REQUIRED)
 
 # 查找 Ragel 状态机编译器
 find_program(RAGEL_EXECUTABLE ragel)
@@ -115,7 +118,7 @@ target_include_directories(CIM
         ${JSONCPP_INCLUDE_DIRS}
         ${LIBEVENT_INCLUDE_DIRS}
         ${HIREDIS_INCLUDE_DIRS}
-        ${ZOOKEEPER_INCLUDE_DIRS}
+        /usr/include/zookeeper
 )
 
 # ==================== 依赖链接 ====================
@@ -127,13 +130,14 @@ target_link_libraries(CIM
         OpenSSL::Crypto
         ZLIB::ZLIB
         protobuf::libprotobuf
+        yaml-cpp::yaml-cpp
     PRIVATE
         ${SQLITE3_LIBRARIES}
         ${MYSQL_LIBRARIES}
         ${JSONCPP_LIBRARIES}
         ${LIBEVENT_LIBRARIES}
-        ${HIREDIS_LIBRARIES}
-        ${ZOOKEEPER_LIBRARIES}
+        ${HIREDIS_VIP_LIBRARIES}
+        /usr/lib/x86_64-linux-gnu/libzookeeper_mt.so
 )
 
 # 定义测试可执行文件列表
@@ -167,11 +171,13 @@ set(EXAMPLES_LIST
 # 循环创建测试可执行文件
 foreach(TEST ${TEST_LIST})
     add_executable(${TEST} tests/${TEST}.cpp)    # 生成可执行文件
+    add_dependencies(${TEST} CIM)                # 指定test依赖 CIM库，先编译库再编译
     target_link_libraries(${TEST} PRIVATE CIM)   # 链接库文件
 endforeach()
 
 foreach(EXAMPLE ${EXAMPLES_LIST})
     add_executable(${EXAMPLE} examples/${EXAMPLE}.cpp)
+    add_dependencies(${TEST} CIM)
     target_link_libraries(${EXAMPLE} PRIVATE CIM)
 endforeach()
 

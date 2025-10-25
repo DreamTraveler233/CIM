@@ -230,4 +230,19 @@ namespace CIM
             return __sync_bool_compare_and_swap(&t, (T)old_val, (T)new_val);
         }
     };
+
+    template <class Iter>
+    std::string Join(Iter begin, Iter end, const std::string &tag)
+    {
+        std::stringstream ss;
+        for (Iter it = begin; it != end; ++it)
+        {
+            if (it != begin)
+            {
+                ss << tag;
+            }
+            ss << *it;
+        }
+        return ss.str();
+    }
 }

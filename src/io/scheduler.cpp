@@ -23,7 +23,7 @@ namespace CIM
             --threads;
 
             CIM_ASSERT(GetThis() == nullptr); // 当前线程的调度器实例为空
-            t_scheduler = this;                 // 设置当前线程的调度器
+            t_scheduler = this;               // 设置当前线程的调度器
 
             // 创建根协程并绑定到当前调度器的run方法
             m_rootCoroutine.reset(new Coroutine(std::bind(&Scheduler::run, this), 0, true));
@@ -370,5 +370,25 @@ namespace CIM
         {
             m_caller->switchTo();
         }
+    }
+
+    std::ostream &Scheduler::dump(std::ostream &os)
+    {
+        os << "[Scheduler name=" << m_name
+           << " size=" << m_threadCount
+           << " active_count=" << m_activeThreadCount
+           << " idle_count=" << m_idleThreadCount
+           << " Running=" << m_isRunning
+           << " ]" << std::endl
+           << "    ";
+        for (size_t i = 0; i < m_threadIds.size(); ++i)
+        {
+            if (i)
+            {
+                os << ", ";
+            }
+            os << m_threadIds[i];
+        }
+        return os;
     }
 }
