@@ -40,38 +40,38 @@ void testLogLevelPerformance(CIM::Logger::ptr logger, CIM::Level level,
     case CIM::Level::DEBUG:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_DEBUG(logger) << "Debug message " << i << " for performance test";
+            CIM_LOG_DEBUG(logger) << "Debug message " << i << " for performance test";
         }
         break;
     case CIM::Level::INFO:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_INFO(logger) << "Info message " << i << " for performance test";
+            CIM_LOG_INFO(logger) << "Info message " << i << " for performance test";
         }
         break;
     case CIM::Level::WARN:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_WARN(logger) << "Warn message " << i << " for performance test";
+            CIM_LOG_WARN(logger) << "Warn message " << i << " for performance test";
         }
         break;
     case CIM::Level::ERROR:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_ERROR(logger) << "Error message " << i << " for performance test";
+            CIM_LOG_ERROR(logger) << "Error message " << i << " for performance test";
         }
         break;
     case CIM::Level::FATAL:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_FATAL(logger) << "Fatal message " << i << " for performance test";
+            CIM_LOG_FATAL(logger) << "Fatal message " << i << " for performance test";
         }
         break;
     case CIM::Level::UNKNOWN:
     default:
         for (int i = 0; i < log_count; ++i)
         {
-            SYLAR_LOG_INFO(logger) << "Unknown level message " << i << " for performance test";
+            CIM_LOG_INFO(logger) << "Unknown level message " << i << " for performance test";
         }
         break;
     }
@@ -97,7 +97,7 @@ void testFormattedLogPerformance(CIM::Logger::ptr logger, int log_count, Perform
 
     for (int i = 0; i < log_count; ++i)
     {
-        SYLAR_LOG_FMT_INFO(logger, "Formatted log message %d with value %f and string %s",
+        CIM_LOG_FMT_INFO(logger, "Formatted log message %d with value %f and string %s",
                            i, 3.14159, "test");
     }
 
@@ -122,7 +122,7 @@ void multiThreadPerformanceTest(CIM::Logger::ptr logger, int log_count)
 
     for (int i = 0; i < log_count; ++i)
     {
-        SYLAR_LOG_INFO(logger) << "Multithread log message " << i << " from thread "
+        CIM_LOG_INFO(logger) << "Multithread log message " << i << " from thread "
                                << std::this_thread::get_id();
     }
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
     std::cout << "========================" << std::endl;
 
     // 创建测试logger
-    auto logger = SYLAR_LOG_ROOT();
+    auto logger = CIM_LOG_ROOT();
     logger->setLevel(CIM::Level::DEBUG);
 
     // 添加文件appender用于测试
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
               << std::endl;
 
     // 仅控制台appender
-    auto logger_console = SYLAR_LOG_NAME("console_only");
+    auto logger_console = CIM_LOG_NAME("console_only");
     logger_console->addAppender(std::make_shared<CIM::StdoutLogAppender>());
 
     g_total_log_count = 0;
@@ -285,14 +285,14 @@ int main(int argc, char **argv)
     printPerformanceResult("仅控制台Appender性能测试", result);
 
     // 仅文件appender
-    auto logger_file = SYLAR_LOG_NAME("file_only");
+    auto logger_file = CIM_LOG_NAME("file_only");
     logger_file->addAppender(std::make_shared<CIM::FileLogAppender>("./log/file_only_test.log"));
 
     testLogLevelPerformance(logger_file, CIM::Level::INFO, 10000, result);
     printPerformanceResult("仅文件Appender性能测试", result);
 
     // 混合appender
-    auto logger_mixed = SYLAR_LOG_NAME("mixed");
+    auto logger_mixed = CIM_LOG_NAME("mixed");
     logger_mixed->addAppender(std::make_shared<CIM::StdoutLogAppender>());
     logger_mixed->addAppender(std::make_shared<CIM::FileLogAppender>("./log/mixed_test.log"));
 

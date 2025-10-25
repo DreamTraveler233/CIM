@@ -16,13 +16,13 @@ void test_log_system()
 {
     std::cout << "=================== 日志系统基本 ===================" << std::endl;
 
-    auto system_log = SYLAR_LOG_NAME("system");
-    auto root_log = SYLAR_LOG_NAME("root");
+    auto system_log = CIM_LOG_NAME("system");
+    auto root_log = CIM_LOG_NAME("root");
 
-    SYLAR_LOG_DEBUG(system_log) << "debug message for system";
-    SYLAR_LOG_INFO(system_log) << "info message for system";
-    SYLAR_LOG_ERROR(system_log) << "error message for system";
-    SYLAR_LOG_INFO(root_log) << "info message for root";
+    CIM_LOG_DEBUG(system_log) << "debug message for system";
+    CIM_LOG_INFO(system_log) << "info message for system";
+    CIM_LOG_ERROR(system_log) << "error message for system";
+    CIM_LOG_INFO(root_log) << "info message for root";
 
     // 测试日志管理器
     auto logger_manager = CIM::loggerMgr::GetInstance();
@@ -52,8 +52,8 @@ void test_log_system()
     std::cout << "日志系统YAML配置加载测试通过" << std::endl;
 
     // 测试配置后的日志输出
-    SYLAR_LOG_DEBUG(system_log) << "debug message after config";
-    SYLAR_LOG_INFO(system_log) << "info message after config";
+    CIM_LOG_DEBUG(system_log) << "debug message after config";
+    CIM_LOG_INFO(system_log) << "info message after config";
 
     std::cout << "日志系统配置后输出测试通过" << std::endl;
 }
@@ -63,8 +63,8 @@ void test_logger_creation()
     std::cout << "=================== 测试日志器创建 ===================" << std::endl;
 
     // 测试获取已存在的logger
-    auto logger1 = SYLAR_LOG_NAME("test_logger");
-    auto logger2 = SYLAR_LOG_NAME("test_logger");
+    auto logger1 = CIM_LOG_NAME("test_logger");
+    auto logger2 = CIM_LOG_NAME("test_logger");
 
     // 应该是同一个实例
     assert(logger1 == logger2);
@@ -80,14 +80,14 @@ void test_log_formatter()
 {
     std::cout << "=================== 测试日志格式化器 ===================" << std::endl;
 
-    auto test_logger = SYLAR_LOG_NAME("formatter_test");
+    auto test_logger = CIM_LOG_NAME("formatter_test");
 
     // 设置自定义格式
     std::string custom_format = "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%l%T%m%n";
     test_logger->setFormatter(custom_format);
 
     // 测试日志输出
-    SYLAR_LOG_INFO(test_logger) << "测试自定义格式";
+    CIM_LOG_INFO(test_logger) << "测试自定义格式";
 
     std::cout << "日志格式化器测试通过" << std::endl;
 }
@@ -96,24 +96,24 @@ void test_log_appender()
 {
     std::cout << "=================== 测试日志附加器 ===================" << std::endl;
 
-    auto test_logger = SYLAR_LOG_NAME("appender_test");
+    auto test_logger = CIM_LOG_NAME("appender_test");
 
     // 创建并添加文件附加器
     auto file_appender = std::make_shared<CIM::FileLogAppender>("test_log.txt");
     test_logger->addAppender(file_appender);
 
     // 测试日志输出到文件
-    SYLAR_LOG_INFO(test_logger) << "测试文件附加器";
+    CIM_LOG_INFO(test_logger) << "测试文件附加器";
 
     // 创建并添加控制台附加器
     auto stdout_appender = std::make_shared<CIM::StdoutLogAppender>();
     test_logger->addAppender(stdout_appender);
 
-    SYLAR_LOG_DEBUG(test_logger) << "测试多个附加器";
+    CIM_LOG_DEBUG(test_logger) << "测试多个附加器";
 
     // 测试删除附加器
     test_logger->delAppender(file_appender);
-    SYLAR_LOG_WARN(test_logger) << "测试删除附加器后";
+    CIM_LOG_WARN(test_logger) << "测试删除附加器后";
 
     // 清空附加器
     test_logger->clearAppender();
@@ -125,7 +125,7 @@ void test_log_level()
 {
     std::cout << "=================== 测试日志级别控制 ===================" << std::endl;
 
-    auto test_logger = SYLAR_LOG_NAME("level_test");
+    auto test_logger = CIM_LOG_NAME("level_test");
 
     // 设置日志级别为ERROR
     test_logger->setLevel(CIM::Level::ERROR);
@@ -153,7 +153,7 @@ void test_log_event()
 {
     std::cout << "=================== 测试日志事件 ===================" << std::endl;
 
-    auto test_logger = SYLAR_LOG_NAME("event_test");
+    auto test_logger = CIM_LOG_NAME("event_test");
 
     // 创建日志事件
     auto event = std::make_shared<CIM::LogEvent>(test_logger, CIM::Level::INFO,
@@ -178,7 +178,7 @@ void test_log_rotate()
 {
     std::cout << "=================== 测试日志轮转 ===================" << std::endl;
 
-    static auto g_logger = SYLAR_LOG_ROOT();
+    static auto g_logger = CIM_LOG_ROOT();
 
     // 加载配置文件
     YAML::Node root = YAML::LoadFile("/home/szy/code/CIM/bin/config/log.yaml");
@@ -186,7 +186,7 @@ void test_log_rotate()
 
     for (int i = 0; i < 10000; ++i)
     {
-        SYLAR_LOG_INFO(g_logger) << "日志轮转测试";
+        CIM_LOG_INFO(g_logger) << "日志轮转测试";
     }
 }
 
@@ -195,9 +195,9 @@ std::atomic<int> g_log_count(0);
 std::atomic<bool> g_test_running(false);
 
 void thread_safe_log_test_func(int thread_id, int log_count) {
-    auto logger = SYLAR_LOG_NAME("thread_safe_test");
+    auto logger = CIM_LOG_NAME("thread_safe_test");
     for (int i = 0; i < log_count && g_test_running; ++i) {
-        SYLAR_LOG_INFO(logger) << "Thread " << thread_id << " log message #" << i;
+        CIM_LOG_INFO(logger) << "Thread " << thread_id << " log message #" << i;
         g_log_count++;
         std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
@@ -214,7 +214,7 @@ void test_log_thread_safety() {
     
     std::vector<std::thread> threads;
     
-    auto logger = SYLAR_LOG_NAME("thread_safe_test");
+    auto logger = CIM_LOG_NAME("thread_safe_test");
     logger->setLevel(CIM::Level::INFO);
     
     // 创建多个线程同时写入日志
@@ -251,8 +251,8 @@ void test_config_integration() {
     assert(before_config != after_config);
     
     // 测试重新配置后的日志输出
-    auto system_logger = SYLAR_LOG_NAME("system");
-    SYLAR_LOG_INFO(system_logger) << "配置集成测试消息";
+    auto system_logger = CIM_LOG_NAME("system");
+    CIM_LOG_INFO(system_logger) << "配置集成测试消息";
     
     std::cout << "日志与配置集成测试通过" << std::endl;
 }

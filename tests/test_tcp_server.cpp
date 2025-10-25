@@ -2,12 +2,12 @@
 #include "iomanager.hpp"
 #include "macro.hpp"
 
-CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+CIM::Logger::ptr g_logger = CIM_LOG_ROOT();
 
 void run()
 {
     auto addr = CIM::Address::LookupAny("0.0.0.0:8033");
-    SYLAR_LOG_INFO(g_logger) << *addr;
+    CIM_LOG_INFO(g_logger) << *addr;
     //auto addr2 = CIM::UnixAddress::ptr(new CIM::UnixAddress("/tmp/unix_addr"));
     std::vector<CIM::Address::ptr> addrs;
     addrs.push_back(addr);

@@ -168,14 +168,14 @@ namespace CIM::http
 
         /**
          * @brief 添加模糊匹配servlet
-         * @param[in] uri uri 模糊匹配 /sylar_*
+         * @param[in] uri uri 模糊匹配 /CIM_*
          * @param[in] slt servlet
          */
         void addGlobServlet(const std::string &uri, Servlet::ptr slt);
 
         /**
          * @brief 添加模糊匹配servlet
-         * @param[in] uri uri 模糊匹配 /sylar_*
+         * @param[in] uri uri 模糊匹配 /CIM_*
          * @param[in] cb FunctionServlet回调函数
          */
         void addGlobServlet(const std::string &uri, FunctionServlet::callback cb);

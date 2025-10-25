@@ -6,7 +6,7 @@
 
 namespace CIM::http
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     CIM::ConfigVar<uint32_t>::ptr g_websocket_message_max_size = CIM::Config::Lookup("websocket.message.max_size", (uint32_t)1024 * 1024 * 32, "websocket message max size");
 
@@ -23,28 +23,28 @@ namespace CIM::http
             req = recvRequest();
             if (!req)
             {
-                SYLAR_LOG_INFO(g_logger) << "invalid http request";
+                CIM_LOG_INFO(g_logger) << "invalid http request";
                 break;
             }
             if (strcasecmp(req->getHeader("Upgrade").c_str(), "websocket"))
             {
-                SYLAR_LOG_INFO(g_logger) << "http header Upgrade != websocket";
+                CIM_LOG_INFO(g_logger) << "http header Upgrade != websocket";
                 break;
             }
             if (strcasecmp(req->getHeader("Connection").c_str(), "Upgrade"))
             {
-                SYLAR_LOG_INFO(g_logger) << "http header Connection != Upgrade";
+                CIM_LOG_INFO(g_logger) << "http header Connection != Upgrade";
                 break;
             }
             if (req->getHeaderAs<int>("Sec-webSocket-Version") != 13)
             {
-                SYLAR_LOG_INFO(g_logger) << "http header Sec-webSocket-Version != 13";
+                CIM_LOG_INFO(g_logger) << "http header Sec-webSocket-Version != 13";
                 break;
             }
             std::string key = req->getHeader("Sec-WebSocket-Key");
             if (key.empty())
             {
-                SYLAR_LOG_INFO(g_logger) << "http header Sec-WebSocket-Key = null";
+                CIM_LOG_INFO(g_logger) << "http header Sec-WebSocket-Key = null";
                 break;
             }
 
@@ -61,13 +61,13 @@ namespace CIM::http
             rsp->setHeader("Sec-WebSocket-Accept", v);
 
             sendResponse(rsp);
-            SYLAR_LOG_DEBUG(g_logger) << *req;
-            SYLAR_LOG_DEBUG(g_logger) << *rsp;
+            CIM_LOG_DEBUG(g_logger) << *req;
+            CIM_LOG_DEBUG(g_logger) << *rsp;
             return req;
         } while (false);
         if (req)
         {
-            SYLAR_LOG_INFO(g_logger) << *req;
+            CIM_LOG_INFO(g_logger) << *req;
         }
         return nullptr;
     }
@@ -123,11 +123,11 @@ namespace CIM::http
             {
                 break;
             }
-            SYLAR_LOG_DEBUG(g_logger) << "WSFrameHead " << ws_head.toString();
+            CIM_LOG_DEBUG(g_logger) << "WSFrameHead " << ws_head.toString();
 
             if (ws_head.opcode == WSFrameHead::PING)
             {
-                SYLAR_LOG_INFO(g_logger) << "PING";
+                CIM_LOG_INFO(g_logger) << "PING";
                 if (WSPong(stream) <= 0)
                 {
                     break;
@@ -140,7 +140,7 @@ namespace CIM::http
             {
                 if (!client && !ws_head.mask)
                 {
-                    SYLAR_LOG_INFO(g_logger) << "WSFrameHead mask != 1";
+                    CIM_LOG_INFO(g_logger) << "WSFrameHead mask != 1";
                     break;
                 }
                 uint64_t length = 0;
@@ -169,7 +169,7 @@ namespace CIM::http
 
                 if ((cur_len + length) >= g_websocket_message_max_size->getValue())
                 {
-                    SYLAR_LOG_WARN(g_logger) << "WSFrameMessage length > "
+                    CIM_LOG_WARN(g_logger) << "WSFrameMessage length > "
                                              << g_websocket_message_max_size->getValue()
                                              << " (" << (cur_len + length) << ")";
                     break;
@@ -204,13 +204,13 @@ namespace CIM::http
 
                 if (ws_head.fin)
                 {
-                    SYLAR_LOG_DEBUG(g_logger) << data;
+                    CIM_LOG_DEBUG(g_logger) << data;
                     return WSFrameMessage::ptr(new WSFrameMessage(opcode, std::move(data)));
                 }
             }
             else
             {
-                SYLAR_LOG_DEBUG(g_logger) << "invalid opcode=" << ws_head.opcode;
+                CIM_LOG_DEBUG(g_logger) << "invalid opcode=" << ws_head.opcode;
             }
         } while (true);
         stream->close();

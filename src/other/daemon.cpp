@@ -10,7 +10,7 @@
 
 namespace CIM
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
     static CIM::ConfigVar<uint32_t>::ptr g_daemon_restart_interval =
         CIM::Config::Lookup("daemon.restart_interval", (uint32_t)5, "daemon restart interval");
 
@@ -52,7 +52,12 @@ namespace CIM
                            std::function<int(int argc, char **argv)> main_cb)
     {
         // 将当前进程转换为守护进程，保持当前工作目录不变，并关闭文件描述符
-        daemon(1, 0);
+        if (daemon(1, 0) == -1)
+        {
+            // 处理错误情况
+            perror("daemon");
+            return -1;
+        }
         // 记录父进程ID和启动时间
         ProcessInfoMgr::GetInstance()->parent_id = getpid();
         ProcessInfoMgr::GetInstance()->parent_start_time = time(0);
@@ -67,7 +72,7 @@ namespace CIM
                 // 记录子进程ID和启动时间
                 ProcessInfoMgr::GetInstance()->main_id = getpid();
                 ProcessInfoMgr::GetInstance()->main_start_time = time(0);
-                SYLAR_LOG_INFO(g_logger) << "process start pid=" << getpid();
+                CIM_LOG_INFO(g_logger) << "process start pid=" << getpid();
 
                 // 执行实际应用程序
                 return real_start(argc, argv, main_cb);
@@ -75,8 +80,8 @@ namespace CIM
             else if (pid < 0)
             {
                 // fork失败处理
-                SYLAR_LOG_ERROR(g_logger) << "fork fail return=" << pid
-                                          << " errno=" << errno << " errstr=" << strerror(errno);
+                CIM_LOG_ERROR(g_logger) << "fork fail return=" << pid
+                                        << " errno=" << errno << " errstr=" << strerror(errno);
                 return -1;
             }
             else
@@ -91,20 +96,20 @@ namespace CIM
                     if (WIFSIGNALED(status) && WTERMSIG(status) == SIGKILL)
                     {
                         // 子进程被kill，跳出循环，不再重启
-                        SYLAR_LOG_INFO(g_logger) << "killed";
+                        CIM_LOG_INFO(g_logger) << "killed";
                         break;
                     }
                     else
                     {
                         // 子进程崩溃，如段错误、其他信号等
-                        SYLAR_LOG_ERROR(g_logger) << "child crash pid=" << pid
-                                                  << " status=" << status;
+                        CIM_LOG_ERROR(g_logger) << "child crash pid=" << pid
+                                                << " status=" << status;
                     }
                 }
                 else
                 {
                     // 子进程正常退出，跳出循环，不再重启
-                    SYLAR_LOG_INFO(g_logger) << "child finished pid=" << pid;
+                    CIM_LOG_INFO(g_logger) << "child finished pid=" << pid;
                     break;
                 }
                 // 增加重启计数并等待指定时间后重新启动（用于等待上一次进程的资源释放）

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cstring>
 
-static auto g_logger = SYLAR_LOG_ROOT();
+static auto g_logger = CIM_LOG_ROOT();
 
 void test_socket()
 {
@@ -14,11 +14,11 @@ void test_socket()
     CIM::IPAddress::ptr addr = CIM::Address::LookupAnyIpAddress("www.baidu.com");
     if (addr)
     {
-        SYLAR_LOG_INFO(g_logger) << "get address: " << addr->toString();
+        CIM_LOG_INFO(g_logger) << "get address: " << addr->toString();
     }
     else
     {
-        SYLAR_LOG_INFO(g_logger) << "get address fail";
+        CIM_LOG_INFO(g_logger) << "get address fail";
         return;
     }
 
@@ -27,12 +27,12 @@ void test_socket()
     addr->setPort(80);
     if (!sock->connect(addr))
     {
-        SYLAR_LOG_INFO(g_logger) << "connect " << addr->toString() << " fail";
+        CIM_LOG_INFO(g_logger) << "connect " << addr->toString() << " fail";
         return;
     }
     else
     {
-        SYLAR_LOG_INFO(g_logger) << "connect " << addr->toString() << " success";
+        CIM_LOG_INFO(g_logger) << "connect " << addr->toString() << " success";
     }
 
     // 发送HTTP GET请求到服务器
@@ -40,12 +40,12 @@ void test_socket()
     int rt = sock->send(data, sizeof(data));
     if (rt <= 0)
     {
-        SYLAR_LOG_INFO(g_logger) << "send fail rt=" << rt;
+        CIM_LOG_INFO(g_logger) << "send fail rt=" << rt;
         return;
     }
     else
     {
-        SYLAR_LOG_INFO(g_logger) << "send " << rt << " bytes data";
+        CIM_LOG_INFO(g_logger) << "send " << rt << " bytes data";
     }
 
     // 接收并显示服务器的HTTP响应
@@ -54,12 +54,12 @@ void test_socket()
     rt = sock->recv(&buff[0], buff.size());
     if (rt <= 0)
     {
-        SYLAR_LOG_INFO(g_logger) << "recv fail rt=" << rt;
+        CIM_LOG_INFO(g_logger) << "recv fail rt=" << rt;
         return;
     }
     else
     {
-        SYLAR_LOG_INFO(g_logger) << "recv " << rt << " bytes data";
+        CIM_LOG_INFO(g_logger) << "recv " << rt << " bytes data";
         buff.resize(rt);
         std::cout << buff << std::endl;
     }

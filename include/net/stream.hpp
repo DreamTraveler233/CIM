@@ -8,7 +8,7 @@ namespace CIM
     /**
      * @brief 抽象流接口类，定义了流的基本操作
      *
-     * Stream类是sylar网络库中所有流式数据传输的基类，
+     * Stream类是CIM网络库中所有流式数据传输的基类，
      * 提供了读写数据的统一接口，可以用于文件、网络套接字等各种数据流。
      */
     class Stream

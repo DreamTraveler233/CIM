@@ -2,7 +2,7 @@
 #include "macro.hpp"
 #include <iostream>
 
-static auto g_logger = SYLAR_LOG_ROOT();
+static auto g_logger = CIM_LOG_ROOT();
 
 void test_request()
 {

@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-auto g_logger = SYLAR_LOG_ROOT();
+auto g_logger = CIM_LOG_ROOT();
 
 void test_coroutine()
 {
-    SYLAR_LOG_INFO(g_logger) << "test_coroutine";
+    CIM_LOG_INFO(g_logger) << "test_coroutine";
 }
 
 void test1()
@@ -27,9 +27,9 @@ void test1()
 
     connect(fd, (const sockaddr *)&addr, sizeof(addr));
     iom.addEvent(fd, CIM::IOManager::WRITE, []()
-                 { SYLAR_LOG_INFO(g_logger) << "write callback"; });
+                 { CIM_LOG_INFO(g_logger) << "write callback"; });
     iom.addEvent(fd, CIM::IOManager::READ, []()
-                 { SYLAR_LOG_INFO(g_logger) << "read callback"; });
+                 { CIM_LOG_INFO(g_logger) << "read callback"; });
 }
 
 void test_timer()
@@ -40,7 +40,7 @@ void test_timer()
         1000, []()
         { 
             static int i=0;
-            SYLAR_LOG_INFO(g_logger) << "timeout i = " << i ;
+            CIM_LOG_INFO(g_logger) << "timeout i = " << i ;
             if(++i == 5)
             {
                 //timer->cancel();

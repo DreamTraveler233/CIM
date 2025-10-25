@@ -10,7 +10,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     LogFileManager::LogFileManager()
         : m_lastYear(-1),
@@ -118,7 +118,7 @@ namespace CIM
 
     LogFile::ptr LogFileManager::getLogFile(const std::string &fileName)
     {
-        SYLAR_ASSERT(!fileName.empty())
+        CIM_ASSERT(!fileName.empty())
         MutexType::Lock lock(m_mutex);
         // 查找日志文件
         auto it = m_logs.find(fileName);

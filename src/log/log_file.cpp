@@ -15,7 +15,7 @@ namespace CIM
           m_filePath(filePath),
           m_rotateType(RotateType::NONE)
     {
-        SYLAR_ASSERT(!filePath.empty());
+        CIM_ASSERT(!filePath.empty());
     }
 
     LogFile::~LogFile()
@@ -51,14 +51,14 @@ namespace CIM
 
     size_t LogFile::writeLog(const std::string &logMsg)
     {
-        SYLAR_ASSERT(!logMsg.empty());
+        CIM_ASSERT(!logMsg.empty());
         int fd = m_fd == -1 ? 1 : m_fd; // 如果未打开文件，则写到标准输出
         return ::write(fd, logMsg.data(), logMsg.size());
     }
 
     void LogFile::rotate(const std::string &newFilePath)
     {
-        SYLAR_ASSERT(!newFilePath.empty());
+        CIM_ASSERT(!newFilePath.empty());
         // 如果旧文件未打开，则直接返回
         if (m_filePath.empty())
         {
@@ -95,7 +95,7 @@ namespace CIM
 
     RotateType LogFile::rotateTypeFromString(const std::string &str)
     {
-        SYLAR_ASSERT(!str.empty());
+        CIM_ASSERT(!str.empty());
 #define XX(name, rotateType) \
     if (str == #name)        \
         return RotateType::rotateType;

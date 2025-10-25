@@ -14,14 +14,14 @@
  * 在不支持的编译器上退化为普通表达式
  */
 #if defined __GNUC__ || defined __llvm__
-#define SYLAR_LIKELY(x) __builtin_expect(!!(x), 1)
-#define SYLAR_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define CIM_LIKELY(x) __builtin_expect(!!(x), 1)
+#define CIM_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
-#define SYLAR_LIKELY(x) (x)
-#define SYLAR_UNLIKELY(x) (x)
+#define CIM_LIKELY(x) (x)
+#define CIM_UNLIKELY(x) (x)
 #endif
 
-#define SYLAR_LOG(logger, level)                                               \
+#define CIM_LOG(logger, level)                                               \
     if (level >= logger->getLevel())                                           \
     CIM::LogEventWrap(                                                       \
         CIM::LogEvent::ptr(                                                  \
@@ -30,13 +30,13 @@
                                 time(0), CIM::Thread::GetName())))           \
         .getSS()
 
-#define SYLAR_LOG_DEBUG(logger) SYLAR_LOG(logger, CIM::Level::DEBUG)
-#define SYLAR_LOG_INFO(logger) SYLAR_LOG(logger, CIM::Level::INFO)
-#define SYLAR_LOG_WARN(logger) SYLAR_LOG(logger, CIM::Level::WARN)
-#define SYLAR_LOG_ERROR(logger) SYLAR_LOG(logger, CIM::Level::ERROR)
-#define SYLAR_LOG_FATAL(logger) SYLAR_LOG(logger, CIM::Level::FATAL)
+#define CIM_LOG_DEBUG(logger) CIM_LOG(logger, CIM::Level::DEBUG)
+#define CIM_LOG_INFO(logger) CIM_LOG(logger, CIM::Level::INFO)
+#define CIM_LOG_WARN(logger) CIM_LOG(logger, CIM::Level::WARN)
+#define CIM_LOG_ERROR(logger) CIM_LOG(logger, CIM::Level::ERROR)
+#define CIM_LOG_FATAL(logger) CIM_LOG(logger, CIM::Level::FATAL)
 
-#define SYLAR_LOG_FMT(logger, level, fmt, ...)                                 \
+#define CIM_LOG_FMT(logger, level, fmt, ...)                                 \
     if (level >= logger->getLevel())                                           \
     CIM::LogEventWrap(                                                       \
         CIM::LogEvent::ptr(                                                  \
@@ -46,28 +46,28 @@
         .getEvent()                                                            \
         ->format(fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::DEBUG, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_INFO(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::INFO, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_WARN(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::WARN, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::ERROR, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT(logger, CIM::Level::FATAL, fmt, __VA_ARGS__)
+#define CIM_LOG_FMT_DEBUG(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::DEBUG, fmt, __VA_ARGS__)
+#define CIM_LOG_FMT_INFO(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::INFO, fmt, __VA_ARGS__)
+#define CIM_LOG_FMT_WARN(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::WARN, fmt, __VA_ARGS__)
+#define CIM_LOG_FMT_ERROR(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::ERROR, fmt, __VA_ARGS__)
+#define CIM_LOG_FMT_FATAL(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::FATAL, fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_ROOT() CIM::loggerMgr::GetInstance()->getRoot()
-#define SYLAR_LOG_NAME(name) CIM::loggerMgr::GetInstance()->getLogger(name)
+#define CIM_LOG_ROOT() CIM::loggerMgr::GetInstance()->getRoot()
+#define CIM_LOG_NAME(name) CIM::loggerMgr::GetInstance()->getLogger(name)
 
-#define SYLAR_ASSERT(X)                                                                \
-    if (SYLAR_UNLIKELY(!(X)))                                                          \
+#define CIM_ASSERT(X)                                                                \
+    if (CIM_UNLIKELY(!(X)))                                                          \
     {                                                                                  \
-        SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
+        CIM_LOG_ERROR(CIM_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\nbacktrace:\n"                          \
                                           << CIM::BacktraceToString(100, 2, "    "); \
         assert(X);                                                                     \
     }
 
-#define SYLAR_ASSERT2(X, W)                                                            \
-    if (SYLAR_UNLIKELY(!(X)))                                                          \
+#define CIM_ASSERT2(X, W)                                                            \
+    if (CIM_UNLIKELY(!(X)))                                                          \
     {                                                                                  \
-        SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ASSERTION: " #X                          \
+        CIM_LOG_ERROR(CIM_LOG_ROOT()) << "ASSERTION: " #X                          \
                                           << "\n"                                      \
                                           << W                                         \
                                           << "\nbacktrace:\n"                          \

@@ -51,7 +51,7 @@ namespace CIM
             : ConfigVariableBase(name, description),
               m_val(default_value)
         {
-            SYLAR_ASSERT(!name.empty());
+            CIM_ASSERT(!name.empty());
         }
 
         /**
@@ -71,7 +71,7 @@ namespace CIM
             }
             catch (std::exception &e)
             {
-                SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::toString exception"
+                CIM_LOG_ERROR(CIM_LOG_ROOT()) << "ConfigVar::toString exception"
                                                   << e.what() << " convert: "
                                                   << typeid(m_val).name()
                                                   << " to string";
@@ -91,7 +91,7 @@ namespace CIM
          */
         bool fromString(const std::string &val) override
         {
-            SYLAR_ASSERT(!val.empty());
+            CIM_ASSERT(!val.empty());
             try
             {
                 setValue(fromStr()(val));
@@ -99,7 +99,7 @@ namespace CIM
             }
             catch (std::exception &e)
             {
-                SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::fromString exception"
+                CIM_LOG_ERROR(CIM_LOG_ROOT()) << "ConfigVar::fromString exception"
                                                   << e.what() << " convert: string to"
                                                   << typeid(m_val).name() << " - " << val;
             }
@@ -163,7 +163,7 @@ namespace CIM
          */
         uint64_t addListener(const ConfigChangeCb &cb)
         {
-            SYLAR_ASSERT(cb);
+            CIM_ASSERT(cb);
             static uint64_t func_id = 0;
             RWMutexType::WriteLock lock(m_mutex);
             ++func_id;
@@ -177,17 +177,17 @@ namespace CIM
          */
         void delListener(uint64_t key)
         {
-            SYLAR_ASSERT(key > 0);
+            CIM_ASSERT(key > 0);
             RWMutexType::WriteLock lock(m_mutex);
             if (m_cbs.find(key) != m_cbs.end())
             {
-                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Removing listener for config variable: "
+                CIM_LOG_INFO(CIM_LOG_ROOT()) << "Removing listener for config variable: "
                                                  << getName() << " with key: " << key;
                 m_cbs.erase(key);
             }
             else
             {
-                SYLAR_LOG_WARN(SYLAR_LOG_ROOT()) << "Trying to remove non-existent listener for config variable: "
+                CIM_LOG_WARN(CIM_LOG_ROOT()) << "Trying to remove non-existent listener for config variable: "
                                                  << getName() << " with key: " << key;
             }
         }
@@ -208,7 +208,7 @@ namespace CIM
          */
         ConfigChangeCb getListener(uint64_t key)
         {
-            SYLAR_ASSERT(key > 0);
+            CIM_ASSERT(key > 0);
             RWMutexType::ReadLock lock(m_mutex);
             auto it = m_cbs.find(key);
             return it == m_cbs.end() ? nullptr : it->second;

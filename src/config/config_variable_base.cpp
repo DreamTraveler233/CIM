@@ -8,7 +8,7 @@ namespace CIM
         : m_name(name),
           m_description(description)
     {
-        SYLAR_ASSERT(!name.empty());
+        CIM_ASSERT(!name.empty());
         std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
     }
 

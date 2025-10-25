@@ -128,12 +128,11 @@ void test_config_callback()
                                 new_value = new_val; });
 
     // 修改配置值
-    int original_value = config_int->getValue();
     config_int->setValue(12345);
 
     // 检查回调是否被调用
     assert(callback_count == 1);
-    assert(old_value == original_value);
+    assert(old_value == 8080);
     assert(new_value == 12345);
     assert(config_int->getValue() == 12345);
 

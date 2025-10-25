@@ -3,7 +3,7 @@ logs:
     level: info
     appenders:
       - type: FileLogAppender
-        path: /home/szy/code/sylar/bin/log/root.log
+        path: /home/szy/code/CIM/bin/log/root.log
         rotate_type: minute
       - type: StdoutLogAppender
         
@@ -11,6 +11,6 @@ logs:
     level: info
     appenders:
       - type: FileLogAppender
-        path: /home/szy/code/sylar/bin/log/system.log
+        path: /home/szy/code/CIM/bin/log/system.log
         rotate_type: minute
       - type: StdoutLogAppender

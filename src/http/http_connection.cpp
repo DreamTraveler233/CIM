@@ -6,7 +6,7 @@
 
 namespace CIM::http
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     HttpResult::HttpResult(int _result, HttpResponse::ptr _response, const std::string &_error)
         : result(_result),
@@ -33,7 +33,7 @@ namespace CIM::http
 
     HttpConnection::~HttpConnection()
     {
-        SYLAR_LOG_DEBUG(g_logger) << "HttpConnection::~HttpConnection";
+        CIM_LOG_DEBUG(g_logger) << "HttpConnection::~HttpConnection";
     }
 
     HttpResponse::ptr HttpConnection::recvResponse()
@@ -134,7 +134,7 @@ namespace CIM::http
                     begin = false;
                 } while (!parser->isFinished());
 
-                SYLAR_LOG_DEBUG(g_logger) << "content_len=" << client_parser.content_len;
+                CIM_LOG_DEBUG(g_logger) << "content_len=" << client_parser.content_len;
                 // 处理当前分块数据
                 if (client_parser.content_len + 2 <= len)
                 {
@@ -210,7 +210,7 @@ namespace CIM::http
         {
             // 获取内容编码类型
             auto content_encoding = parser->getData()->getHeader("content-encoding");
-            SYLAR_LOG_DEBUG(g_logger) << "content_encoding: " << content_encoding
+            CIM_LOG_DEBUG(g_logger) << "content_encoding: " << content_encoding
                                       << " size=" << body.size();
             // 处理gzip编码
             if (strcasecmp(content_encoding.c_str(), "gzip") == 0)
@@ -387,7 +387,7 @@ namespace CIM::http
         Uri::ptr turi = Uri::Create(uri);
         if (!turi)
         {
-            SYLAR_LOG_ERROR(g_logger) << "invalid uri=" << uri;
+            CIM_LOG_ERROR(g_logger) << "invalid uri=" << uri;
         }
         return std::make_shared<HttpConnectionPool>(turi->getHost(), vhost, turi->getPort(), turi->getScheme() == "https", max_size, max_alive_time, max_request);
     }
@@ -459,7 +459,7 @@ namespace CIM::http
             IPAddress::ptr addr = Address::LookupAnyIpAddress(m_host);
             if (!addr)
             {
-                SYLAR_LOG_ERROR(g_logger) << "get addr fail: " << m_host;
+                CIM_LOG_ERROR(g_logger) << "get addr fail: " << m_host;
                 return nullptr;
             }
             addr->setPort(m_port);
@@ -467,12 +467,12 @@ namespace CIM::http
             Socket::ptr sock = m_isHttps ? SSLSocket::CreateTCP(addr) : Socket::CreateTCP(addr);
             if (!sock)
             {
-                SYLAR_LOG_ERROR(g_logger) << "create sock fail: " << *addr;
+                CIM_LOG_ERROR(g_logger) << "create sock fail: " << *addr;
                 return nullptr;
             }
             if (!sock->connect(addr))
             {
-                SYLAR_LOG_ERROR(g_logger) << "sock connect fail: " << *addr;
+                CIM_LOG_ERROR(g_logger) << "sock connect fail: " << *addr;
                 return nullptr;
             }
 

@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <byteswap.h>
 
-#define SYLAR_LITTLE_ENDIAN 1 // 定义小端字节序标识符
-#define SYLAR_BIG_ENDIAN 2    // 定义大端字节序标识符
+#define CIM_LITTLE_ENDIAN 1 // 定义小端字节序标识符
+#define CIM_BIG_ENDIAN 2    // 定义大端字节序标识符
 
 namespace CIM
 {
@@ -31,15 +31,15 @@ namespace CIM
         return (T)bswap_16((uint16_t)value); // 16位字节序转换
     }
 
-    // 根据系统字节序定义 SYLAR_BYTE_ORDER
+    // 根据系统字节序定义 CIM_BYTE_ORDER
 #if BYTE_ORDER == BIG_ENDIAN
-#define SYLAR_BYTE_ORDER SYLAR_BIG_ENDIAN
+#define CIM_BYTE_ORDER CIM_BIG_ENDIAN
 #else
-#define SYLAR_BYTE_ORDER SYLAR_LITTLE_ENDIAN
+#define CIM_BYTE_ORDER CIM_LITTLE_ENDIAN
 #endif
 
     // 针对不同系统字节序的字节序转换函数
-#if SYLAR_BYTE_ORDER == SYLAR_BIG_ENDIAN
+#if CIM_BYTE_ORDER == CIM_BIG_ENDIAN
     // 在大端系统上，网络字节序和主机字节序相同，不需要转换
     template <typename T>
     T ntoh(T n)

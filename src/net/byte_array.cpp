@@ -5,7 +5,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     ByteArray::Node::Node(size_t s)
         : ptr(new char[s]),
@@ -34,7 +34,7 @@ namespace CIM
           m_position(0),
           m_capacity(base_size),
           m_data_size(0),
-          m_endian(SYLAR_BIG_ENDIAN),
+          m_endian(CIM_BIG_ENDIAN),
           m_root_node(new Node(base_size)),
           m_cur_node(m_root_node)
     {
@@ -62,7 +62,7 @@ namespace CIM
     }
 
 #define XX(value)                     \
-    if (SYLAR_BYTE_ORDER != m_endian) \
+    if (CIM_BYTE_ORDER != m_endian) \
     {                                 \
         value = byteswap(value);      \
     }                                 \
@@ -297,7 +297,7 @@ namespace CIM
 #define XX(type)                      \
     type v;                           \
     read(&v, sizeof(v));              \
-    if (SYLAR_BYTE_ORDER != m_endian) \
+    if (CIM_BYTE_ORDER != m_endian) \
     {                                 \
         return byteswap(v);           \
     }                                 \
@@ -674,7 +674,7 @@ namespace CIM
         ofs.open(path, std::ios::trunc | std::ios::binary);
         if (!ofs)
         {
-            SYLAR_LOG_ERROR(g_logger) << "ByteArray::writeToFile path=" << path
+            CIM_LOG_ERROR(g_logger) << "ByteArray::writeToFile path=" << path
                                       << " error=" << errno << " errstr=" << strerror(errno);
             return false;
         }
@@ -716,7 +716,7 @@ namespace CIM
         ifs.open(path, std::ios::in | std::ios::binary);
         if (!ifs)
         {
-            SYLAR_LOG_ERROR(g_logger) << "ByteArray::readFromFile path=" << path
+            CIM_LOG_ERROR(g_logger) << "ByteArray::readFromFile path=" << path
                                       << " error=" << errno << " errstr=" << strerror(errno);
             return false;
         }
@@ -738,11 +738,11 @@ namespace CIM
     {
         if (val)
         {
-            m_endian = SYLAR_LITTLE_ENDIAN;
+            m_endian = CIM_LITTLE_ENDIAN;
         }
         else
         {
-            m_endian = SYLAR_BIG_ENDIAN;
+            m_endian = CIM_BIG_ENDIAN;
         }
     }
 
@@ -1018,6 +1018,6 @@ namespace CIM
     
     bool ByteArray::isLittleEndian() const
     {
-        return m_endian == SYLAR_LITTLE_ENDIAN;
+        return m_endian == CIM_LITTLE_ENDIAN;
     }
 }

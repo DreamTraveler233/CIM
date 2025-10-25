@@ -4,7 +4,7 @@
 
 void test()
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     YAML::Node test = YAML::LoadFile("/home/szy/code/CIM/bin/config/log.yaml");
     CIM::Config::LoadFromYaml(test);
@@ -15,7 +15,7 @@ void test()
 
     for (int i = 0; i < 10000; ++i)
     {
-        SYLAR_LOG_INFO(g_logger) << "第 " << i << " 条日志";
+        CIM_LOG_INFO(g_logger) << "第 " << i << " 条日志";
         sleep(1);
     }
 

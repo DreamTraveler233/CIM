@@ -57,7 +57,7 @@ namespace CIM
                                                  const T &default_value,
                                                  const std::string &description = "")
         {
-            SYLAR_ASSERT(!name.empty());
+            CIM_ASSERT(!name.empty());
             RWMutexType::WriteLock lock(GetMutex());
             // 根据配置项名称在存储容器中查找
             auto it = GetDatas().find(name);
@@ -70,13 +70,13 @@ namespace CIM
                 // 如果类型转换成功，说明找到了同名且同类型的配置项
                 if (tmp)
                 {
-                    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name = " << name << " exists";
+                    CIM_LOG_INFO(CIM_LOG_ROOT()) << "Lookup name = " << name << " exists";
                     return tmp;
                 }
                 // 如果类型转换失败，说明虽然找到了同名配置项，但其实际类型与请求的类型T不匹配
                 else
                 {
-                    SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name = " << name << " exists but type not "
+                    CIM_LOG_ERROR(CIM_LOG_ROOT()) << "Lookup name = " << name << " exists but type not "
                                                       << typeid(T).name() << " real_type = " << it->second->getTypeName()
                                                       << " " << "value = " << it->second->toString();
                     // 抛出异常
@@ -88,7 +88,7 @@ namespace CIM
             // 检查配置项名称是否合法，只能包含字母、数字、下划线和点号
             if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789._") != std::string::npos)
             {
-                SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "lookup name invalid name=" << name;
+                CIM_LOG_ERROR(CIM_LOG_ROOT()) << "lookup name invalid name=" << name;
                 throw std::invalid_argument(name); // 抛出异常
             }
 
@@ -107,7 +107,7 @@ namespace CIM
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
-            SYLAR_ASSERT(!name.empty());
+            CIM_ASSERT(!name.empty());
             RWMutexType::ReadLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if (it == GetDatas().end())

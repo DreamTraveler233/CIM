@@ -9,7 +9,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     /**
      * @brief 创建指定类型的掩码
@@ -48,7 +48,7 @@ namespace CIM
 
     Address::ptr Address::Create(const sockaddr *addr, socklen_t addrlen)
     {
-        SYLAR_ASSERT(addr && addrlen > 0);
+        CIM_ASSERT(addr && addrlen > 0);
         if (addr == nullptr)
         {
             return nullptr;
@@ -73,7 +73,7 @@ namespace CIM
     bool Address::Lookup(std::vector<Address::ptr> &result, const std::string &host,
                          int family, int type, int protocol)
     {
-        SYLAR_ASSERT(result.empty() && !host.empty());
+        CIM_ASSERT(result.empty() && !host.empty());
         addrinfo hints, *results, *next;
         hints.ai_flags = 0;
         hints.ai_family = family;
@@ -129,7 +129,7 @@ namespace CIM
         int error = getaddrinfo(node.c_str(), service, &hints, &results);
         if (error)
         {
-            SYLAR_LOG_ERROR(g_logger) << "Address::Create getaddrinfo(" << host << ", "
+            CIM_LOG_ERROR(g_logger) << "Address::Create getaddrinfo(" << host << ", "
                                       << family << ", " << type << ") error=" << error
                                       << " errstr=" << strerror(error);
             return false;
@@ -150,7 +150,7 @@ namespace CIM
 
     Address::ptr Address::LookupAny(const std::string &host, int family, int type, int protocol)
     {
-        SYLAR_ASSERT(!host.empty());
+        CIM_ASSERT(!host.empty());
         std::vector<Address::ptr> result;
         if (Lookup(result, host, family, type, protocol))
         {
@@ -161,7 +161,7 @@ namespace CIM
 
     std::shared_ptr<IPAddress> Address::LookupAnyIpAddress(const std::string &host, int family, int type, int protocol)
     {
-        SYLAR_ASSERT(!host.empty());
+        CIM_ASSERT(!host.empty());
         std::vector<Address::ptr> result;
         if (Lookup(result, host, family, type, protocol))
         {
@@ -180,12 +180,12 @@ namespace CIM
     bool Address::GetInterfaceAddresses(std::multimap<std::string, std::pair<Address::ptr, uint32_t>> &result,
                                         int family)
     {
-        SYLAR_ASSERT(result.empty());
+        CIM_ASSERT(result.empty());
         struct ifaddrs *next, *results;
         // 调用getifaddrs获取所有网络接口信息
         if (getifaddrs(&results) != 0)
         {
-            SYLAR_LOG_DEBUG(g_logger) << "Address::GetInterfaceAddresses getifaddrs "
+            CIM_LOG_DEBUG(g_logger) << "Address::GetInterfaceAddresses getifaddrs "
                                          " err="
                                       << errno << " errstr=" << strerror(errno);
             return false;
@@ -246,7 +246,7 @@ namespace CIM
         catch (...)
         {
             // 异常处理：记录错误日志并释放资源
-            SYLAR_LOG_ERROR(g_logger) << "Address::GetInterfaceAddresses exception";
+            CIM_LOG_ERROR(g_logger) << "Address::GetInterfaceAddresses exception";
             freeifaddrs(results);
             return false;
         }
@@ -259,7 +259,7 @@ namespace CIM
     bool Address::GetInterfaceAddresses(std::vector<std::pair<Address::ptr, uint32_t>> &result,
                                         const std::string &iface, int family)
     {
-        SYLAR_ASSERT(result.empty());
+        CIM_ASSERT(result.empty());
         // 处理特殊情况：如果接口名称为空或为"*"，则返回默认地址
         if (iface.empty() || iface == "*")
         {
@@ -345,7 +345,7 @@ namespace CIM
 
     IPAddress::ptr IPAddress::Create(const char *address, uint16_t port)
     {
-        SYLAR_ASSERT(address);
+        CIM_ASSERT(address);
         addrinfo hints, *results;
         // 初始化hints结构体
         memset(&hints, 0, sizeof(hints));
@@ -359,7 +359,7 @@ namespace CIM
         if (error)
         {
             // 解析失败，记录错误日志并返回nullptr
-            SYLAR_LOG_ERROR(g_logger) << "IPAddress::Create(" << address << ", " << port << ") error="
+            CIM_LOG_ERROR(g_logger) << "IPAddress::Create(" << address << ", " << port << ") error="
                                       << error << " errno=" << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
@@ -388,7 +388,7 @@ namespace CIM
 
     IPv4Address::ptr IPv4Address::Create(const char *address, uint16_t port)
     {
-        SYLAR_ASSERT(address);
+        CIM_ASSERT(address);
         // 创建IPv4Address对象
         IPv4Address::ptr rt(new IPv4Address);
         // 设置端口号，转换为网络字节序
@@ -398,7 +398,7 @@ namespace CIM
         if (result <= 0)
         {
             // 解析失败，记录错误日志并返回nullptr
-            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "IPv4Address::Create(" << address << ", " << port
+            CIM_LOG_ERROR(CIM_LOG_ROOT()) << "IPv4Address::Create(" << address << ", " << port
                                               << ") rt=" << result << " errno=" << errno
                                               << " errstr=" << strerror(errno);
             return nullptr;
@@ -451,7 +451,7 @@ namespace CIM
 
     IPAddress::ptr IPv4Address::broadcastAddress(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(!(prefix_len > 32));
+        CIM_ASSERT(!(prefix_len > 32));
         // 复制当前地址信息到广播地址结构体
         sockaddr_in baddr(m_addr);
         // 计算广播地址：将IP地址与主机部分全1的掩码进行按位或运算
@@ -464,7 +464,7 @@ namespace CIM
 
     IPAddress::ptr IPv4Address::networkAddress(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(!(prefix_len > 32));
+        CIM_ASSERT(!(prefix_len > 32));
         // 复制当前地址信息到网络地址结构体
         sockaddr_in baddr(m_addr);
         // 计算网络地址：将IP地址与子网掩码进行按位与运算
@@ -477,7 +477,7 @@ namespace CIM
 
     IPAddress::ptr IPv4Address::subnetMask(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(!(prefix_len > 32));
+        CIM_ASSERT(!(prefix_len > 32));
         // 初始化子网掩码结构体
         sockaddr_in mask_addr;
         memset(&mask_addr, 0, sizeof(mask_addr));
@@ -504,7 +504,7 @@ namespace CIM
 
     IPv6Address::ptr IPv6Address::Create(const char *address, uint16_t port)
     {
-        SYLAR_ASSERT(address);
+        CIM_ASSERT(address);
         // 创建IPv6Address对象
         IPv6Address::ptr rt(new IPv6Address);
         // 设置端口号，转换为网络字节序
@@ -514,7 +514,7 @@ namespace CIM
         if (result <= 0)
         {
             // 解析失败，记录错误日志并返回nullptr
-            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "IPv6Address::Create(" << address << ", " << port
+            CIM_LOG_ERROR(CIM_LOG_ROOT()) << "IPv6Address::Create(" << address << ", " << port
                                               << ") rt=" << result << " errno=" << errno
                                               << " errstr=" << strerror(errno);
             return nullptr;
@@ -601,7 +601,7 @@ namespace CIM
 
     IPAddress::ptr IPv6Address::broadcastAddress(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(prefix_len > 128);
+        CIM_ASSERT(prefix_len <= 128);
         // 复制当前地址信息到广播地址结构体
         sockaddr_in6 baddr(m_addr);
         // 对前缀长度所在字节进行处理，将主机部分的位设置为1
@@ -617,7 +617,7 @@ namespace CIM
 
     IPAddress::ptr IPv6Address::networkAddress(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(prefix_len > 128);
+        CIM_ASSERT(prefix_len <= 128);
         // 复制当前地址信息到网络地址结构体
         sockaddr_in6 baddr(m_addr);
         // 对前缀长度所在字节进行处理，将主机部分的位设置为0
@@ -628,7 +628,7 @@ namespace CIM
 
     IPAddress::ptr IPv6Address::subnetMask(uint32_t prefix_len)
     {
-        SYLAR_ASSERT(prefix_len > 128);
+        CIM_ASSERT(prefix_len >= 128);
         // 初始化子网掩码结构体
         sockaddr_in6 subnet;
         memset(&subnet, 0, sizeof(subnet));
@@ -671,7 +671,7 @@ namespace CIM
 
     UnixAddress::UnixAddress(const std::string &path)
     {
-        SYLAR_ASSERT(!path.empty());
+        CIM_ASSERT(!path.empty());
         // 清零整个地址结构体
         memset(&m_addr, 0, sizeof(m_addr));
         // 设置地址族为Unix域套接字
@@ -715,7 +715,7 @@ namespace CIM
 
     void UnixAddress::setAddrLen(socklen_t length)
     {
-        SYLAR_ASSERT(length > 0);
+        CIM_ASSERT(length > 0);
         m_length = length;
     }
 

@@ -129,7 +129,7 @@ namespace CIM
 
     Timer::ptr TimerManager::addTimer(uint64_t ms, std::function<void()> cb, bool recurring)
     {
-        SYLAR_ASSERT(ms && cb);
+        CIM_ASSERT(ms && cb);
         Timer::ptr timer(new Timer(ms, cb, recurring, this));
         RWMutex::WriteLock lock(m_mutex);
         addTimer(timer, lock);

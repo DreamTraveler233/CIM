@@ -4,7 +4,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     /**
      * @brief 递归遍历YAML节点，将所有配置项的名称和节点存入输出列表
@@ -22,7 +22,7 @@ namespace CIM
         // 检查配置项名称是否合法，只能包含字母、数字、下划线和点号
         if (prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789._") != std::string::npos)
         {
-            SYLAR_LOG_ERROR(g_logger) << "Config invalid name " << prefix << " : " << node;
+            CIM_LOG_ERROR(g_logger) << "Config invalid name " << prefix << " : " << node;
             return;
         }
         // 将当前节点添加到输出列表
@@ -50,7 +50,7 @@ namespace CIM
 
     void Config::LoadFromConfDir(const std::string &path, bool force)
     {
-        SYLAR_ASSERT(!path.empty());
+        CIM_ASSERT(!path.empty());
         std::string absoulte_path = EnvMgr::GetInstance()->getAbsolutePath(path);
         std::vector<std::string> files;
         FSUtil::ListAllFile(files, absoulte_path, ".yml");
@@ -71,12 +71,12 @@ namespace CIM
             {
                 YAML::Node root = YAML::LoadFile(i);
                 LoadFromYaml(root);
-                SYLAR_LOG_INFO(g_logger) << "LoadConfFile file="
+                CIM_LOG_INFO(g_logger) << "LoadConfFile file="
                                          << i << " ok";
             }
             catch (...)
             {
-                SYLAR_LOG_ERROR(g_logger) << "LoadConfFile file="
+                CIM_LOG_ERROR(g_logger) << "LoadConfFile file="
                                           << i << " failed";
             }
         }
@@ -92,7 +92,7 @@ namespace CIM
      */
     void Config::LoadFromYaml(const YAML::Node &root)
     {
-        SYLAR_ASSERT(root);
+        CIM_ASSERT(root);
 
         std::list<std::pair<std::string, const YAML::Node>> all_nodes;
         // 递归遍历YAML节点树，将所有配置项的名称和值存入列表
@@ -124,14 +124,14 @@ namespace CIM
                     var->fromString(ss.str()); // 转换为字符串后赋值给配置变量
                 }
             }
-            SYLAR_LOG_DEBUG(g_logger) << std::endl
+            CIM_LOG_DEBUG(g_logger) << std::endl
                                       << loggerMgr::GetInstance()->toYamlString();
         }
     }
 
     void Config::Visit(std::function<void(ConfigVariableBase::ptr)> cb)
     {
-        SYLAR_ASSERT(cb);
+        CIM_ASSERT(cb);
         RWMutexType::ReadLock lock(GetMutex());
         ConfigVarMap &m = GetDatas();
         for (auto it = m.begin();

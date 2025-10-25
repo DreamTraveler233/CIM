@@ -8,7 +8,7 @@ namespace CIM
     // 当前线程的线程名称
     static thread_local std::string t_thread_name = "UNKNOWN";
 
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     Thread::Thread(std::function<void()> cb, const std::string &name)
         : m_id(-1),
@@ -31,7 +31,7 @@ namespace CIM
         int rt = pthread_create(&m_thread, nullptr, &Thread::run, this);
         if (rt)
         {
-            SYLAR_LOG_ERROR(g_logger) << "pthread_create fail, rt = " << rt << " name = " << name;
+            CIM_LOG_ERROR(g_logger) << "pthread_create fail, rt = " << rt << " name = " << name;
             throw std::logic_error("pthread_create error");
         }
 
@@ -48,7 +48,7 @@ namespace CIM
         int rt = pthread_join(m_thread, nullptr);
         if (rt)
         {
-            SYLAR_LOG_ERROR(g_logger) << "pthread_join thread fail, rt = " << rt << " name = " << m_name;
+            CIM_LOG_ERROR(g_logger) << "pthread_join thread fail, rt = " << rt << " name = " << m_name;
             throw std::logic_error("pthread_join error");
         }
         m_thread = 0;

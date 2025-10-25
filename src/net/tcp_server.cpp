@@ -4,7 +4,7 @@
 
 namespace CIM
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     // 配置 TCP 读超时事件
     static auto g_tcp_server_read_timeout =
@@ -56,7 +56,7 @@ namespace CIM
             // 绑定地址
             if (!sock->bind(addr))
             {
-                SYLAR_LOG_ERROR(g_logger) << "bind fail errno="
+                CIM_LOG_ERROR(g_logger) << "bind fail errno="
                                           << errno << " errstr=" << strerror(errno)
                                           << " addr=[" << addr->toString() << "]";
                 fails.push_back(addr);
@@ -66,7 +66,7 @@ namespace CIM
             // 开启监听
             if (!sock->listen())
             {
-                SYLAR_LOG_ERROR(g_logger) << "listen fail errno="
+                CIM_LOG_ERROR(g_logger) << "listen fail errno="
                                           << errno << " errstr=" << strerror(errno)
                                           << " addr=[" << addr->toString() << "]";
                 fails.push_back(addr);
@@ -83,7 +83,7 @@ namespace CIM
 
         for (auto &i : m_socks)
         {
-            SYLAR_LOG_INFO(g_logger) << "type=" << m_type
+            CIM_LOG_INFO(g_logger) << "type=" << m_type
                                      << " name=" << m_name
                                      << " ssl=" << m_ssl
                                      << " server bind success: " << *i;
@@ -122,7 +122,7 @@ namespace CIM
             }
             else
             {
-                SYLAR_LOG_ERROR(g_logger) << "accept errno=" << errno
+                CIM_LOG_ERROR(g_logger) << "accept errno=" << errno
                                           << " errstr=" << strerror(errno);
             }
         }
@@ -130,7 +130,7 @@ namespace CIM
 
     void TcpServer::handleClient(Socket::ptr client)
     {
-        SYLAR_LOG_INFO(g_logger) << "handleClient: " << *client;
+        CIM_LOG_INFO(g_logger) << "handleClient: " << *client;
     }
 
     void TcpServer::stop()

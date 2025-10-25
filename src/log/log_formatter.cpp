@@ -10,13 +10,13 @@ namespace CIM
         : m_pattern(pattern),
           m_isError(false)
     {
-        SYLAR_ASSERT(!pattern.empty());
+        CIM_ASSERT(!pattern.empty());
         init();
     }
 
     std::string LogFormatter::format(std::shared_ptr<LogEvent> event)
     {
-        SYLAR_ASSERT(event);
+        CIM_ASSERT(event);
         std::stringstream ss;
         for (auto &i : m_items)
         {

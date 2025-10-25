@@ -24,13 +24,13 @@ namespace CIM
             g_log_defines->addListener([](const std::set<LogDefine> &old_val,
                                           const std::set<LogDefine> &new_val)
                                        {
-                                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "on_logger_conf_changed";
+                                CIM_LOG_INFO(CIM_LOG_ROOT()) << "on_logger_conf_changed";
                                 
                                 // 遍历新的日志配置，处理新增和修改的日志器
                                 for (auto &i : new_val)
                                 {
                                     // 查找日志器，如果找不到则创建并添加到日志器管理器中
-                                    auto logger = SYLAR_LOG_NAME(i.name);
+                                    auto logger = CIM_LOG_NAME(i.name);
                                     
                                     // 设置该日志器的日志级别
                                     logger->setLevel(i.level);
@@ -61,7 +61,7 @@ namespace CIM
                                         }
                                         else
                                         {
-                                            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "type not FileLogAppender or StdoutLogAppender";
+                                            CIM_LOG_ERROR(CIM_LOG_ROOT()) << "type not FileLogAppender or StdoutLogAppender";
                                         }
             
                                         // 设置输出器的日志级别
@@ -106,7 +106,7 @@ namespace CIM
                                     if (it == new_val.end())
                                     {
                                         // 如果在新配置中找不到当前旧配置项，说明这个配置项被删除了
-                                        auto logger = SYLAR_LOG_NAME(i.name);
+                                        auto logger = CIM_LOG_NAME(i.name);
                                         logger->setLevel((Level)100);       // 设置日志级别为100，表示关闭日志
                                         logger->clearAppender();            // 清空所有appender
                                     }

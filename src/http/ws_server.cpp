@@ -3,7 +3,7 @@
 
 namespace CIM::http
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     WSServer::WSServer(CIM::IOManager *worker, CIM::IOManager *io_worker, CIM::IOManager *accept_worker)
         : TcpServer(worker, io_worker, accept_worker)
@@ -14,26 +14,26 @@ namespace CIM::http
 
     void WSServer::handleClient(Socket::ptr client)
     {
-        SYLAR_LOG_DEBUG(g_logger) << "handleClient " << *client;
+        CIM_LOG_DEBUG(g_logger) << "handleClient " << *client;
         WSSession::ptr session(new WSSession(client));
         do
         {
             HttpRequest::ptr header = session->handleShake();
             if (!header)
             {
-                SYLAR_LOG_DEBUG(g_logger) << "handleShake error";
+                CIM_LOG_DEBUG(g_logger) << "handleShake error";
                 break;
             }
             WSServlet::ptr servlet = m_dispatch->getWSServlet(header->getPath());
             if (!servlet)
             {
-                SYLAR_LOG_DEBUG(g_logger) << "no match WSServlet";
+                CIM_LOG_DEBUG(g_logger) << "no match WSServlet";
                 break;
             }
             int rt = servlet->onConnect(header, session);
             if (rt)
             {
-                SYLAR_LOG_DEBUG(g_logger) << "onConnect return " << rt;
+                CIM_LOG_DEBUG(g_logger) << "onConnect return " << rt;
                 break;
             }
             while (true)
@@ -46,7 +46,7 @@ namespace CIM::http
                 rt = servlet->handle(header, msg, session);
                 if (rt)
                 {
-                    SYLAR_LOG_DEBUG(g_logger) << "handle return " << rt;
+                    CIM_LOG_DEBUG(g_logger) << "handle return " << rt;
                     break;
                 }
             }

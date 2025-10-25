@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(CIM)
 
+# 查找 Ragel 状态机编译器
+find_program(RAGEL_EXECUTABLE ragel)
+if(NOT RAGEL_EXECUTABLE)
+    message(FATAL_ERROR "Ragel not found. Please install ragel to compile this project.")
+endif()
+
 # 查找 OpenSSL 库
 find_package(OpenSSL REQUIRED)
 
@@ -11,22 +17,48 @@ find_package(ZLIB REQUIRED)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Wall -Wno-deprecated -Werror -Wno-unused-function")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -DNDEBUG -Wall -Wno-deprecated -Werror -Wno-unused-function")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -Wall")
 endif()
 
 # 添加通用编译选项
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic -std=c++11")
 
-# 收集源文件
-file(GLOB_RECURSE LIB_SRC "src/*.cpp")
+# 处理 .rl 文件，生成对应的 .cpp 文件
+# 查找所有 .rl 文件
+file(GLOB_RECURSE RL_SOURCES "src/*.rl")
+foreach(RL_FILE ${RL_SOURCES})
+    # 获取不带扩展名的文件名
+    string(REGEX REPLACE "\\.rl$" ".rl.cpp" CPP_FILE ${RL_FILE})
+    
+    # 添加自定义命令，使用 ragel 生成 cpp 文件
+    add_custom_command(
+        OUTPUT ${CPP_FILE}
+        COMMAND ${RAGEL_EXECUTABLE} -G2 -o ${CPP_FILE} ${RL_FILE}
+        DEPENDS ${RL_FILE}
+        COMMENT "Generating ${CPP_FILE} from ${RL_FILE}"
+    )
+    
+    # 将生成的 cpp 文件添加到生成文件列表
+    list(APPEND GENERATED_SOURCES ${CPP_FILE})
+endforeach()
+
+# 收集其他源文件（排除 .rl 文件）
+file(GLOB_RECURSE OTHER_SOURCES "src/*.cpp")
+list(FILTER OTHER_SOURCES EXCLUDE REGEX ".*\\.rl\\.cpp$")
+
+# 合并所有源文件
+set(LIB_SRC ${OTHER_SOURCES} ${GENERATED_SOURCES})
 
 # 生成动态库（.so）
 add_library(CIM SHARED ${LIB_SRC})
 
+# 指定 GENERATED_SOURCES 为由 CIM 目标生成的文件
+set_source_files_properties(${GENERATED_SOURCES} PROPERTIES GENERATED TRUE)
+
 # 链接 OpenSSL 和 zlib 库到 CIM 库
 target_link_libraries(CIM ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 
-# 头文件搜索目录
+# 头文件搜索路径
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/base
@@ -40,7 +72,7 @@ include_directories(
 )
 
 # 定义测试可执行文件列表
-set(TEST_EXECUTABLES
+set(TEST_LIST
     test_log_basic
     test_log_performance
     test_log_rotate
@@ -63,21 +95,21 @@ set(TEST_EXECUTABLES
     test_daemon
 )
 
-set(EXAMPLES_EXECUTABLES
+set(EXAMPLES_LIST
     echo_server
 )
 
 # 循环创建测试可执行文件
-foreach(TEST_EXECUTABLE ${TEST_EXECUTABLES})
-    add_executable(${TEST_EXECUTABLE} tests/${TEST_EXECUTABLE}.cpp) # 生成可执行文件
-    add_dependencies(${TEST_EXECUTABLE} CIM)                      # 指定test依赖 sylar库，先编译库再编译可执行文件
-    target_link_libraries(${TEST_EXECUTABLE} CIM yaml-cpp)        # 链接库到可执行文件
+foreach(TEST ${TEST_LIST})
+    add_executable(${TEST} tests/${TEST}.cpp)    # 生成可执行文件
+    add_dependencies(${TEST} CIM)                # 指定test依赖 CIM库，先编译库再编译可执行文件
+    target_link_libraries(${TEST} CIM yaml-cpp)  # 链接库到可执行文件
 endforeach()
 
-foreach(EXAMPLES_EXECUTABLES ${EXAMPLES_EXECUTABLES})
-    add_executable(${EXAMPLES_EXECUTABLES} examples/${EXAMPLES_EXECUTABLES}.cpp)
-    add_dependencies(${TEST_EXECUTABLE} CIM)
-    target_link_libraries(${EXAMPLES_EXECUTABLES} CIM yaml-cpp)
+foreach(EXAMPLE ${EXAMPLES_LIST})
+    add_executable(${EXAMPLE} examples/${EXAMPLE}.cpp)
+    add_dependencies(${EXAMPLE} CIM)
+    target_link_libraries(${EXAMPLE} CIM yaml-cpp)
 endforeach()
 
 # 指定可执行文件输出目录

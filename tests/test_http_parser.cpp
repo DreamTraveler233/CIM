@@ -6,14 +6,14 @@ const char test_request_data[] = "POST / HTTP/1.1\r\n"
                                  "Host: www.baidu.com\r\n"
                                  "Content-Length: 10\r\n\r\n"
                                  "1234567890";
-static auto g_logger = SYLAR_LOG_ROOT();
+static auto g_logger = CIM_LOG_ROOT();
 
 void test_request()
 {
     CIM::http::HttpRequestParser::ptr parser(new CIM::http::HttpRequestParser);
     std::string tmp = test_request_data;
     size_t size = parser->execute(&tmp[0], tmp.size());
-    SYLAR_LOG_INFO(g_logger) << "execute rt=" << size
+    CIM_LOG_INFO(g_logger) << "execute rt=" << size
                              << "has_error=" << parser->hasError()
                              << "has_finished=" << parser->isFinished()
                              << "content_length=" << parser->getContentLength();
@@ -42,7 +42,7 @@ void test_response()
     CIM::http::HttpResponseParser parser;
     std::string tmp = test_response_data;
     size_t s = parser.execute(&tmp[0], tmp.size(), true);
-    SYLAR_LOG_ERROR(g_logger) << "execute rt=" << s
+    CIM_LOG_ERROR(g_logger) << "execute rt=" << s
                               << " has_error=" << parser.hasError()
                               << " is_finished=" << parser.isFinished()
                               << " total=" << tmp.size()
@@ -58,7 +58,7 @@ void test_response()
 int main(int argc, char **argv)
 {
     test_request();
-    SYLAR_LOG_INFO(g_logger) << "------------------------------------------";
+    CIM_LOG_INFO(g_logger) << "------------------------------------------";
     test_response();
     return 0;
 }

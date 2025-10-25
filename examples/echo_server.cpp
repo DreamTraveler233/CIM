@@ -4,7 +4,7 @@
 #include "byte_array.hpp"
 #include "address.hpp"
 
-static CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+static CIM::Logger::ptr g_logger = CIM_LOG_ROOT();
 
 class EchoServer : public CIM::TcpServer
 {
@@ -23,7 +23,7 @@ EchoServer::EchoServer(int type)
 
 void EchoServer::handleClient(CIM::Socket::ptr client)
 {
-    SYLAR_LOG_INFO(g_logger) << "handleClient " << *client;
+    CIM_LOG_INFO(g_logger) << "handleClient " << *client;
     CIM::ByteArray::ptr ba(new CIM::ByteArray);
     while (true)
     {
@@ -34,19 +34,19 @@ void EchoServer::handleClient(CIM::Socket::ptr client)
         int rt = client->recv(&iovs[0], iovs.size());
         if (rt == 0)
         {
-            SYLAR_LOG_INFO(g_logger) << "client close: " << *client;
+            CIM_LOG_INFO(g_logger) << "client close: " << *client;
             break;
         }
         else if (rt < 0)
         {
-            SYLAR_LOG_INFO(g_logger) << "client error rt=" << rt
+            CIM_LOG_INFO(g_logger) << "client error rt=" << rt
                                      << " errno=" << errno << " errstr=" << strerror(errno);
             break;
         }
         // 更新实际数据
         ba->setPosition(ba->getPosition() + rt);
         ba->setPosition(0);
-        // SYLAR_LOG_INFO(g_logger) << "recv rt=" << rt << " data=" << std::string((char *)iovs[0].iov_base, rt);
+        // CIM_LOG_INFO(g_logger) << "recv rt=" << rt << " data=" << std::string((char *)iovs[0].iov_base, rt);
         if (m_type == 1)
         { // text
             std::cout << ba->toString() << std::endl;
@@ -62,7 +62,7 @@ int type = 1;
 
 void run()
 {
-    SYLAR_LOG_INFO(g_logger) << "server type=" << type;
+    CIM_LOG_INFO(g_logger) << "server type=" << type;
     EchoServer::ptr es(new EchoServer(type));
     auto addr = CIM::Address::LookupAny("0.0.0.0:8020");
     while (!es->bind(addr))
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        SYLAR_LOG_INFO(g_logger) << "used as[" << argv[0] << " -t] or [" << argv[0] << " -b]";
+        CIM_LOG_INFO(g_logger) << "used as[" << argv[0] << " -t] or [" << argv[0] << " -b]";
         return 0;
     }
 

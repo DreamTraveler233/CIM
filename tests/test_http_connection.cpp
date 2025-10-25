@@ -6,7 +6,7 @@
 #include "zlib_stream.hpp"
 #include <fstream>
 
-static CIM::Logger::ptr g_logger = SYLAR_LOG_ROOT();
+static CIM::Logger::ptr g_logger = CIM_LOG_ROOT();
 
 void test_pool()
 {
@@ -16,7 +16,7 @@ void test_pool()
     CIM::IOManager::GetThis()->addTimer(1000, [pool]()
                                           {
             auto r = pool->doGet("/", 300);
-            SYLAR_LOG_INFO(g_logger) << r->toString(); }, true);
+            CIM_LOG_INFO(g_logger) << r->toString(); }, true);
 }
 
 void run()
@@ -24,7 +24,7 @@ void run()
     // CIM::Address::ptr addr = CIM::Address::LookupAnyIpAddress("www.CIM.top:80");
     // if (!addr)
     // {
-    //     SYLAR_LOG_INFO(g_logger) << "get addr error";
+    //     CIM_LOG_INFO(g_logger) << "get addr error";
     //     return;
     // }
 
@@ -32,7 +32,7 @@ void run()
     // bool rt = sock->connect(addr);
     // if (!rt)
     // {
-    //     SYLAR_LOG_INFO(g_logger) << "connect " << *addr << " failed";
+    //     CIM_LOG_INFO(g_logger) << "connect " << *addr << " failed";
     //     return;
     // }
 
@@ -40,7 +40,7 @@ void run()
     // CIM::http::HttpRequest::ptr req(new CIM::http::HttpRequest);
     // req->setPath("/blog/");
     // req->setHeader("host", "www.CIM.top");
-    // SYLAR_LOG_INFO(g_logger) << "req:" << std::endl
+    // CIM_LOG_INFO(g_logger) << "req:" << std::endl
     //                          << *req;
 
     // conn->sendRequest(req);
@@ -48,30 +48,30 @@ void run()
 
     // if (!rsp)
     // {
-    //     SYLAR_LOG_INFO(g_logger) << "recv response error";
+    //     CIM_LOG_INFO(g_logger) << "recv response error";
     //     return;
     // }
-    // SYLAR_LOG_INFO(g_logger) << "rsp:" << std::endl
+    // CIM_LOG_INFO(g_logger) << "rsp:" << std::endl
     //                          << *rsp;
 
     // std::ofstream ofs("rsp.dat");
     // ofs << *rsp;
 
-    // SYLAR_LOG_INFO(g_logger) << "=========================";
+    // CIM_LOG_INFO(g_logger) << "=========================";
 
     // auto r = CIM::http::HttpConnection::DoGet("http://www.baidu.com", 300);
-    // SYLAR_LOG_INFO(g_logger) << "result=" << r->result
+    // CIM_LOG_INFO(g_logger) << "result=" << r->result
     //                          << " error=" << r->error
     //                          << " rsp=" << (r->response ? r->response->toString() : "");
 
-    // SYLAR_LOG_INFO(g_logger) << "=========================";
+    // CIM_LOG_INFO(g_logger) << "=========================";
     test_pool();
 }
 
 void test_https()
 {
     auto r = CIM::http::HttpConnection::DoGet("http://www.baidu.com/", 300, {{"Accept-Encoding", "gzip, deflate, br"}, {"Connection", "keep-alive"}, {"User-Agent", "curl/7.29.0"}});
-    SYLAR_LOG_INFO(g_logger) << "result=" << r->result
+    CIM_LOG_INFO(g_logger) << "result=" << r->result
                              << " error=" << r->error
                              << " rsp=" << (r->response ? r->response->toString() : "");
 
@@ -85,7 +85,7 @@ void test_https()
                         {"Accept-Encoding", "gzip, deflate, br"},
                         {"User-Agent", "curl/7.29.0"}
                     });
-            SYLAR_LOG_INFO(g_logger) << r->toString(); }, true);
+            CIM_LOG_INFO(g_logger) << r->toString(); }, true);
 }
 
 void test_data()

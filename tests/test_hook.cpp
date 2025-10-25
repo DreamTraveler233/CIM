@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-auto g_logger = SYLAR_LOG_ROOT();
+auto g_logger = CIM_LOG_ROOT();
 
 void test_sleep()
 {
@@ -15,23 +15,23 @@ void test_sleep()
 
     CIM::set_hook_enable(true);
     
-    SYLAR_LOG_INFO(g_logger) << "test_sleep begin";
+    CIM_LOG_INFO(g_logger) << "test_sleep begin";
     time_t start = time(nullptr);
     
     iom.addTimer(1000, [](){
-        SYLAR_LOG_INFO(g_logger) << "timer callback 1";
+        CIM_LOG_INFO(g_logger) << "timer callback 1";
         sleep(2);
-        SYLAR_LOG_INFO(g_logger) << "timer callback 1 end";
+        CIM_LOG_INFO(g_logger) << "timer callback 1 end";
     });
     
     iom.addTimer(1500, [](){
-        SYLAR_LOG_INFO(g_logger) << "timer callback 2";
+        CIM_LOG_INFO(g_logger) << "timer callback 2";
         usleep(100000); // 100ms
-        SYLAR_LOG_INFO(g_logger) << "timer callback 2 end";
+        CIM_LOG_INFO(g_logger) << "timer callback 2 end";
     });
     
     time_t end = time(nullptr);
-    SYLAR_LOG_INFO(g_logger) << "test_sleep end, cost time: " << (end - start) << "s";
+    CIM_LOG_INFO(g_logger) << "test_sleep end, cost time: " << (end - start) << "s";
 }
 
 int main(int argc, char** argv)

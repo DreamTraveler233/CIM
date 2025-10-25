@@ -18,7 +18,9 @@ namespace CIM {
 
     action save_scheme
     {
-        uri->setScheme(std::string(mark, fpc - mark));
+        if (mark && fpc > mark) {  // 添加空指针和范围检查
+            uri->setScheme(std::string(mark, fpc - mark));
+        }
         mark = NULL;
     }
 
@@ -26,25 +28,24 @@ namespace CIM {
 
     action save_port
     {
-        if (fpc != mark) {
+        if (mark && fpc != mark) {  // 添加检查
             uri->setPort(atoi(mark));
         }
         mark = NULL;
     }
     action save_userinfo
     {
-        if(mark) {
-            //std::cout << std::string(mark, fpc - mark) << std::endl;
+        if(mark && fpc > mark) {  // 添加检查
             uri->setUserinfo(std::string(mark, fpc - mark));
         }
         mark = NULL;
     }
     action save_host
     {
-        if (mark != NULL) {
-            //std::cout << std::string(mark, fpc - mark) << std::endl;
+        if (mark && fpc > mark) {  // 添加检查
             uri->setHost(std::string(mark, fpc - mark));
         }
+        mark = NULL;  // 确保 mark 被重置
     }
 
     userinfo = (unreserved | pct_encoded | sub_delims | ":")*;
@@ -76,8 +77,9 @@ namespace CIM {
 
     action save_path
     {
-            //std::cout << std::string(mark, fpc - mark) << std::endl;
-        uri->setPath(std::string(mark, fpc - mark));
+        if (mark && fpc > mark) {  // 添加检查
+            uri->setPath(std::string(mark, fpc - mark));
+        }
         mark = NULL;
     }
 
@@ -102,14 +104,16 @@ namespace CIM {
 
     action save_query
     {
-        //std::cout << std::string(mark, fpc - mark) << std::endl;
-        uri->setQuery(std::string(mark, fpc - mark));
+        if (mark && fpc > mark) {  // 添加检查
+            uri->setQuery(std::string(mark, fpc - mark));
+        }
         mark = NULL;
     }
     action save_fragment
     {
-        //std::cout << std::string(mark, fpc - mark) << std::endl;
-        uri->setFragment(std::string(mark, fpc - mark));
+        if (mark && fpc > mark) {  // 添加检查
+            uri->setQuery(std::string(mark, fpc - mark));
+        }
         mark = NULL;
     }
 

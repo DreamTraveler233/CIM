@@ -5,7 +5,7 @@
 
 namespace CIM::http
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     HttpServer::HttpServer(bool keepalive, IOManager *worker, IOManager *accept_worker)
         : TcpServer(worker, accept_worker),
@@ -37,7 +37,7 @@ namespace CIM::http
      */
     void HttpServer::handleClient(Socket::ptr client)
     {
-        SYLAR_LOG_DEBUG(g_logger) << "handleClient " << *client;
+        CIM_LOG_DEBUG(g_logger) << "handleClient " << *client;
         // 创建HTTP会话对象，用于管理与客户端的通信
         HttpSession::ptr session(new HttpSession(client));
         do
@@ -47,7 +47,7 @@ namespace CIM::http
             if (!req)
             {
                 // 请求接收失败，记录错误日志并退出循环
-                SYLAR_LOG_DEBUG(g_logger) << "recv http request fail, errno="
+                CIM_LOG_DEBUG(g_logger) << "recv http request fail, errno="
                                           << errno << " errstr=" << strerror(errno)
                                           << " cliet:" << *client << " keep_alive=" << m_isKeepalive;
                 break;

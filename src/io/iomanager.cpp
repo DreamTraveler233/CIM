@@ -8,7 +8,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     IOManager::IOManager(size_t threads, bool use_caller, const std::string &name)
         : Scheduler(threads, use_caller, name)
@@ -19,7 +19,7 @@ namespace CIM
         if (!epfd.isValid())
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "epoll_create1 failed: " << strerror(saved_errno);
+            CIM_LOG_ERROR(g_logger) << "epoll_create1 failed: " << strerror(saved_errno);
             throw std::runtime_error("IOManager initialization failed");
         }
 
@@ -29,7 +29,7 @@ namespace CIM
         if (-1 == rt)
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "pipe failed: " << strerror(saved_errno);
+            CIM_LOG_ERROR(g_logger) << "pipe failed: " << strerror(saved_errno);
             throw std::runtime_error("IOManager initialization failed");
         }
 
@@ -45,7 +45,7 @@ namespace CIM
         if (-1 == rt)
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "fcntl failed: " << strerror(saved_errno);
+            CIM_LOG_ERROR(g_logger) << "fcntl failed: " << strerror(saved_errno);
             throw std::runtime_error("IOManager initialization failed");
         }
 
@@ -54,7 +54,7 @@ namespace CIM
         if (-1 == rt)
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl failed: " << strerror(saved_errno);
+            CIM_LOG_ERROR(g_logger) << "epoll_ctl failed: " << strerror(saved_errno);
             throw std::runtime_error("IOManager initialization failed");
         }
 
@@ -91,9 +91,9 @@ namespace CIM
 
     bool IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     {
-        SYLAR_ASSERT(fd >= 0)
-        SYLAR_ASSERT(event == READ || event == WRITE);
-        SYLAR_ASSERT(cb);
+        CIM_ASSERT(fd >= 0)
+        CIM_ASSERT(event == READ || event == WRITE);
+        CIM_ASSERT(cb);
 
         FdContext *fd_ctx = nullptr;
 
@@ -118,7 +118,7 @@ namespace CIM
         if (fd_ctx->events & event)
         {
             // 如果事件已经存在，则直接返回true，避免重复添加相同的事件类型
-            SYLAR_LOG_DEBUG(g_logger) << "addEvent assert fd=" << fd
+            CIM_LOG_DEBUG(g_logger) << "addEvent assert fd=" << fd
                                       << " event=" << event
                                       << " fd_ctx.event=" << fd_ctx->events;
             return true;
@@ -137,7 +137,7 @@ namespace CIM
         {
             saved_errno = errno;
             // 如果 epoll_ctl 失败，记录错误日志并返回失败
-            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
+            CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
                                       << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
@@ -152,13 +152,13 @@ namespace CIM
 
         // if (event_ctx.coroutine)
         // {
-        //     SYLAR_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
+        //     CIM_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
         //                              << fd << " event=" << event;
         //     fd_ctx->resetContext(event_ctx);
         // }
-        SYLAR_ASSERT(!event_ctx.scheduler);
-        SYLAR_ASSERT(!event_ctx.coroutine);
-        SYLAR_ASSERT(!event_ctx.cb);
+        CIM_ASSERT(!event_ctx.scheduler);
+        CIM_ASSERT(!event_ctx.coroutine);
+        CIM_ASSERT(!event_ctx.cb);
 
         event_ctx.scheduler = Scheduler::GetThis();
         if (cb)
@@ -170,7 +170,7 @@ namespace CIM
         {
             // 否则使用当前协程作为事件处理逻辑
             event_ctx.coroutine = Coroutine::GetThis();
-            SYLAR_ASSERT(event_ctx.coroutine->getState() == Coroutine::EXEC);
+            CIM_ASSERT(event_ctx.coroutine->getState() == Coroutine::EXEC);
         }
 
         return 0;
@@ -178,8 +178,8 @@ namespace CIM
 
     bool IOManager::delEvent(int fd, Event event)
     {
-        SYLAR_ASSERT(fd >= 0)
-        SYLAR_ASSERT(event == READ || event == WRITE);
+        CIM_ASSERT(fd >= 0)
+        CIM_ASSERT(event == READ || event == WRITE);
 
         FdContext *fd_ctx = nullptr;
 
@@ -189,7 +189,7 @@ namespace CIM
             RWMutexType::ReadLock lock(m_mutex);
             if ((int)m_fdContexts.size() <= fd)
             {
-                SYLAR_LOG_ERROR(g_logger) << "delEvent: fd=" << fd
+                CIM_LOG_ERROR(g_logger) << "delEvent: fd=" << fd
                                           << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false; // 文件描述符超出范围，直接返回失败
             }
@@ -220,7 +220,7 @@ namespace CIM
         {
             saved_errno = errno;
             // 如果 epoll_ctl 失败，记录错误日志并返回失败
-            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
+            CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
                                       << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
@@ -237,8 +237,8 @@ namespace CIM
 
     bool IOManager::cancelEvent(int fd, Event event)
     {
-        SYLAR_ASSERT(fd >= 0)
-        SYLAR_ASSERT(event == READ || event == WRITE);
+        CIM_ASSERT(fd >= 0)
+        CIM_ASSERT(event == READ || event == WRITE);
 
         FdContext *fd_ctx = nullptr;
         {
@@ -246,7 +246,7 @@ namespace CIM
             RWMutexType::ReadLock lock(m_mutex);
             if ((int)m_fdContexts.size() <= fd)
             {
-                SYLAR_LOG_ERROR(g_logger) << "cancelEvent: fd=" << fd
+                CIM_LOG_ERROR(g_logger) << "cancelEvent: fd=" << fd
                                           << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false; // 文件描述符超出范围，直接返回false
             }
@@ -274,7 +274,7 @@ namespace CIM
         if (rt)
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
+            CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
                                       << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false; // epoll_ctl调用失败时记录错误日志并返回false
         }
@@ -288,7 +288,7 @@ namespace CIM
 
     bool IOManager::cancelAll(int fd)
     {
-        SYLAR_ASSERT(fd >= 0)
+        CIM_ASSERT(fd >= 0)
 
         FdContext *fd_ctx = nullptr;
         {
@@ -296,7 +296,7 @@ namespace CIM
             // 检查 fd 是否在合法范围内
             if ((int)m_fdContexts.size() <= fd)
             {
-                SYLAR_LOG_ERROR(g_logger) << "cancelAll: fd=" << fd
+                CIM_LOG_ERROR(g_logger) << "cancelAll: fd=" << fd
                                           << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false;
             }
@@ -322,7 +322,7 @@ namespace CIM
         if (rt)
         {
             saved_errno = errno;
-            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
+            CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
                                       << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
@@ -342,7 +342,7 @@ namespace CIM
         }
 
         // 确保所有事件都已被正确清理
-        SYLAR_ASSERT(fd_ctx->events == 0)
+        CIM_ASSERT(fd_ctx->events == 0)
         return true;
     }
 
@@ -360,7 +360,7 @@ namespace CIM
         }
         // 通过管道写入一个字节 "T" 以触发调度器
         int rt = write(m_tickleFds[1], "T", 1);
-        SYLAR_ASSERT(rt == 1)
+        CIM_ASSERT(rt == 1)
     }
 
     bool IOManager::stopping(uint64_t &timeout)
@@ -379,7 +379,7 @@ namespace CIM
     void IOManager::idle()
     {
         // ==========初始化阶段==========
-        SYLAR_LOG_DEBUG(g_logger) << "idle";
+        CIM_LOG_DEBUG(g_logger) << "idle";
 
         // 分配 epoll_event 数组并使用智能指针管理内存，用于存储 epoll 等待到的事件
         epoll_event *events = new epoll_event[64]();
@@ -394,7 +394,7 @@ namespace CIM
             uint64_t next_timeout = 0;
             if (stopping(next_timeout))
             {
-                SYLAR_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
+                CIM_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
                 break;
             }
 
@@ -480,7 +480,7 @@ namespace CIM
                 if (rt2)
                 {
                     int saved_errno = errno;
-                    SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", "
+                    CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", "
                                               << fd_ctx->fd << ", " << event.events << "): "
                                               << rt2 << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
                     continue;
@@ -541,7 +541,7 @@ namespace CIM
             // 返回写事件上下文
             return write;
         default:
-            SYLAR_ASSERT2(false, "getContext");
+            CIM_ASSERT2(false, "getContext");
         }
         throw std::invalid_argument("getContext invalid event");
     }
@@ -556,7 +556,7 @@ namespace CIM
     void IOManager::FdContext::triggerEvent(Event event)
     {
         // 确保传入的事件是当前已注册的事件之一
-        SYLAR_ASSERT(events & event);
+        CIM_ASSERT(events & event);
 
         // 清除已触发事件的标志位
         events = (Event)(events & ~event);

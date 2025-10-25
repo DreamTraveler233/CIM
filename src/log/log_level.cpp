@@ -26,7 +26,7 @@ namespace CIM
 
     Level LogLevel::FromString(const std::string &str)
     {
-        SYLAR_ASSERT(!str.empty());
+        CIM_ASSERT(!str.empty());
 #define XX(name, level) \
     if (str == #name)   \
         return Level::level;

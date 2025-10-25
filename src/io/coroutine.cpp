@@ -7,7 +7,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     static std::atomic<uint64_t> s_coroutine_id = {0};    // 协程id
     static std::atomic<uint64_t> s_coroutine_count = {0}; // 全局协程计数器
@@ -45,21 +45,21 @@ namespace CIM
         // 获取上下文，接管当前线程
         if (getcontext(&m_ctx))
         {
-            SYLAR_ASSERT2(false, "getcontext");
+            CIM_ASSERT2(false, "getcontext");
             return; // 如果有适当的错误处理机制，应该在这里处理
         }
 
         // 设置线程局部变量
         SetThis(this);
         ++s_coroutine_count;
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine() id=" << m_id;
+        CIM_LOG_DEBUG(g_logger) << "Coroutine::Coroutine() id=" << m_id;
     }
 
     Coroutine::Coroutine(std::function<void()> cb, size_t stack_size, bool use_caller)
         : m_id(++s_coroutine_id),
           m_cb(cb)
     {
-        SYLAR_ASSERT(cb);
+        CIM_ASSERT(cb);
         ++s_coroutine_count;
 
         // 使用局部变量管理栈空间，确保异常安全性
@@ -81,7 +81,7 @@ namespace CIM
             // 获取当前线程上下文环境
             if (getcontext(&m_ctx))
             {
-                SYLAR_ASSERT2(false, "getcontext");
+                CIM_ASSERT2(false, "getcontext");
             }
 
             // 设置协程的入口函数
@@ -104,23 +104,23 @@ namespace CIM
             --s_coroutine_count;
             throw; // 重新抛出异常
         }
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::Coroutine()" << " id=" << m_id;
+        CIM_LOG_DEBUG(g_logger) << "Coroutine::Coroutine()" << " id=" << m_id;
     }
 
     Coroutine::~Coroutine()
     {
-        SYLAR_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine" << " id=" << m_id;
+        CIM_LOG_DEBUG(g_logger) << "Coroutine::~Coroutine" << " id=" << m_id;
         if (m_stack) // 说明为子协程
         {
-            SYLAR_ASSERT(m_state == State::TERM ||
+            CIM_ASSERT(m_state == State::TERM ||
                          m_state == State::INIT ||
                          m_state == State::EXCEPT);
             StackAllocator::Dealloc(m_stack, m_stack_size);
         }
         else // 说明为主协程
         {
-            SYLAR_ASSERT(!m_cb);
-            SYLAR_ASSERT(m_state == State::EXEC);
+            CIM_ASSERT(!m_cb);
+            CIM_ASSERT(m_state == State::EXEC);
 
             // 将主协程指针置空
             Coroutine *cur = t_coroutine;
@@ -134,15 +134,15 @@ namespace CIM
 
     void Coroutine::reset(std::function<void()> cb)
     {
-        SYLAR_ASSERT(m_stack);
-        SYLAR_ASSERT(m_stack_size > 0);
-        SYLAR_ASSERT(m_state == State::TERM ||
+        CIM_ASSERT(m_stack);
+        CIM_ASSERT(m_stack_size > 0);
+        CIM_ASSERT(m_state == State::TERM ||
                      m_state == State::INIT ||
                      m_state == State::EXCEPT);
         m_cb = cb;
         if (getcontext(&m_ctx)) // 获取当前上下文环境
         {
-            SYLAR_ASSERT2(false, "getcontext");
+            CIM_ASSERT2(false, "getcontext");
         }
         m_ctx.uc_link = nullptr;
         m_ctx.uc_stack.ss_sp = m_stack;
@@ -156,7 +156,7 @@ namespace CIM
     {
         // 把当前运行协程设置为该子协程
         SetThis(this);
-        SYLAR_ASSERT(m_state != State::EXEC &&
+        CIM_ASSERT(m_state != State::EXEC &&
                      m_state != State::TERM &&
                      m_state != State::EXCEPT);
         m_state = State::EXEC;
@@ -164,7 +164,7 @@ namespace CIM
         // 从主协程切换到当前线程（子协程）
         if (swapcontext(&Scheduler::GetMainCoroutine()->m_ctx, &m_ctx))
         {
-            SYLAR_ASSERT2(false, "swapcontext");
+            CIM_ASSERT2(false, "swapcontext");
         }
     }
 
@@ -174,20 +174,20 @@ namespace CIM
         SetThis(Scheduler::GetMainCoroutine());
         if (swapcontext(&m_ctx, &Scheduler::GetMainCoroutine()->m_ctx))
         {
-            SYLAR_ASSERT2(false, "swapcontext");
+            CIM_ASSERT2(false, "swapcontext");
         }
     }
 
     void Coroutine::call()
     {
         SetThis(this);
-        SYLAR_ASSERT(m_state != State::EXEC &&
+        CIM_ASSERT(m_state != State::EXEC &&
                      m_state != State::TERM &&
                      m_state != State::EXCEPT);
         m_state = State::EXEC;
         if (swapcontext(&t_thread_coroutine->m_ctx, &m_ctx))
         {
-            SYLAR_ASSERT2(false, "swapcontext");
+            CIM_ASSERT2(false, "swapcontext");
         }
     }
 
@@ -196,7 +196,7 @@ namespace CIM
         SetThis(t_thread_coroutine.get());
         if (swapcontext(&m_ctx, &t_thread_coroutine->m_ctx))
         {
-            SYLAR_ASSERT2(false, "swapcontext");
+            CIM_ASSERT2(false, "swapcontext");
         }
     }
 
@@ -230,7 +230,7 @@ namespace CIM
 
         // 当前协程为空，说明在当前线程还没有协程，则创建一个主协程
         Coroutine::ptr main_coroutine(new Coroutine);
-        SYLAR_ASSERT(t_coroutine == main_coroutine.get());
+        CIM_ASSERT(t_coroutine == main_coroutine.get());
         // 设置主协程
         t_thread_coroutine = main_coroutine;
         return t_coroutine->shared_from_this();
@@ -239,7 +239,7 @@ namespace CIM
     void Coroutine::YieldToReady()
     {
         Coroutine::ptr cur = GetThis();
-        SYLAR_ASSERT(cur->m_state == EXEC);
+        CIM_ASSERT(cur->m_state == EXEC);
         cur->m_state = State::READY;
         cur->swapOut();
     }
@@ -247,7 +247,7 @@ namespace CIM
     void Coroutine::YieldToHold()
     {
         Coroutine::ptr cur = GetThis();
-        SYLAR_ASSERT(cur->m_state == EXEC);
+        CIM_ASSERT(cur->m_state == EXEC);
         cur->m_state = State::HOLD;
         cur->swapOut();
     }
@@ -261,7 +261,7 @@ namespace CIM
     {
         // 获取当前正在运行的协程
         Coroutine::ptr cur = GetThis();
-        SYLAR_ASSERT(cur);
+        CIM_ASSERT(cur);
 
         try
         {
@@ -272,7 +272,7 @@ namespace CIM
         catch (std::exception &ex)
         {
             cur->m_state = State::EXCEPT;
-            SYLAR_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
+            CIM_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
                                       << " coroutine id: " << cur->getId()
                                       << std::endl
                                       << BacktraceToString();
@@ -280,7 +280,7 @@ namespace CIM
         catch (...)
         {
             cur->m_state = State::EXCEPT;
-            SYLAR_LOG_ERROR(g_logger) << "Coroutine exception";
+            CIM_LOG_ERROR(g_logger) << "Coroutine exception";
         }
 
         // 协程执行完毕后，需要将控制权交还给主协程
@@ -288,14 +288,14 @@ namespace CIM
         cur.reset();
         p->swapOut();
 
-        SYLAR_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
+        CIM_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
     }
 
     void Coroutine::CallerMainFunc()
     {
         // 获取当前正在运行的协程
         Coroutine::ptr cur = GetThis();
-        SYLAR_ASSERT(cur);
+        CIM_ASSERT(cur);
 
         try
         {
@@ -306,7 +306,7 @@ namespace CIM
         catch (std::exception &ex)
         {
             cur->m_state = State::EXCEPT;
-            SYLAR_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
+            CIM_LOG_ERROR(g_logger) << "coroutine exception: " << ex.what()
                                       << " coroutine id: " << cur->getId()
                                       << std::endl
                                       << BacktraceToString();
@@ -314,7 +314,7 @@ namespace CIM
         catch (...)
         {
             cur->m_state = State::EXCEPT;
-            SYLAR_LOG_ERROR(g_logger) << "Coroutine exception";
+            CIM_LOG_ERROR(g_logger) << "Coroutine exception";
         }
 
         // 协程执行完毕后，需要将控制权交还给主协程
@@ -322,7 +322,7 @@ namespace CIM
         cur.reset();
         p->back();
 
-        SYLAR_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
+        CIM_ASSERT2(false, "never reach coroutine id=" + std::to_string(p->getId()));
     }
 
     uint64_t Coroutine::GetCoroutineId()

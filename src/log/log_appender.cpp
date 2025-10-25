@@ -7,7 +7,7 @@ namespace CIM
     LogAppender::~LogAppender() {}
     void LogAppender::setFormatter(LogFormatter::ptr formatter)
     {
-        SYLAR_ASSERT(formatter);
+        CIM_ASSERT(formatter);
         MutexType::Lock lock(m_mutex);
         m_formatter = formatter;
     }
@@ -18,7 +18,7 @@ namespace CIM
     }
     void LogAppender::setLevel(Level level)
     {
-        SYLAR_ASSERT(level != Level::UNKNOWN);
+        CIM_ASSERT(level != Level::UNKNOWN);
         MutexType::Lock lock(m_mutex);
         m_level = level;
     }
@@ -30,7 +30,7 @@ namespace CIM
 
     void StdoutLogAppender::log(LogEvent::ptr event)
     {
-        SYLAR_ASSERT(event);
+        CIM_ASSERT(event);
         if (event->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);
@@ -56,14 +56,14 @@ namespace CIM
 
     FileLogAppender::FileLogAppender(const std::string &fileName)
     {
-        SYLAR_ASSERT(!fileName.empty())
+        CIM_ASSERT(!fileName.empty())
         m_logFile = LogFileManager::GetInstance()->getLogFile(fileName);
         m_logFile->openFile();
     }
 
     void FileLogAppender::log(LogEvent::ptr event)
     {
-        SYLAR_ASSERT(event);
+        CIM_ASSERT(event);
         if (event->getLevel() >= m_level)
         {
             MutexType::Lock lock(m_mutex);

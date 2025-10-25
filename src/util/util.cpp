@@ -8,7 +8,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     pid_t GetThreadId()
     {
@@ -31,7 +31,7 @@ namespace CIM
         char **strings = backtrace_symbols(array, s);
         if (NULL == strings)
         {
-            SYLAR_LOG_ERROR(g_logger) << "backtrace_symbols error";
+            CIM_LOG_ERROR(g_logger) << "backtrace_symbols error";
             free(array);
             return;
         }

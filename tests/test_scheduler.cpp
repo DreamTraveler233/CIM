@@ -2,12 +2,12 @@
 #include "scheduler.hpp"
 #include"iomanager.hpp"
 
-auto g_logger = SYLAR_LOG_ROOT();
+auto g_logger = CIM_LOG_ROOT();
 
 void test_fiber()
 {
     static int count = 5;
-    SYLAR_LOG_INFO(g_logger) << "test begin count=" << count;
+    CIM_LOG_INFO(g_logger) << "test begin count=" << count;
     std::this_thread::sleep_for(std::chrono::seconds(1));
     if (--count>0)
     {

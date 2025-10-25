@@ -44,10 +44,10 @@ namespace CIM
         if (pos != std::string::npos)
         {
             // 查找 "CIM/" 子字符串
-            size_t sylar_pos = file_name.find("CIM/");
-            if (sylar_pos != std::string::npos)
+            size_t CIM_pos = file_name.find("CIM/");
+            if (CIM_pos != std::string::npos)
             {
-                return file_name.substr(sylar_pos + 6);
+                return file_name.substr(CIM_pos + 6);
             }
             // 如果没有找到 "CIM/"，则返回文件名部分
             return file_name.substr(pos + 1);
@@ -56,7 +56,7 @@ namespace CIM
     }
     void LogEvent::format(const char *fmt, ...)
     {
-        SYLAR_ASSERT(fmt);
+        CIM_ASSERT(fmt);
         va_list al;
         va_start(al, fmt);
         format(fmt, al);
@@ -64,7 +64,7 @@ namespace CIM
     }
     void LogEvent::format(const char *fmt, va_list al)
     {
-        SYLAR_ASSERT(fmt);
+        CIM_ASSERT(fmt);
         char *buf = nullptr;
         int len = vasprintf(&buf, fmt, al);
         if (len != -1)
@@ -76,7 +76,7 @@ namespace CIM
     LogEventWrap::LogEventWrap(LogEvent::ptr event)
         : m_event(event)
     {
-        SYLAR_ASSERT(event);
+        CIM_ASSERT(event);
     }
 
     LogEventWrap::~LogEventWrap()

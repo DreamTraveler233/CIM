@@ -5,7 +5,7 @@
 
 namespace CIM::http
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     // 加载http协议解析器的配置项
     static auto g_http_request_buffer_size =
@@ -101,7 +101,7 @@ namespace CIM::http
 
         if (m == HttpMethod::INVALID_METHOD)
         {
-            SYLAR_LOG_WARN(g_logger) << "invalid http request method: "
+            CIM_LOG_WARN(g_logger) << "invalid http request method: "
                                      << std::string(at, length);
             parser->setError(1000);
             return;
@@ -124,7 +124,7 @@ namespace CIM::http
      */
     void on_request_fragment(void *data, const char *at, size_t length)
     {
-        // SYLAR_LOG_INFO(g_logger) << "on_request_fragment:" << std::string(at, length);
+        // CIM_LOG_INFO(g_logger) << "on_request_fragment:" << std::string(at, length);
         HttpRequestParser *parser = static_cast<HttpRequestParser *>(data);
         parser->getData()->setFragment(std::string(at, length));
     }
@@ -182,7 +182,7 @@ namespace CIM::http
         }
         else
         {
-            SYLAR_LOG_WARN(g_logger) << "invalid http request version: "
+            CIM_LOG_WARN(g_logger) << "invalid http request version: "
                                      << std::string(at, length);
             parser->setError(1001);
             return;
@@ -211,7 +211,7 @@ namespace CIM::http
         HttpRequestParser *parser = static_cast<HttpRequestParser *>(data);
         if (flen == 0)
         {
-            SYLAR_LOG_WARN(g_logger) << "invalid http request field length == 0";
+            CIM_LOG_WARN(g_logger) << "invalid http request field length == 0";
             // parser->setError(1002);
             return;
         }
@@ -332,7 +332,7 @@ namespace CIM::http
         }
         else
         {
-            SYLAR_LOG_WARN(g_logger) << "invalid http response version: "
+            CIM_LOG_WARN(g_logger) << "invalid http response version: "
                                      << std::string(at, length);
             parser->setError(1001);
             return;
@@ -365,7 +365,7 @@ namespace CIM::http
         HttpResponseParser *parser = static_cast<HttpResponseParser *>(data);
         if (flen == 0)
         {
-            SYLAR_LOG_WARN(g_logger) << "invalid http response field length == 0";
+            CIM_LOG_WARN(g_logger) << "invalid http response field length == 0";
             // parser->setError(1002);
             return;
         }

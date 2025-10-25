@@ -476,7 +476,7 @@ namespace CIM
         size_t m_position;      //!< 当前读写位置
         size_t m_capacity;      //!< 总容量
         size_t m_data_size;     //!< 数据总大小
-        int8_t m_endian;        //!< 字节序（SYLAR_LITTLE_ENDIAN 或 SYLAR_BIG_ENDIAN）
+        int8_t m_endian;        //!< 字节序（CIM_LITTLE_ENDIAN 或 CIM_BIG_ENDIAN）
         Node *m_root_node;      //!< 根节点指针
         Node *m_cur_node;       //!< 当前节点指针
     };

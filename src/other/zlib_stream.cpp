@@ -100,9 +100,9 @@ namespace CIM
 
     int ZlibStream::init(Type type, int level, int window_bits, int memlevel, Strategy strategy)
     {
-        SYLAR_ASSERT((level >= 0 && level <= 9) || level == DEFAULT_COMPRESSION);
-        SYLAR_ASSERT((window_bits >= 8 && window_bits <= 15));
-        SYLAR_ASSERT((memlevel >= 1 && memlevel <= 9));
+        CIM_ASSERT((level >= 0 && level <= 9) || level == DEFAULT_COMPRESSION);
+        CIM_ASSERT((window_bits >= 8 && window_bits <= 15));
+        CIM_ASSERT((memlevel >= 1 && memlevel <= 9));
 
         memset(&m_zstream, 0, sizeof(m_zstream));
 

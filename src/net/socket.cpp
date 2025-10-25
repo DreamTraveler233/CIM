@@ -7,7 +7,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     Socket::ptr Socket::CreateTCP(CIM::Address::ptr address)
     {
@@ -114,7 +114,7 @@ namespace CIM
         int rt = getsockopt(m_sock, level, option, result, (socklen_t *)len);
         if (rt)
         {
-            SYLAR_LOG_DEBUG(g_logger) << "getOption sock=" << m_sock
+            CIM_LOG_DEBUG(g_logger) << "getOption sock=" << m_sock
                                       << " level=" << level << " option=" << option
                                       << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
@@ -126,7 +126,7 @@ namespace CIM
     {
         if (setsockopt(m_sock, level, option, result, (socklen_t)len))
         {
-            SYLAR_LOG_DEBUG(g_logger) << "setOption sock=" << m_sock
+            CIM_LOG_DEBUG(g_logger) << "setOption sock=" << m_sock
                                       << " level=" << level << " option=" << option
                                       << " errno=" << errno << " errstr=" << strerror(errno);
             return false;
@@ -143,7 +143,7 @@ namespace CIM
         int newsock = ::accept(m_sock, nullptr, nullptr);
         if (newsock == -1)
         {
-            SYLAR_LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
+            CIM_LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
                                       << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
@@ -161,15 +161,15 @@ namespace CIM
         if (!isValid())
         {
             newSock();
-            if (SYLAR_UNLIKELY(!isValid()))
+            if (CIM_UNLIKELY(!isValid()))
             {
                 return false;
             }
         }
 
-        if (SYLAR_UNLIKELY(addr->getFamily() != m_family))
+        if (CIM_UNLIKELY(addr->getFamily() != m_family))
         {
-            SYLAR_LOG_ERROR(g_logger) << "bind sock.family("
+            CIM_LOG_ERROR(g_logger) << "bind sock.family("
                                       << m_family << ") addr.family(" << addr->getFamily()
                                       << ") not equal, addr=" << addr->toString();
             return false;
@@ -193,7 +193,7 @@ namespace CIM
         // 绑定地址
         if (::bind(m_sock, addr->getAddr(), addr->getAddrLen()))
         {
-            SYLAR_LOG_ERROR(g_logger) << "bind error errrno=" << errno
+            CIM_LOG_ERROR(g_logger) << "bind error errrno=" << errno
                                       << " errstr=" << strerror(errno);
             return false;
         }
@@ -206,7 +206,7 @@ namespace CIM
     {
         if (!m_remoteAddress)
         {
-            SYLAR_LOG_ERROR(g_logger) << "reconnect m_remoteAddress is null";
+            CIM_LOG_ERROR(g_logger) << "reconnect m_remoteAddress is null";
             return false;
         }
         m_localAddress.reset();
@@ -219,15 +219,15 @@ namespace CIM
         if (!isValid())
         {
             newSock();
-            if (SYLAR_UNLIKELY(!isValid()))
+            if (CIM_UNLIKELY(!isValid()))
             {
                 return false;
             }
         }
 
-        if (SYLAR_UNLIKELY(addr->getFamily() != m_family))
+        if (CIM_UNLIKELY(addr->getFamily() != m_family))
         {
-            SYLAR_LOG_ERROR(g_logger) << "connect sock.family("
+            CIM_LOG_ERROR(g_logger) << "connect sock.family("
                                       << m_family << ") addr.family(" << addr->getFamily()
                                       << ") not equal, addr=" << addr->toString();
             return false;
@@ -237,7 +237,7 @@ namespace CIM
         {
             if (::connect(m_sock, addr->getAddr(), addr->getAddrLen()))
             {
-                SYLAR_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
+                CIM_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
                                           << ") error errno=" << errno << " errstr=" << strerror(errno);
                 close();
                 return false;
@@ -247,7 +247,7 @@ namespace CIM
         {
             if (::connect_with_timeout(m_sock, addr->getAddr(), addr->getAddrLen(), timeout_ms))
             {
-                SYLAR_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
+                CIM_LOG_ERROR(g_logger) << "sock=" << m_sock << " connect(" << addr->toString()
                                           << ") timeout=" << timeout_ms << " error errno="
                                           << errno << " errstr=" << strerror(errno);
                 close();
@@ -264,12 +264,12 @@ namespace CIM
     {
         if (!isValid())
         {
-            SYLAR_LOG_ERROR(g_logger) << "listen error sock=-1";
+            CIM_LOG_ERROR(g_logger) << "listen error sock=-1";
             return false;
         }
         if (::listen(m_sock, backlog))
         {
-            SYLAR_LOG_ERROR(g_logger) << "listen error errno=" << errno
+            CIM_LOG_ERROR(g_logger) << "listen error errno=" << errno
                                       << " errstr=" << strerror(errno);
             return false;
         }
@@ -338,7 +338,7 @@ namespace CIM
         socklen_t addrlen = result->getAddrLen();
         if (getpeername(m_sock, result->getAddr(), &addrlen))
         {
-            SYLAR_LOG_ERROR(g_logger) << "getpeername error sock=" << m_sock
+            CIM_LOG_ERROR(g_logger) << "getpeername error sock=" << m_sock
                                       << " errno=" << errno << " errstr=" << strerror(errno);
             return Address::ptr(new UnknownAddress(m_family));
         }
@@ -383,7 +383,7 @@ namespace CIM
         socklen_t addrlen = result->getAddrLen();
         if (getsockname(m_sock, result->getAddr(), &addrlen))
         {
-            SYLAR_LOG_ERROR(g_logger) << "getsockname error sock=" << m_sock
+            CIM_LOG_ERROR(g_logger) << "getsockname error sock=" << m_sock
                                       << " errno=" << errno << " errstr=" << strerror(errno);
             return Address::ptr(new UnknownAddress(m_family));
         }
@@ -597,13 +597,13 @@ namespace CIM
     void Socket::newSock()
     {
         m_sock = socket(m_family, m_type, m_protocol);
-        if (SYLAR_LIKELY(m_sock != -1))
+        if (CIM_LIKELY(m_sock != -1))
         {
             setDefaultOptions();
         }
         else
         {
-            SYLAR_LOG_ERROR(g_logger) << "socket(" << m_family
+            CIM_LOG_ERROR(g_logger) << "socket(" << m_family
                                       << ", " << m_type << ", " << m_protocol << ") errno="
                                       << errno << " errstr=" << strerror(errno);
         }
@@ -637,7 +637,7 @@ namespace CIM
         int newsock = ::accept(m_sock, nullptr, nullptr);
         if (newsock == -1)
         {
-            SYLAR_LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
+            CIM_LOG_ERROR(g_logger) << "accept(" << m_sock << ") errno="
                                       << errno << " errstr=" << strerror(errno);
             return nullptr;
         }
@@ -711,13 +711,13 @@ namespace CIM
 
     int SSLSocket::sendTo(const void *buffer, size_t length, const Address::ptr to, int flags)
     {
-        SYLAR_ASSERT(false);
+        CIM_ASSERT(false);
         return -1;
     }
 
     int SSLSocket::sendTo(const iovec *buffers, size_t length, const Address::ptr to, int flags)
     {
-        SYLAR_ASSERT(false);
+        CIM_ASSERT(false);
         return -1;
     }
 
@@ -755,13 +755,13 @@ namespace CIM
 
     int SSLSocket::recvFrom(void *buffer, size_t length, Address::ptr from, int flags)
     {
-        SYLAR_ASSERT(false);
+        CIM_ASSERT(false);
         return -1;
     }
 
     int SSLSocket::recvFrom(iovec *buffers, size_t length, Address::ptr from, int flags)
     {
-        SYLAR_ASSERT(false);
+        CIM_ASSERT(false);
         return -1;
     }
 
@@ -782,19 +782,19 @@ namespace CIM
         m_ctx.reset(SSL_CTX_new(SSLv23_server_method()), SSL_CTX_free);
         if (SSL_CTX_use_certificate_chain_file(m_ctx.get(), cert_file.c_str()) != 1)
         {
-            SYLAR_LOG_ERROR(g_logger) << "SSL_CTX_use_certificate_chain_file("
+            CIM_LOG_ERROR(g_logger) << "SSL_CTX_use_certificate_chain_file("
                                       << cert_file << ") error";
             return false;
         }
         if (SSL_CTX_use_PrivateKey_file(m_ctx.get(), key_file.c_str(), SSL_FILETYPE_PEM) != 1)
         {
-            SYLAR_LOG_ERROR(g_logger) << "SSL_CTX_use_PrivateKey_file("
+            CIM_LOG_ERROR(g_logger) << "SSL_CTX_use_PrivateKey_file("
                                       << key_file << ") error";
             return false;
         }
         if (SSL_CTX_check_private_key(m_ctx.get()) != 1)
         {
-            SYLAR_LOG_ERROR(g_logger) << "SSL_CTX_check_private_key cert_file="
+            CIM_LOG_ERROR(g_logger) << "SSL_CTX_check_private_key cert_file="
                                       << cert_file << " key_file=" << key_file;
             return false;
         }

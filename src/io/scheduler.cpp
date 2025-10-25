@@ -4,7 +4,7 @@
 
 namespace CIM
 {
-    static auto g_logger = SYLAR_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
     // 当前线程的调度器对象
     static thread_local Scheduler *t_scheduler = nullptr;
@@ -14,7 +14,7 @@ namespace CIM
     Scheduler::Scheduler(size_t threads, bool use_caller, const std::string &name)
         : m_name(name)
     {
-        SYLAR_ASSERT(threads > 0);
+        CIM_ASSERT(threads > 0);
 
         // 如果使用调用线程，则将当前线程作为调度线程之一
         if (use_caller)
@@ -22,7 +22,7 @@ namespace CIM
             Coroutine::GetThis(); // 初始化当前线程的主协程
             --threads;
 
-            SYLAR_ASSERT(GetThis() == nullptr); // 当前线程的调度器实例为空
+            CIM_ASSERT(GetThis() == nullptr); // 当前线程的调度器实例为空
             t_scheduler = this;                 // 设置当前线程的调度器
 
             // 创建根协程并绑定到当前调度器的run方法
@@ -41,7 +41,7 @@ namespace CIM
 
     Scheduler::~Scheduler()
     {
-        SYLAR_ASSERT(!m_isRunning);
+        CIM_ASSERT(!m_isRunning);
         if (GetThis() == this)
         {
             t_scheduler = nullptr;
@@ -83,7 +83,7 @@ namespace CIM
         }
         m_isRunning = true;
 
-        SYLAR_ASSERT(m_threads.empty());
+        CIM_ASSERT(m_threads.empty());
         m_threads.resize(m_threadCount); // 提前分配内存
         for (size_t i = 0; i < m_threadCount; ++i)
         {
@@ -104,7 +104,7 @@ namespace CIM
             (m_rootCoroutine->getState() == Coroutine::State::TERM ||
              m_rootCoroutine->getState() == Coroutine::State::INIT))
         {
-            SYLAR_LOG_INFO(g_logger) << "quick stopped";
+            CIM_LOG_INFO(g_logger) << "quick stopped";
             m_isRunning = false;
 
             // 再次确认是否应该停止
@@ -117,11 +117,11 @@ namespace CIM
         // 根据是否使用调用线程进行断言检查
         if (m_rootThreadId != -1)
         {
-            SYLAR_ASSERT(GetThis() == this);
+            CIM_ASSERT(GetThis() == this);
         }
         else
         {
-            SYLAR_ASSERT(GetThis() != this);
+            CIM_ASSERT(GetThis() != this);
         }
 
         m_isRunning = false;
@@ -131,7 +131,7 @@ namespace CIM
             MutexType::Lock lock(m_mutex);
             for (size_t i = 0; i < m_threadCount; ++i)
             {
-                SYLAR_LOG_DEBUG(g_logger) << "worker thread tickle";
+                CIM_LOG_DEBUG(g_logger) << "worker thread tickle";
                 tickle();
             }
         }
@@ -139,7 +139,7 @@ namespace CIM
         // 处理根协程
         if (m_rootCoroutine)
         {
-            SYLAR_LOG_DEBUG(g_logger) << "m_rootCoroutine tickle";
+            CIM_LOG_DEBUG(g_logger) << "m_rootCoroutine tickle";
             tickle();
 
             // 在调用根协程之前再次检查是否应该停止
@@ -165,7 +165,7 @@ namespace CIM
 
     void Scheduler::switchTo(int thread)
     {
-        SYLAR_ASSERT(Scheduler::GetThis() != nullptr);
+        CIM_ASSERT(Scheduler::GetThis() != nullptr);
         if (Scheduler::GetThis() == this)
         {
             if (thread == -1 || thread == CIM::GetThreadId())
@@ -179,7 +179,7 @@ namespace CIM
 
     void Scheduler::tickle()
     {
-        SYLAR_LOG_INFO(g_logger) << "tickle";
+        CIM_LOG_INFO(g_logger) << "tickle";
     }
 
     bool Scheduler::stopping()
@@ -190,7 +190,7 @@ namespace CIM
 
     void Scheduler::idle()
     {
-        SYLAR_LOG_INFO(g_logger) << "thread idle";
+        CIM_LOG_INFO(g_logger) << "thread idle";
         while (!stopping())
         {
             Coroutine::YieldToHold();
@@ -243,7 +243,7 @@ namespace CIM
                         continue;
                     }
 
-                    SYLAR_ASSERT(it->coroutine || it->cb);
+                    CIM_ASSERT(it->coroutine || it->cb);
 
                     // 如果it中保存的是协程，并且正在执行中，则跳过
                     if (it->coroutine && it->coroutine->getState() == Coroutine::State::EXEC)
@@ -337,7 +337,7 @@ namespace CIM
                 // 空闲协程已经执行完毕
                 if (idle_coroutine->getState() == Coroutine::State::TERM)
                 {
-                    SYLAR_LOG_INFO(g_logger) << "idle coroutine over";
+                    CIM_LOG_INFO(g_logger) << "idle coroutine over";
                     break;
                 }
 

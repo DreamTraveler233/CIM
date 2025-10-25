@@ -16,8 +16,8 @@
  * - 提供RAII机制自动管理文件描述符生命周期
  */
 
-#ifndef __SYLAR_FD_MANAGER_H__
-#define __SYLAR_FD_MANAGER_H__
+#ifndef __CIM_FD_MANAGER_H__
+#define __CIM_FD_MANAGER_H__
 
 #include "memory"
 #include "lock.hpp"
@@ -214,4 +214,4 @@ namespace CIM
     };
 }
 
-#endif // __SYLAR_FD_MANAGER_H__
+#endif // __CIM_FD_MANAGER_H__

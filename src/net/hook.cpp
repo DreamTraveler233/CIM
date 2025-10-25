@@ -13,7 +13,7 @@
 
 namespace CIM
 {
-    Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     // TCP 超时时间
     static auto g_tcp_connect_timeout =
@@ -79,7 +79,7 @@ namespace CIM
             g_tcp_connect_timeout->addListener(
                 [](const int &old_value, const int &new_value)
                 {
-                    SYLAR_LOG_INFO(g_logger) << "tcp connect timeout changed from "
+                    CIM_LOG_INFO(g_logger) << "tcp connect timeout changed from "
                                              << old_value << " to " << new_value;
                     s_connect_timeout = new_value;
                 });
@@ -205,7 +205,7 @@ namespace CIM
             if (rt)
             {
                 // 添加事件失败，记录日志并返回错误
-                SYLAR_LOG_ERROR(g_logger) << hook_fun_name << " addEvent (" << fd << ", " << event << ")";
+                CIM_LOG_ERROR(g_logger) << hook_fun_name << " addEvent (" << fd << ", " << event << ")";
                 if (timer)
                 {
                     timer->cancel();
@@ -474,7 +474,7 @@ namespace CIM
                 {
                     timer->cancel();
                 }
-                SYLAR_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
+                CIM_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
             }
 
             // 检查socket错误状态

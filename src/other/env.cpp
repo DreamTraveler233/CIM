@@ -9,14 +9,18 @@
 
 namespace CIM
 {
-    static CIM::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
 
     bool Env::init(int argc, char **argv)
     {
         char link[1024] = {0};
         char path[1024] = {0};
         sprintf(link, "/proc/%d/exe", getpid());
-        readlink(link, path, sizeof(path));
+        if (readlink(link, path, sizeof(path)) == -1)
+        {
+            // 处理错误情况
+            perror("readlink");
+        }
         // /path/xxx/exe
         m_exe = path;
 
@@ -40,8 +44,8 @@ namespace CIM
                 }
                 else
                 {
-                    SYLAR_LOG_ERROR(g_logger) << "invalid arg idx=" << i
-                                              << " val=" << argv[i];
+                    CIM_LOG_ERROR(g_logger) << "invalid arg idx=" << i
+                                            << " val=" << argv[i];
                     return false;
                 }
             }
@@ -54,8 +58,8 @@ namespace CIM
                 }
                 else
                 {
-                    SYLAR_LOG_ERROR(g_logger) << "invalid arg idx=" << i
-                                              << " val=" << argv[i];
+                    CIM_LOG_ERROR(g_logger) << "invalid arg idx=" << i
+                                            << " val=" << argv[i];
                     return false;
                 }
             }
