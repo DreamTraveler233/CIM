@@ -19,7 +19,7 @@ pkg_check_modules(MYSQL REQUIRED mysqlclient)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 pkg_check_modules(LIBEVENT REQUIRED libevent)
 pkg_check_modules(HIREDIS_VIP REQUIRED hiredis_vip)
-# pkg_check_modules(ZOOKEEPER REQUIRED libzookeeper-mt)
+pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
 
 # 查找 yaml-cpp 库
 find_package(yaml-cpp REQUIRED)
@@ -91,6 +91,9 @@ list(FILTER OTHER_SOURCES EXCLUDE REGEX ".*\\.rl\\.cpp$")
 # 合并所有源文件
 set(LIB_SRC ${OTHER_SOURCES} ${GENERATED_SOURCES})
 
+# 显式添加 Roaring Bitmap 的 C 实现文件
+list(APPEND LIB_SRC ${PROJECT_SOURCE_DIR}/src/ds/roaring.c)
+
 # ==================== 主库构建 ====================
 # 生成动态库（.so）
 add_library(CIM SHARED ${LIB_SRC})
@@ -112,12 +115,16 @@ target_include_directories(CIM
         ${PROJECT_SOURCE_DIR}/include/streams
         ${PROJECT_SOURCE_DIR}/include/rock
         ${PROJECT_SOURCE_DIR}/include/ns
+        ${PROJECT_SOURCE_DIR}/include/ds
+        ${PROJECT_SOURCE_DIR}/include/orm
+        ${PROJECT_SOURCE_DIR}/include/email
     PRIVATE
         ${SQLITE3_INCLUDE_DIRS}
         ${MYSQL_INCLUDE_DIRS}
         ${JSONCPP_INCLUDE_DIRS}
         ${LIBEVENT_INCLUDE_DIRS}
         ${HIREDIS_INCLUDE_DIRS}
+        ${TINYXML2_INCLUDE_DIRS}
         /usr/include/zookeeper
 )
 
@@ -137,6 +144,7 @@ target_link_libraries(CIM
         ${JSONCPP_LIBRARIES}
         ${LIBEVENT_LIBRARIES}
         ${HIREDIS_VIP_LIBRARIES}
+        ${TINYXML2_LIBRARIES}
         /usr/lib/x86_64-linux-gnu/libzookeeper_mt.so
 )
 

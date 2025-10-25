@@ -444,7 +444,7 @@ namespace CIM
         if (getifaddrs(&ifas))
         {
             CIM_LOG_ERROR(g_logger) << "getifaddrs errno=" << errno
-                                      << " errstr=" << strerror(errno);
+                                    << " errstr=" << strerror(errno);
             return localhost;
         }
 
@@ -486,6 +486,20 @@ namespace CIM
     {
         static const std::string ip = _GetIPv4();
         return ip;
+    }
+
+    std::string ToUpper(const std::string &name)
+    {
+        std::string rt = name;
+        std::transform(rt.begin(), rt.end(), rt.begin(), ::toupper);
+        return rt;
+    }
+
+    std::string ToLower(const std::string &name)
+    {
+        std::string rt = name;
+        std::transform(rt.begin(), rt.end(), rt.begin(), ::tolower);
+        return rt;
     }
 
     int8_t TypeUtil::ToChar(const std::string &str)

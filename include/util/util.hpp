@@ -14,6 +14,12 @@
 #include <cxxabi.h>
 #include <boost/lexical_cast.hpp>
 
+#include "hash_util.hpp"
+#include "json_util.hpp"
+#include "time_util.hpp"
+#include "string_util.hpp"
+#include "crypto_util.hpp"
+
 namespace CIM
 {
     /**
@@ -132,6 +138,10 @@ namespace CIM
         }
     }
 
+    std::string ToUpper(const std::string &name);
+
+    std::string ToLower(const std::string &name);
+
     class TypeUtil
     {
     public:
@@ -245,4 +255,74 @@ namespace CIM
         }
         return ss.str();
     }
+
+    template <class T>
+    class SharedArray
+    {
+    public:
+        explicit SharedArray(const uint64_t &size = 0, T *p = 0)
+            : m_size(size), m_ptr(p, delete_array<T>)
+        {
+        }
+        template <class D>
+        SharedArray(const uint64_t &size, T *p, D d)
+            : m_size(size), m_ptr(p, d){};
+
+        SharedArray(const SharedArray &r)
+            : m_size(r.m_size), m_ptr(r.m_ptr)
+        {
+        }
+
+        SharedArray &operator=(const SharedArray &r)
+        {
+            m_size = r.m_size;
+            m_ptr = r.m_ptr;
+            return *this;
+        }
+
+        T &operator[](std::ptrdiff_t i) const
+        {
+            return m_ptr.get()[i];
+        }
+
+        T *get() const
+        {
+            return m_ptr.get();
+        }
+
+        bool unique() const
+        {
+            return m_ptr.unique();
+        }
+
+        long use_count() const
+        {
+            return m_ptr.use_count();
+        }
+
+        void swap(SharedArray &b)
+        {
+            std::swap(m_size, b.m_size);
+            m_ptr.swap(b.m_ptr);
+        }
+
+        bool operator!() const
+        {
+            return !m_ptr;
+        }
+
+        operator bool() const
+        {
+            return !!m_ptr;
+        }
+
+        uint64_t size() const
+        {
+            return m_size;
+        }
+
+    private:
+        uint64_t m_size;
+        std::shared_ptr<T> m_ptr;
+    };
 }
