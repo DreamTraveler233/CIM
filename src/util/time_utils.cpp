@@ -1,6 +1,7 @@
 #include "time_util.hpp"
 #include <sys/time.h>
 #include <ctime>
+#include <cstring>
 
 namespace CIM
 {
@@ -51,7 +52,18 @@ namespace CIM
         return std::string(buf, n); // 使用buf的前n个字符构造string对象
     }
 
-    std::string TimeUtil::TimeToString(uint64_t timestamp, const std::string &format)
+    time_t TimeUtil::StrToTime(const char *str, const char *format)
+    {
+        struct tm t;
+        memset(&t, 0, sizeof(t));
+        if (!strptime(str, format, &t))
+        {
+            return 0;
+        }
+        return mktime(&t);
+    }
+
+    std::string TimeUtil::TimeToStr(uint64_t timestamp, const std::string &format)
     {
         struct tm tm;
         time_t t = timestamp;

@@ -64,7 +64,7 @@ namespace CIM
         MutexType m_mutex;                                        ///< 互斥锁，保证线程安全
     };
 
-    using loggerMgr = CIM::Singleton<LoggerManager>; ///< 日志管理器单例模式别名
+    using LoggerMgr = CIM::Singleton<LoggerManager>; ///< 日志管理器单例模式别名
 
     /**
      * @brief 日志追加器配置项

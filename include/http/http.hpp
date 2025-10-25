@@ -10,7 +10,6 @@
 
 namespace CIM::http
 {
-
     // X-Macro技术（也称为"交叉宏"技术）
     /* Request Methods */
 #define HTTP_METHOD_MAP(XX)          \
@@ -127,7 +126,7 @@ namespace CIM::http
 #define XX(num, name, string) name = num,
         HTTP_METHOD_MAP(XX)
 #undef XX
-            INVALID_METHOD
+            INVALID_METHOD // 无效的HTTP方法
     };
 
     /**
@@ -140,9 +139,13 @@ namespace CIM::http
 #undef XX
     };
 
+    // 将字符串转换为HttpMethod枚举值
     HttpMethod StringToHttpMethod(const std::string &m);
+    // 将字符数组转换为HttpMethod枚举值
     HttpMethod CharsToHttpMethod(const char *m);
+    // 将HttpMethod枚举值转换为字符串
     const char *HttpMethodToString(const HttpMethod &m);
+    // 将HttpStatus枚举值转换为描述字符串
     const char *HttpStatusToString(const HttpStatus &s);
 
     /**
@@ -220,9 +223,10 @@ namespace CIM::http
     {
     public:
         /// HTTP请求的智能指针
-        typedef std::shared_ptr<HttpRequest> ptr;
+        using ptr = std::shared_ptr<HttpRequest>;
         /// MAP结构
-        typedef std::map<std::string, std::string, CaseInsensitiveLess> MapType;
+        using MapType = std::map<std::string, std::string, CaseInsensitiveLess>;
+
         /**
          * @brief 构造函数
          * @param[in] version 版本
@@ -533,10 +537,15 @@ namespace CIM::http
          */
         std::string toString() const;
 
+        // 初始化HTTP请求相关参数
         void init();
+        // 初始化所有参数
         void initParam();
+        // 初始化查询参数
         void initQueryParam();
+        // 初始化请求体参数
         void initBodyParam();
+        // 初始化Cookie
         void initCookies();
 
     private:
@@ -562,9 +571,10 @@ namespace CIM::http
     {
     public:
         /// HTTP响应结构智能指针
-        typedef std::shared_ptr<HttpResponse> ptr;
+        using ptr = std::shared_ptr<HttpResponse>;
         /// MapType
-        typedef std::map<std::string, std::string, CaseInsensitiveLess> MapType;
+        using MapType = std::map<std::string, std::string, CaseInsensitiveLess>;
+
         /**
          * @brief 构造函数
          * @param[in] version 版本
@@ -711,20 +721,34 @@ namespace CIM::http
          */
         std::string toString() const;
 
+        /**
+         * @brief 设置重定向地址
+         * @param[in] uri 重定向的URI
+         */
         void setRedirect(const std::string &uri);
+
+        /**
+         * @brief 设置Cookie
+         * @param[in] key Cookie键
+         * @param[in] val Cookie值
+         * @param[in] expired 过期时间
+         * @param[in] path Cookie路径
+         * @param[in] domain Cookie域
+         * @param[in] secure 是否安全连接
+         */
         void setCookie(const std::string &key, const std::string &val,
                        time_t expired = 0, const std::string &path = "",
                        const std::string &domain = "", bool secure = false);
 
     private:
-        HttpStatus m_status;  /// 响应状态
-        uint8_t m_version;    /// 版本
-        bool m_close;         /// 是否自动关闭
-        bool m_websocket;     /// 是否为websocket
-        std::string m_body;   /// 响应消息体
-        std::string m_reason; /// 响应原因
-        MapType m_headers;    /// 响应头部MAP
-        std::vector<std::string> m_cookies;
+        HttpStatus m_status;                /// 响应状态
+        uint8_t m_version;                  /// 版本
+        bool m_close;                       /// 是否自动关闭
+        bool m_websocket;                   /// 是否为websocket
+        std::string m_body;                 /// 响应消息体
+        std::string m_reason;               /// 响应原因
+        MapType m_headers;                  /// 响应头部MAP
+        std::vector<std::string> m_cookies; /// Cookie列表
     };
 
     /**

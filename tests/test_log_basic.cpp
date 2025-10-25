@@ -25,7 +25,7 @@ void test_log_system()
     CIM_LOG_INFO(root_log) << "info message for root";
 
     // 测试日志管理器
-    auto logger_manager = CIM::loggerMgr::GetInstance();
+    auto logger_manager = CIM::LoggerMgr::GetInstance();
     assert(logger_manager != nullptr);
 
     auto system_logger = logger_manager->getLogger("system");
@@ -237,7 +237,7 @@ void test_config_integration() {
     std::cout << "=================== 测试日志与配置集成 ===================" << std::endl;
     
     // 获取日志管理器
-    auto logger_manager = CIM::loggerMgr::GetInstance();
+    auto logger_manager = CIM::LoggerMgr::GetInstance();
     
     // 保存原始配置
     std::string before_config = logger_manager->toYamlString();

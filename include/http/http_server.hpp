@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CIM_HTTP_HTTP_SERVER_HPP__
+#define __CIM_HTTP_HTTP_SERVER_HPP__
 
 #include "tcp_server.hpp"
 #include "http_session.hpp"
@@ -21,27 +22,33 @@ namespace CIM::http
          * @param[in] worker 工作调度器
          * @param[in] accept_worker 接收连接调度器
          */
-        HttpServer(bool keepalive = false,
-                   IOManager *worker = IOManager::GetThis(),
-                   IOManager *accept_worker = IOManager::GetThis());
+        HttpServer(bool keepalive = false, 
+            IOManager *worker = IOManager::GetThis(), 
+            IOManager *io_worker = IOManager::GetThis(), 
+            IOManager *accept_worker = IOManager::GetThis());
 
         /**
          * @brief 获取ServletDispatch
          */
-        ServletDispatch::ptr getServletDispatch() const;
+        ServletDispatch::ptr getServletDispatch() const { return m_dispatch; }
 
         /**
          * @brief 设置ServletDispatch
          */
-        void setServletDispatch(ServletDispatch::ptr v);
+        void setServletDispatch(ServletDispatch::ptr v) { m_dispatch = v; }
 
-        // virtual void setName(const std::string &v) override;
+        virtual void setName(const std::string &v) override;
 
     protected:
         virtual void handleClient(Socket::ptr client) override;
 
     private:
-        bool m_isKeepalive;              /// 是否支持长连接
-        ServletDispatch::ptr m_dispatch; /// Servlet分发器
+        /// 是否支持长连接
+        bool m_isKeepalive;
+        /// Servlet分发器
+        ServletDispatch::ptr m_dispatch;
     };
+
 }
+
+#endif

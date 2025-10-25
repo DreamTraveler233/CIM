@@ -52,8 +52,8 @@
 #define CIM_LOG_FMT_ERROR(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::ERROR, fmt, __VA_ARGS__)
 #define CIM_LOG_FMT_FATAL(logger, fmt, ...) CIM_LOG_FMT(logger, CIM::Level::FATAL, fmt, __VA_ARGS__)
 
-#define CIM_LOG_ROOT() CIM::loggerMgr::GetInstance()->getRoot()
-#define CIM_LOG_NAME(name) CIM::loggerMgr::GetInstance()->getLogger(name)
+#define CIM_LOG_ROOT() CIM::LoggerMgr::GetInstance()->getRoot()
+#define CIM_LOG_NAME(name) CIM::LoggerMgr::GetInstance()->getLogger(name)
 
 #define CIM_ASSERT(X)                                                                \
     if (CIM_UNLIKELY(!(X)))                                                          \

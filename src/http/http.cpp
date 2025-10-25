@@ -6,7 +6,7 @@ namespace CIM::http
      * @brief 将字符串表示的HTTP方法转换为HttpMethod枚举值
      * @param[in] m HTTP方法字符串
      * @return 对应的HttpMethod枚举值，如果未找到匹配项则返回INVALID_METHOD
-     * 
+     *
      * @details 使用X-Macro技术遍历HTTP_METHOD_MAP中定义的所有HTTP方法，
      *          通过逐个比较输入字符串与预定义的方法字符串来确定对应的枚举值
      */
@@ -49,7 +49,7 @@ namespace CIM::http
      * @brief 将HttpMethod枚举值转换为对应的字符串表示
      * @param[in] m HttpMethod枚举值
      * @return 对应的HTTP方法字符串，如果枚举值无效则返回"<unknown>"
-     * 
+     *
      * @details 通过将枚举值转换为数组索引，从预定义的字符串数组中获取对应的HTTP方法名。
      *          如果索引超出数组范围，则返回"<unknown>"表示未知方法。
      */
@@ -113,27 +113,90 @@ namespace CIM::http
         return rsp;
     }
 
-    HttpMethod HttpRequest::getMethod() const { return m_method; }
-    uint8_t HttpRequest::getVersion() const { return m_version; }
-    const std::string &HttpRequest::getPath() const { return m_path; }
-    const std::string &HttpRequest::getQuery() const { return m_query; }
-    const std::string &HttpRequest::getBody() const { return m_body; }
-    const HttpRequest::MapType &HttpRequest::getHeaders() const { return m_headers; }
-    const HttpRequest::MapType &HttpRequest::getParams() const { return m_params; }
-    const HttpRequest::MapType &HttpRequest::getCookies() const { return m_cookies; }
-    void HttpRequest::setMethod(HttpMethod v) { m_method = v; }
-    void HttpRequest::setVersion(uint8_t v) { m_version = v; }
-    void HttpRequest::setPath(const std::string &v) { m_path = v; }
-    void HttpRequest::setQuery(const std::string &v) { m_query = v; }
-    void HttpRequest::setFragment(const std::string &v) { m_fragment = v; }
-    void HttpRequest::setBody(const std::string &v) { m_body = v; }
-    bool HttpRequest::isClose() const { return m_close; }
-    void HttpRequest::setClose(bool v) { m_close = v; }
-    bool HttpRequest::isWebsocket() const { return m_websocket; }
-    void HttpRequest::setWebsocket(bool v) { m_websocket = v; }
-    void HttpRequest::setHeaders(const MapType &v) { m_headers = v; }
-    void HttpRequest::setParams(const MapType &v) { m_params = v; }
-    void HttpRequest::setCookies(const MapType &v) { m_cookies = v; }
+    HttpMethod HttpRequest::getMethod() const
+    {
+        return m_method;
+    }
+    uint8_t HttpRequest::getVersion() const
+    {
+        return m_version;
+    }
+    const std::string &HttpRequest::getPath() const
+    {
+        return m_path;
+    }
+    const std::string &HttpRequest::getQuery() const
+    {
+        return m_query;
+    }
+    const std::string &HttpRequest::getBody() const
+    {
+        return m_body;
+    }
+    const HttpRequest::MapType &HttpRequest::getHeaders() const
+    {
+        return m_headers;
+    }
+    const HttpRequest::MapType &HttpRequest::getParams() const
+    {
+        return m_params;
+    }
+    const HttpRequest::MapType &HttpRequest::getCookies() const
+    {
+        return m_cookies;
+    }
+    void HttpRequest::setMethod(HttpMethod v)
+    {
+        m_method = v;
+    }
+    void HttpRequest::setVersion(uint8_t v)
+    {
+        m_version = v;
+    }
+    void HttpRequest::setPath(const std::string &v)
+    {
+        m_path = v;
+    }
+    void HttpRequest::setQuery(const std::string &v)
+    {
+        m_query = v;
+    }
+    void HttpRequest::setFragment(const std::string &v)
+    {
+        m_fragment = v;
+    }
+    void HttpRequest::setBody(const std::string &v)
+    {
+        m_body = v;
+    }
+    bool HttpRequest::isClose() const
+    {
+        return m_close;
+    }
+    void HttpRequest::setClose(bool v)
+    {
+        m_close = v;
+    }
+    bool HttpRequest::isWebsocket() const
+    {
+        return m_websocket;
+    }
+    void HttpRequest::setWebsocket(bool v)
+    {
+        m_websocket = v;
+    }
+    void HttpRequest::setHeaders(const MapType &v)
+    {
+        m_headers = v;
+    }
+    void HttpRequest::setParams(const MapType &v)
+    {
+        m_params = v;
+    }
+    void HttpRequest::setCookies(const MapType &v)
+    {
+        m_cookies = v;
+    }
     std::string HttpRequest::getHeader(const std::string &key, const std::string &def) const
     {
         auto it = m_headers.find(key);
@@ -333,20 +396,62 @@ namespace CIM::http
     {
     }
 
-    HttpStatus HttpResponse::getStatus() const { return m_status; }
-    uint8_t HttpResponse::getVersion() const { return m_version; }
-    const std::string &HttpResponse::getBody() const { return m_body; }
-    const std::string &HttpResponse::getReason() const { return m_reason; }
-    const HttpResponse::MapType &HttpResponse::getHeaders() const { return m_headers; }
-    void HttpResponse::setStatus(HttpStatus v) { m_status = v; }
-    void HttpResponse::setVersion(uint8_t v) { m_version = v; }
-    void HttpResponse::setBody(const std::string &v) { m_body = v; }
-    void HttpResponse::setReason(const std::string &v) { m_reason = v; }
-    void HttpResponse::setHeaders(const MapType &v) { m_headers = v; }
-    bool HttpResponse::isClose() const { return m_close; }
-    void HttpResponse::setClose(bool v) { m_close = v; }
-    bool HttpResponse::isWebsocket() const { return m_websocket; }
-    void HttpResponse::setWebsocket(bool v) { m_websocket = v; }
+    HttpStatus HttpResponse::getStatus() const
+    {
+        return m_status;
+    }
+    uint8_t HttpResponse::getVersion() const
+    {
+        return m_version;
+    }
+    const std::string &HttpResponse::getBody() const
+    {
+        return m_body;
+    }
+    const std::string &HttpResponse::getReason() const
+    {
+        return m_reason;
+    }
+    const HttpResponse::MapType &HttpResponse::getHeaders() const
+    {
+        return m_headers;
+    }
+    void HttpResponse::setStatus(HttpStatus v)
+    {
+        m_status = v;
+    }
+    void HttpResponse::setVersion(uint8_t v)
+    {
+        m_version = v;
+    }
+    void HttpResponse::setBody(const std::string &v)
+    {
+        m_body = v;
+    }
+    void HttpResponse::setReason(const std::string &v)
+    {
+        m_reason = v;
+    }
+    void HttpResponse::setHeaders(const MapType &v)
+    {
+        m_headers = v;
+    }
+    bool HttpResponse::isClose() const
+    {
+        return m_close;
+    }
+    void HttpResponse::setClose(bool v)
+    {
+        m_close = v;
+    }
+    bool HttpResponse::isWebsocket() const
+    {
+        return m_websocket;
+    }
+    void HttpResponse::setWebsocket(bool v)
+    {
+        m_websocket = v;
+    }
     std::string HttpResponse::getHeader(const std::string &key, const std::string &def) const
     {
         auto it = m_headers.find(key);

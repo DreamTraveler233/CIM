@@ -125,7 +125,7 @@ namespace CIM
                 }
             }
             CIM_LOG_DEBUG(g_logger) << std::endl
-                                      << loggerMgr::GetInstance()->toYamlString();
+                                      << LoggerMgr::GetInstance()->toYamlString();
         }
     }
 
