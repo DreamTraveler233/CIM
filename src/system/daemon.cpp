@@ -1,7 +1,7 @@
 #include "daemon.hpp"
 #include "macro.hpp"
 #include "config.hpp"
-#include "time_util.hpp"
+#include "util.hpp"
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
@@ -10,8 +10,8 @@
 
 namespace CIM
 {
-    static CIM::Logger::ptr g_logger = CIM_LOG_NAME("system");
-    static CIM::ConfigVar<uint32_t>::ptr g_daemon_restart_interval =
+    static auto g_logger = CIM_LOG_NAME("system");
+    static auto g_daemon_restart_interval =
         CIM::Config::Lookup("daemon.restart_interval", (uint32_t)5, "daemon restart interval");
 
     std::string ProcessInfo::toString() const

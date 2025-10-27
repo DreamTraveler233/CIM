@@ -4,6 +4,7 @@
 
 namespace CIM
 {
+    static auto g_logger = CIM_LOG_NAME("system");
     // 用于存储所有的日志定义
     auto g_log_defines = CIM::Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
@@ -24,7 +25,7 @@ namespace CIM
             g_log_defines->addListener([](const std::set<LogDefine> &old_val,
                                           const std::set<LogDefine> &new_val)
                                        {
-                                CIM_LOG_INFO(CIM_LOG_ROOT()) << "on_logger_conf_changed";
+                                CIM_LOG_INFO(g_logger) << "logger config changed";
                                 
                                 // 遍历新的日志配置，处理新增和修改的日志器
                                 for (auto &i : new_val)

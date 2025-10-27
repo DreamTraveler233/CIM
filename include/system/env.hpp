@@ -113,14 +113,14 @@ namespace CIM
         std::string getEnv(const std::string &key, const std::string &default_value = "");
 
         /**
-         * @brief 获取绝对路径
+         * @brief 获取可执行文件绝对路径
          * @param[in] path 路径
          * @return 绝对路径
          */
         std::string getAbsolutePath(const std::string &path) const;
 
         /**
-         * @brief 获取绝对工作路径
+         * @brief 获取可执行文件绝对工作路径
          * @param[in] path 路径
          * @return 绝对工作路径
          */
@@ -137,11 +137,11 @@ namespace CIM
         std::map<std::string, std::string> m_args;                /// 参数映射表
         std::vector<std::pair<std::string, std::string>> m_helps; /// 帮助信息列表
         std::string m_program;                                    /// 程序名
-        std::string m_exe;
-        std::string m_cwd; /// 当前工作目录
+        std::string m_exe;                                        /// 可执行文件的绝对路径
+        std::string m_cwd;                                        /// 可执行文件绝对工作目录
     };
 
     /// 环境管理器单例
-    typedef CIM::Singleton<Env> EnvMgr;
+    using EnvMgr = Singleton<Env>;
 
 }

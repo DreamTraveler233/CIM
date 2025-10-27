@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CIM_UTIL_UTIL_CPP__
+#define __CIM_UTIL_UTIL_CPP__
 
 #include <pthread.h>
 #include <unistd.h>
@@ -326,3 +327,5 @@ namespace CIM
         std::shared_ptr<T> m_ptr;
     };
 }
+
+#endif

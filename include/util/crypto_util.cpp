@@ -4,6 +4,17 @@
 
 namespace CIM
 {
+    namespace
+    {
+
+        // struct CryptoInit {
+        //     CryptoInit() {
+        //         OpenSSL_add_all_ciphers();
+        //     }
+        // };
+
+    }
+
     int32_t CryptoUtil::AES256Ecb(const void *key, const void *in, int32_t in_len, void *out, bool encode)
     {
         int32_t len = 0;
@@ -32,39 +43,26 @@ namespace CIM
     {
         int tmp_len = 0;
         bool has_error = false;
-        // 使用 OpenSSL 1.1.0+ API，创建和释放 EVP_CIPHER_CTX
-        EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-        if (!ctx)
-        {
-            return -1;
-        }
-
+        EVP_CIPHER_CTX ctx;
         do
         {
-            // 初始化上下文
-            if (EVP_CipherInit_ex(ctx, cipher, nullptr, (const uint8_t *)key, (const uint8_t *)iv, enc) != 1)
-            {
-                has_error = true;
-                break;
-            }
-
-            if (EVP_CipherUpdate(ctx, (uint8_t *)out, &tmp_len, (const uint8_t *)in, in_len) != 1)
+            // static CryptoInit s_crypto_init;
+            EVP_CIPHER_CTX_init(&ctx);
+            EVP_CipherInit_ex(&ctx, cipher, nullptr, (const uint8_t *)key, (const uint8_t *)iv, enc);
+            if (EVP_CipherUpdate(&ctx, (uint8_t *)out, &tmp_len, (const uint8_t *)in, in_len) != 1)
             {
                 has_error = true;
                 break;
             }
             *out_len = tmp_len;
-
-            if (EVP_CipherFinal_ex(ctx, (uint8_t *)out + tmp_len, &tmp_len) != 1)
+            if (EVP_CipherFinal_ex(&ctx, (uint8_t *)out + tmp_len, &tmp_len) != 1)
             {
                 has_error = true;
                 break;
             }
             *out_len += tmp_len;
         } while (0);
-
-        EVP_CIPHER_CTX_free(ctx);
-
+        EVP_CIPHER_CTX_cleanup(&ctx);
         if (has_error)
         {
             return -1;

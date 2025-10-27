@@ -18,18 +18,22 @@
 
 namespace CIM
 {
-    static Logger::ptr g_logger = CIM_LOG_NAME("system");
+    static auto g_logger = CIM_LOG_NAME("system");
 
-    static ConfigVar<std::string>::ptr g_server_work_path =
-        Config::Lookup("server.work_path", std::string("/apps/work/sylar"), "server work path");
+    // 服务器工作目录配置项
+    static auto g_server_work_path =
+        Config::Lookup("server.work_path", std::string("apps/work/CIM"), "server work path");
 
-    static ConfigVar<std::string>::ptr g_server_pid_file =
-        Config::Lookup("server.pid_file", std::string("sylar.pid"), "server pid file");
+    // 服务器PID文件配置项
+    static auto g_server_pid_file =
+        Config::Lookup("server.pid_file", std::string("CIM.pid"), "server pid file");
 
-    static ConfigVar<std::string>::ptr g_service_discovery_zk =
+    // 服务发现Zookeeper配置项
+    static auto g_service_discovery_zk =
         Config::Lookup("service_discovery.zk", std::string(""), "service discovery zookeeper");
 
-    static ConfigVar<std::vector<TcpServerConf>>::ptr g_servers_conf = Config::Lookup("servers", std::vector<TcpServerConf>(), "http server config");
+    // 服务器配置项
+    static auto g_servers_conf = Config::Lookup("servers", std::vector<TcpServerConf>(), "http server config");
 
     Application *Application::s_instance = nullptr;
 
@@ -38,11 +42,26 @@ namespace CIM
         s_instance = this;
     }
 
+    /**
+     * @brief 初始化应用程序
+     * @param argc 主函数参数个数
+     * @param argv 主函数参数列表
+     * @return 初始化成功返回true，失败返回false
+     *
+     * 该函数主要完成以下工作：
+     * 1. 解析命令行参数
+     * 2. 加载配置文件
+     * 3. 初始化模块
+     * 4. 检查运行模式（前台/后台）
+     * 5. 检查进程是否已在运行
+     * 6. 创建工作目录
+     */
     bool Application::init(int argc, char **argv)
     {
         m_argc = argc;
         m_argv = argv;
 
+        /*添加命令行帮助信息*/
         EnvMgr::GetInstance()->addHelp("s", "start with the terminal");
         EnvMgr::GetInstance()->addHelp("d", "run as daemon");
         EnvMgr::GetInstance()->addHelp("c", "conf path default: ./conf");
@@ -59,31 +78,37 @@ namespace CIM
             is_print_help = true;
         }
 
+        /*加载配置文件*/
         std::string conf_path = EnvMgr::GetInstance()->getConfigPath();
         CIM_LOG_INFO(g_logger) << "load conf path:" << conf_path;
-        Config::LoadFromConfDir(conf_path);
+        Config::LoadFromConfigDir(conf_path);
 
+        /*初始化模块管理器并获取所有模块*/
         ModuleMgr::GetInstance()->init();
         std::vector<Module::ptr> modules;
         ModuleMgr::GetInstance()->listAll(modules);
 
+        /*在参数解析前调用各模块的回调函数*/
         for (auto i : modules)
         {
             i->onBeforeArgsParse(argc, argv);
         }
 
+        /*如果需要打印帮助信息，则打印后返回*/
         if (is_print_help)
         {
             EnvMgr::GetInstance()->printHelp();
             return false;
         }
 
+        /*在参数解析后调用各模块的回调函数*/
         for (auto i : modules)
         {
             i->onAfterArgsParse(argc, argv);
         }
         modules.clear();
 
+        /*确定运行类型：1-前台运行，2-后台运行*/
         int run_type = 0;
         if (EnvMgr::GetInstance()->has("s"))
         {
@@ -94,12 +119,14 @@ namespace CIM
             run_type = 2;
         }
 
+        /*如果未指定运行类型，则打印帮助信息并返回*/
         if (run_type == 0)
         {
             EnvMgr::GetInstance()->printHelp();
             return false;
         }
 
+        /*检查服务是否已经在运行*/
         std::string pidfile = g_server_work_path->getValue() + "/" + g_server_pid_file->getValue();
         if (FSUtil::IsRunningPidfile(pidfile))
         {
@@ -107,6 +134,7 @@ namespace CIM
             return false;
         }
 
+        /*创建工作目录*/
         if (!FSUtil::Mkdir(g_server_work_path->getValue()))
         {
             CIM_LOG_FATAL(g_logger) << "create work path [" << g_server_work_path->getValue()
@@ -125,12 +153,30 @@ namespace CIM
                             is_daemon);
     }
 
+    /**
+     * @brief 应用程序主函数
+     * @param argc 主函数参数个数
+     * @param argv 主函数参数列表
+     * @return 执行结果，正常退出返回0
+     *
+     * 该函数主要完成以下工作：
+     * 1. 忽略SIGPIPE信号
+     * 2. 记录日志并加载配置
+     * 3. 写入进程ID到pid文件
+     * 4. 创建主IO管理器并调度运行协程
+     * 5. 添加定时器并启动事件循环
+     */
     int Application::main(int argc, char **argv)
     {
+        // 忽略SIGPIPE信号，避免socket连接断开时程序异常退出
         signal(SIGPIPE, SIG_IGN);
         CIM_LOG_INFO(g_logger) << "main";
+
+        // 获取配置路径并重新加载配置
         std::string conf_path = EnvMgr::GetInstance()->getConfigPath();
-        Config::LoadFromConfDir(conf_path, true);
+        Config::LoadFromConfigDir(conf_path, true);
+
+        // 将当前进程ID写入pid文件
         {
             std::string pidfile = g_server_work_path->getValue() + "/" + g_server_pid_file->getValue();
             std::ofstream ofs(pidfile);
@@ -142,19 +188,37 @@ namespace CIM
             ofs << getpid();
         }
 
+        // 创建主IO管理器并调度执行协程
         m_mainIOManager.reset(new IOManager(1, true, "main"));
         m_mainIOManager->schedule(std::bind(&Application::run_coroutine, this));
+
+        // 添加一个周期性定时器（目前为空实现）
         m_mainIOManager->addTimer(2000, []()
                                   {
                                       // CIM_LOG_INFO(g_logger) << "hello";
                                   },
                                   true);
+
+        // 停止主IO管理器
         m_mainIOManager->stop();
         return 0;
     }
 
+    /**
+     * @brief 运行协程函数
+     * @return 执行结果，正常退出返回0
+     *
+     * 该函数主要完成以下工作：
+     * 1. 加载所有模块
+     * 2. 初始化工作线程管理器
+     * 3. 初始化Redis管理器
+     * 4. 解析并启动服务器配置
+     * 5. 初始化服务发现组件
+     * 6. 启动所有服务器
+     */
     int Application::run_coroutine()
     {
+        // 获取所有模块并加载
         std::vector<Module::ptr> modules;
         ModuleMgr::GetInstance()->listAll(modules);
         bool has_error = false;
@@ -168,16 +232,21 @@ namespace CIM
                 has_error = true;
             }
         }
+        // 如果模块加载出错，则直接退出程序
         if (has_error)
         {
             _exit(0);
         }
 
+        // 初始化工作线程管理器和Fox线程管理器
         WorkerMgr::GetInstance()->init();
         FoxThreadMgr::GetInstance()->init();
         FoxThreadMgr::GetInstance()->start();
+
+        // 初始化Redis管理器
         RedisMgr::GetInstance();
 
+        // 获取服务器配置并创建服务器实例
         auto http_confs = g_servers_conf->getValue();
         std::vector<TcpServer::ptr> svrs;
         for (auto &i : http_confs)
@@ -185,13 +254,14 @@ namespace CIM
             CIM_LOG_DEBUG(g_logger) << std::endl
                                     << LexicalCast<TcpServerConf, std::string>()(i);
 
+            // 解析服务器地址配置
             std::vector<Address::ptr> address;
             for (auto &a : i.address)
             {
                 size_t pos = a.find(":");
                 if (pos == std::string::npos)
                 {
-                    // CIM_LOG_ERROR(g_logger) << "invalid address: " << a;
+                    CIM_LOG_ERROR(g_logger) << "invalid address: " << a;
                     address.push_back(UnixAddress::ptr(new UnixAddress(a)));
                     continue;
                 }
@@ -204,8 +274,7 @@ namespace CIM
                     continue;
                 }
                 std::vector<std::pair<Address::ptr, uint32_t>> result;
-                if (Address::GetInterfaceAddresses(result,
-                                                   a.substr(0, pos)))
+                if (Address::GetInterfaceAddresses(result,a.substr(0, pos)))
                 {
                     for (auto &x : result)
                     {
@@ -228,6 +297,8 @@ namespace CIM
                 CIM_LOG_ERROR(g_logger) << "invalid address: " << a;
                 _exit(0);
             }
+
+            // 获取IO管理器配置
             IOManager *accept_worker = IOManager::GetThis();
             IOManager *io_worker = IOManager::GetThis();
             IOManager *process_worker = IOManager::GetThis();
@@ -262,6 +333,7 @@ namespace CIM
                 }
             }
 
+            // 根据服务器类型创建对应的服务器实例
             TcpServer::ptr server;
             if (i.type == "http")
             {
@@ -288,10 +360,14 @@ namespace CIM
                                         << LexicalCast<TcpServerConf, std::string>()(i);
                 _exit(0);
             }
+
+            // 设置服务器名称
             if (!i.name.empty())
             {
                 server->setName(i.name);
             }
+
+            // 绑定服务器地址
             std::vector<Address::ptr> fails;
             if (!server->bind(address, fails, i.ssl))
             {
@@ -302,6 +378,8 @@ namespace CIM
                 }
                 _exit(0);
             }
+
+            // 加载SSL证书
             if (i.ssl)
             {
                 if (!server->loadCertificates(i.cert_file, i.key_file))
@@ -310,12 +388,15 @@ namespace CIM
                                             << i.cert_file << " key_file=" << i.key_file;
                 }
             }
+
+            // 设置服务器配置并添加到服务器列表
             server->setConf(i);
             // server->start();
             m_servers[i.type].push_back(server);
             svrs.push_back(server);
         }
 
+        // 初始化服务发现组件
         if (!g_service_discovery_zk->getValue().empty())
         {
             m_serviceDiscovery.reset(new ZKServiceDiscovery(g_service_discovery_zk->getValue()));
@@ -363,34 +444,29 @@ namespace CIM
             }
         }
 
+        // 通知所有模块服务器准备就绪
         for (auto &i : modules)
         {
             i->onServerReady();
         }
 
+        // 启动所有服务器
         for (auto &i : svrs)
         {
             i->start();
         }
 
+        // 启动Rock服务负载均衡
         if (m_rockSDLoadBalance)
         {
             m_rockSDLoadBalance->start();
         }
 
+        // 通知所有模块服务器已启动
         for (auto &i : modules)
         {
             i->onServerUp();
         }
-        // ZKServiceDiscovery::ptr m_serviceDiscovery;
-        // RockSDLoadBalance::ptr m_rockSDLoadBalance;
-        // ZKServiceDiscovery::ptr zksd(new ZKServiceDiscovery("127.0.0.1:21811"));
-        // zksd->registerServer("blog", "chat", GetIPv4() + ":8090", "xxx");
-        // zksd->queryServer("blog", "chat");
-        // zksd->setSelfInfo(GetIPv4() + ":8090");
-        // zksd->setSelfData("vvv");
-        // static RockSDLoadBalance::ptr rsdlb(new RockSDLoadBalance(zksd));
-        // rsdlb->start();
         return 0;
     }
 
@@ -408,6 +484,21 @@ namespace CIM
     void Application::listAllServer(std::map<std::string, std::vector<TcpServer::ptr>> &servers)
     {
         servers = m_servers;
+    }
+
+    Application *Application::GetInstance()
+    {
+        return s_instance;
+    }
+
+    ZKServiceDiscovery::ptr Application::getServiceDiscovery() const
+    {
+        return m_serviceDiscovery;
+    }
+
+    RockSDLoadBalance::ptr Application::getRockSDLoadBalance() const
+    {
+        return m_rockSDLoadBalance;
     }
 
 }

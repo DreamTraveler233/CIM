@@ -77,8 +77,8 @@ namespace CIM
                 else
                 {
                     CIM_LOG_ERROR(CIM_LOG_ROOT()) << "Lookup name = " << name << " exists but type not "
-                                                      << typeid(T).name() << " real_type = " << it->second->getTypeName()
-                                                      << " " << "value = " << it->second->toString();
+                                                  << typeid(T).name() << " real_type = " << it->second->getTypeName()
+                                                  << " " << "value = " << it->second->toString();
                     // 抛出异常
                     throw std::runtime_error("Config variable '" + name + "' exists but type mismatch. Requested: " + std::string(typeid(T).name()) + ", Actual: " + it->second->getTypeName());
                 }
@@ -126,9 +126,11 @@ namespace CIM
         static ConfigVariableBase::ptr LookupBase(const std::string &name);
 
         /**
-         * @brief 加载path文件夹里面的配置文件
+         * @brief 从指定目录加载配置文件
+         * @param path 配置文件目录路径
+         * @param force 是否强制加载，即使文件未修改也重新加载
          */
-        static void LoadFromConfDir(const std::string &path, bool force = false);
+        static void LoadFromConfigDir(const std::string &path, bool force = false);
 
         /**
          * @brief 从YAML配置文件中加载配置项

@@ -84,7 +84,7 @@ namespace CIM
                                << " version=" << module->getVersion()
                                << " path=" << module->getFilename()
                                << " success";
-        Config::LoadFromConfDir(EnvMgr::GetInstance()->getConfigPath(), true);
+        Config::LoadFromConfigDir(EnvMgr::GetInstance()->getConfigPath(), true);
         return module;
     }
 

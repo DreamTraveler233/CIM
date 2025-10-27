@@ -118,6 +118,7 @@ target_include_directories(CIM
         ${PROJECT_SOURCE_DIR}/include/ds
         ${PROJECT_SOURCE_DIR}/include/orm
         ${PROJECT_SOURCE_DIR}/include/email
+        ${PROJECT_SOURCE_DIR}/include/system
     PRIVATE
         ${SQLITE3_INCLUDE_DIRS}
         ${MYSQL_INCLUDE_DIRS}
@@ -170,6 +171,8 @@ set(TEST_LIST
     test_uri
     test_http_connection
     test_daemon
+    test_env
+    test_application
 )
 
 set(EXAMPLES_LIST

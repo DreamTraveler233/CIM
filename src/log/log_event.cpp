@@ -47,7 +47,7 @@ namespace CIM
             size_t CIM_pos = file_name.find("CIM/");
             if (CIM_pos != std::string::npos)
             {
-                return file_name.substr(CIM_pos + 6);
+                return file_name.substr(CIM_pos + 4);
             }
             // 如果没有找到 "CIM/"，则返回文件名部分
             return file_name.substr(pos + 1);

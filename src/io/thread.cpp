@@ -6,7 +6,7 @@ namespace CIM
     // 当前线程的线程对象
     static thread_local Thread *t_thread = nullptr;
     // 当前线程的线程名称
-    static thread_local std::string t_thread_name = "UNKNOWN";
+    static thread_local std::string t_thread_name = "unknown";
 
     static auto g_logger = CIM_LOG_NAME("system");
 

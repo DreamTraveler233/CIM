@@ -45,39 +45,57 @@ namespace CIM
         return it == GetDatas().end() ? nullptr : it->second;
     }
 
+    // 文件修改时间
     static std::map<std::string, uint64_t> s_file2modifytime;
     static CIM::Mutex s_mutex;
 
-    void Config::LoadFromConfDir(const std::string &path, bool force)
+    /**
+     * @brief 从指定目录加载配置文件
+     * @param path 配置文件目录路径
+     * @param force 是否强制加载，即使文件未修改也重新加载
+     *
+     * 该函数会遍历指定目录下的所有.yml文件，检查文件的修改时间，
+     * 如果文件有更新或者强制加载标志为true，则加载该配置文件。
+     * 加载成功后会通过LoadFromYaml函数将配置项注册到系统中。
+     */
+    void Config::LoadFromConfigDir(const std::string &path, bool force)
     {
         CIM_ASSERT(!path.empty());
+        // 获取绝对路径
         std::string absoulte_path = EnvMgr::GetInstance()->getAbsolutePath(path);
+        // 存储找到的配置文件列表
         std::vector<std::string> files;
-        FSUtil::ListAllFile(files, absoulte_path, ".yml");
-
+        // 遍历目录下所有.yml文件
+        FSUtil::ListAllFile(files, absoulte_path, ".yaml");
+        // 遍历所有找到的配置文件
         for (auto &i : files)
         {
+            // 检查文件修改时间，避免重复加载未修改的文件
             {
                 struct stat st;
+                // 获取文件状态信息
                 lstat(i.c_str(), &st);
                 Mutex::Lock lock(s_mutex);
+                // 如果非强制加载且文件修改时间未变，则跳过该文件
                 if (!force && s_file2modifytime[i] == (uint64_t)st.st_mtime)
                 {
                     continue;
                 }
+                // 更新文件修改时间记录
                 s_file2modifytime[i] = st.st_mtime;
             }
             try
             {
+                // 加载配置文件
                 YAML::Node root = YAML::LoadFile(i);
                 LoadFromYaml(root);
-                CIM_LOG_INFO(g_logger) << "LoadConfFile file="
-                                         << i << " ok";
+                CIM_LOG_INFO(g_logger) << "LoadConfigFile file="
+                                       << i << " ok";
             }
             catch (...)
             {
-                CIM_LOG_ERROR(g_logger) << "LoadConfFile file="
-                                          << i << " failed";
+                CIM_LOG_ERROR(g_logger) << "LoadConfigFile file="
+                                        << i << " failed";
             }
         }
     }
@@ -124,8 +142,8 @@ namespace CIM
                     var->fromString(ss.str()); // 转换为字符串后赋值给配置变量
                 }
             }
-            CIM_LOG_DEBUG(g_logger) << std::endl
-                                      << LoggerMgr::GetInstance()->toYamlString();
+            // CIM_LOG_DEBUG(g_logger) << std::endl
+            //                         << LoggerMgr::GetInstance()->toYamlString();
         }
     }
 

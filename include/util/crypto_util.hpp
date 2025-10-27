@@ -13,20 +13,45 @@ namespace CIM
     {
     public:
         // key 32字节
-        static int32_t AES256Ecb(const void *key, const void *in, int32_t in_len, void *out, bool encode);
+        static int32_t AES256Ecb(const void *key,
+                                 const void *in,
+                                 int32_t in_len,
+                                 void *out,
+                                 bool encode);
 
         // key 16字节
-        static int32_t AES128Ecb(const void *key, const void *in, int32_t in_len, void *out, bool encode);
+        static int32_t AES128Ecb(const void *key,
+                                 const void *in,
+                                 int32_t in_len,
+                                 void *out,
+                                 bool encode);
 
         // key 32字节
         // iv 16字节
-        static int32_t AES256Cbc(const void *key, const void *iv, const void *in, int32_t in_len, void *out, bool encode);
+        static int32_t AES256Cbc(const void *key,
+                                 const void *iv,
+                                 const void *in,
+                                 int32_t in_len,
+                                 void *out,
+                                 bool encode);
 
         // key 16字节
         // iv 16字节
-        static int32_t AES128Cbc(const void *key, const void *iv, const void *in, int32_t in_len, void *out, bool encode);
+        static int32_t AES128Cbc(const void *key,
+                                 const void *iv,
+                                 const void *in,
+                                 int32_t in_len,
+                                 void *out,
+                                 bool encode);
 
-        static int32_t Crypto(const EVP_CIPHER *cipher, bool enc, const void *key, const void *iv, const void *in, int32_t in_len, void *out, int32_t *out_len);
+        static int32_t Crypto(const EVP_CIPHER *cipher,
+                              bool enc,
+                              const void *key,
+                              const void *iv,
+                              const void *in,
+                              int32_t in_len,
+                              void *out,
+                              int32_t *out_len);
     };
 
     class RSACipher

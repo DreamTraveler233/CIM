@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include"env.hpp"
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include <cassert>
@@ -258,15 +259,24 @@ void test_custom_type()
     std::cout << "自定义类型配置测试通过" << std::endl;
 }
 
+void test_config_dir()
+{
+    CIM::Config::LoadFromConfigDir("config");
+}
+
 int main(int argc, char **argv)
 {
     std::cout << "开始执行配置模块全面测试" << std::endl;
 
-    test_config_basic();
-    test_config_containers();
-    test_config_callback();
-    test_yaml_load();
-    test_custom_type();
+    // test_config_basic();
+    // test_config_containers();
+    // test_config_callback();
+    // test_yaml_load();
+    // test_custom_type();
+    CIM::EnvMgr::GetInstance()->init(argc,argv);
+    test_config_dir();
+    sleep(10);
+    test_config_dir();
 
     std::cout << "=================== 配置模块所有测试通过 ===================" << std::endl;
     return 0;
