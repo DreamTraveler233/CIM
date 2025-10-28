@@ -149,16 +149,14 @@ namespace CIM
 
         // 初始化事件上下文
         FdContext::EventContext &event_ctx = fd_ctx->getContext(event);
-
-        // if (event_ctx.coroutine)
-        // {
-        //     CIM_LOG_WARN(g_logger) << "Event context already has coroutine or callback, resetting it. fd="
-        //                              << fd << " event=" << event;
-        //     fd_ctx->resetContext(event_ctx);
-        // }
-        CIM_ASSERT(!event_ctx.scheduler);
-        CIM_ASSERT(!event_ctx.coroutine);
-        CIM_ASSERT(!event_ctx.cb);
+        if (event_ctx.scheduler || event_ctx.coroutine || event_ctx.cb)
+        {
+            CIM_LOG_WARN(g_logger) << "addEvent warning fd=" << fd
+                                   << " event=" << event
+                                   << " event_ctx.scheduler=" << (event_ctx.scheduler ? "not null" : "null")
+                                   << " event_ctx.coroutine=" << (event_ctx.coroutine ? "not null" : "null")
+                                   << " event_ctx.cb=" << (event_ctx.cb ? "not null" : "null");
+        }
 
         event_ctx.scheduler = Scheduler::GetThis();
         if (cb)
@@ -576,9 +574,9 @@ namespace CIM
             event_ctx.scheduler->schedule(event_ctx.coroutine);
         }
 
-        // 清空事件上下文中的调度器指针
-        event_ctx.scheduler = nullptr;
-        // event_ctx.coroutine.reset();
+        // 触发完成后必须清理上下文，避免后续 addEvent 命中断言
+        // 尤其是在 fd_ctx->events 位已清零但上下文仍残留时
+        resetContext(event_ctx);
 
         return;
     }
