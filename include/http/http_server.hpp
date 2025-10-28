@@ -22,10 +22,10 @@ namespace CIM::http
          * @param[in] worker 工作调度器
          * @param[in] accept_worker 接收连接调度器
          */
-        HttpServer(bool keepalive = false, 
-            IOManager *worker = IOManager::GetThis(), 
-            IOManager *io_worker = IOManager::GetThis(), 
-            IOManager *accept_worker = IOManager::GetThis());
+        HttpServer(bool keepalive = false,
+                   IOManager *worker = IOManager::GetThis(),
+                   IOManager *io_worker = IOManager::GetThis(),
+                   IOManager *accept_worker = IOManager::GetThis());
 
         /**
          * @brief 获取ServletDispatch

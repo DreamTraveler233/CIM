@@ -87,6 +87,8 @@ list(APPEND GENERATED_SOURCES ${NS_PROTO_SRC})
 # 收集其他源文件（排除 .rl 文件）
 file(GLOB_RECURSE OTHER_SOURCES "src/*.cpp")
 list(FILTER OTHER_SOURCES EXCLUDE REGEX ".*\\.rl\\.cpp$")
+# 排除包含可执行入口(main)的引导程序源码，避免被编进共享库
+list(FILTER OTHER_SOURCES EXCLUDE REGEX ".*/bootstrap/.*")
 
 # 合并所有源文件
 set(LIB_SRC ${OTHER_SOURCES} ${GENERATED_SOURCES})
@@ -179,6 +181,11 @@ set(EXAMPLES_LIST
     echo_server
 )
 
+# 业务服务可执行文件
+add_executable(cim_server src/bootstrap/cim_server.cpp)
+add_dependencies(cim_server CIM)
+target_link_libraries(cim_server PRIVATE CIM)
+
 # 循环创建测试可执行文件
 foreach(TEST ${TEST_LIST})
     add_executable(${TEST} tests/${TEST}.cpp)    # 生成可执行文件
@@ -188,7 +195,7 @@ endforeach()
 
 foreach(EXAMPLE ${EXAMPLES_LIST})
     add_executable(${EXAMPLE} examples/${EXAMPLE}.cpp)
-    add_dependencies(${TEST} CIM)
+    add_dependencies(${EXAMPLE} CIM)
     target_link_libraries(${EXAMPLE} PRIVATE CIM)
 endforeach()
 
