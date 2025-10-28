@@ -1,0 +1,3 @@
+server:
+    work_path: apps/work/CIM
+    pid_file: CIM.pid

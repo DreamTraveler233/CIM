@@ -1,6 +1,7 @@
 #include "log_appender.hpp"
 #include "yaml-cpp/yaml.h"
 #include "macro.hpp"
+#include <algorithm>
 
 namespace CIM
 {
@@ -70,6 +71,20 @@ namespace CIM
             if (m_logFile)
             {
                 std::string formatted_msg = m_formatter->format(event);
+                if (m_logFile->getRotateType() == RotateType::SIZE)
+                {
+                    const uint64_t threshold = m_logFile->getMaxFileSize();
+                    if (threshold > 0)
+                    {
+                        const auto currentSize = m_logFile->getFileSize();
+                        // 计算写入该日志消息后的预期文件大小
+                        const uint64_t projectedSize = static_cast<uint64_t>(std::max<int64_t>(0, currentSize)) + formatted_msg.size();
+                        if (projectedSize > threshold)
+                        {
+                            LogFileManager::GetInstance()->rotateBySize(m_logFile);
+                        }
+                    }
+                }
                 m_logFile->writeLog(formatted_msg);
             }
         }
@@ -87,6 +102,10 @@ namespace CIM
             node["formatter"] = m_formatter->getPattern();
         }
         node["rotate_type"] = LogFile::rotateTypeToString(m_logFile->getRotateType());
+        if (m_logFile->getRotateType() == RotateType::SIZE)
+        {
+            node["max_size"] = m_logFile->getMaxFileSize();
+        }
         std::stringstream ss;
         ss << node;
         return ss.str();

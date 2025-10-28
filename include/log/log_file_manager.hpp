@@ -28,23 +28,6 @@
 
 namespace CIM
 {
-    /**
-     * @brief 日志文件管理类，负责日志文件对象的创建、轮转和管理
-     *        支持按分钟、小时、天自动轮转日志文件
-     *
-     * 该类采用单例模式设计，通过定时器每秒检查时间变化，
-     * 当检测到分钟、小时或天发生变化时，根据日志文件设置的轮转类型进行相应轮转。
-     *
-     * 轮转机制：
-     * - 分钟轮转：当分钟数发生变化时，将当前日志文件重命名为带时间戳的归档文件，并创建新的日志文件
-     * - 小时轮转：当小时数发生变化时，执行类似的轮转操作
-     * - 天轮转：当天数发生变化时，执行类似的轮转操作
-     *
-     * 命名规则：
-     * - 分钟轮转文件名：原文件名_YYYY-MM-DDTHHMM.扩展名
-     * - 小时轮转文件名：原文件名_YYYY-MM-DDTHH.扩展名
-     * - 天轮转文件名：原文件名_YYYY-MM-DD.扩展名
-     */
     class LogFileManager : public Singleton<LogFileManager>
     {
     public:
@@ -72,6 +55,13 @@ namespace CIM
          * @return LogFilePtr 日志文件智能指针，打开失败时返回空指针
          */
         LogFile::ptr getLogFile(const std::string &fileName);
+
+        /**
+         * @brief 按文件大小轮转日志文件。
+         *
+         * @param file 日志文件智能指针
+         */
+        void rotateBySize(const LogFile::ptr &file);
 
     private:
         /**

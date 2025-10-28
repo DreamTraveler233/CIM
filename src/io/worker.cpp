@@ -4,10 +4,14 @@
 
 namespace CIM
 {
-    static auto g_worker_config = Config::Lookup("workers", std::map<std::string, std::map<std::string, std::string>>(), "worker config");
+    static auto g_worker_config =
+        Config::Lookup("workers", std::map<std::string, std::map<std::string, std::string>>(), "worker config");
 
     WorkerGroup::WorkerGroup(uint32_t batch_size, Scheduler *s)
-        : m_batchSize(batch_size), m_finish(false), m_scheduler(s), m_sem(batch_size)
+        : m_batchSize(batch_size),
+          m_finish(false),
+          m_scheduler(s),
+          m_sem(batch_size)
     {
     }
 

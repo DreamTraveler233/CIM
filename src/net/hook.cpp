@@ -201,8 +201,8 @@ namespace CIM
             }
 
             // 添加IO事件监听
-            int rt = iom->addEvent(fd, (IOManager::Event)event);
-            if (rt)
+            bool rt = iom->addEvent(fd, (IOManager::Event)event);
+            if (!rt)
             {
                 // 添加事件失败，记录日志并返回错误
                 CIM_LOG_ERROR(g_logger) << hook_fun_name << " addEvent (" << fd << ", " << event << ")";
@@ -212,26 +212,24 @@ namespace CIM
                 }
                 return -1;
             }
-            else
+
+            // 成功添加事件，让出当前协程控制权
+            Coroutine::YieldToHold();
+
+            // 协程重新被调度时，首先取消定时器（因为不再需要超时控制）
+            if (timer)
             {
-                // 成功添加事件，让出当前协程控制权
-                Coroutine::YieldToHold();
-
-                // 协程重新被调度时，首先取消定时器（因为不再需要超时控制）
-                if (timer)
-                {
-                    timer->cancel();
-                }
-
-                // 如果定时器触发（超时），设置错误码并返回
-                if (tinfo->cancelled)
-                {
-                    errno = tinfo->cancelled;
-                    return -1;
-                }
-                // 重新尝试IO操作
-                goto retry;
+                timer->cancel();
             }
+
+            // 如果定时器触发（超时），设置错误码并返回
+            if (tinfo->cancelled)
+            {
+                errno = tinfo->cancelled;
+                return -1;
+            }
+            // 重新尝试IO操作
+            goto retry;
         }
         return n;
     }
@@ -448,8 +446,17 @@ namespace CIM
             }
 
             // 添加写事件监听（连接完成时socket可写）
-            int rt = iom->addEvent(fd, IOManager::WRITE);
-            if (rt == 0)
+            bool rt = iom->addEvent(fd, IOManager::WRITE);
+            if (!rt)
+            {
+                // 事件添加失败，取消定时器并记录日志
+                if (timer)
+                {
+                    timer->cancel();
+                }
+                CIM_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
+            }
+            else
             {
                 // 事件添加成功，让出协程控制权
                 Coroutine::YieldToHold();
@@ -466,15 +473,6 @@ namespace CIM
                     errno = tinfo->cancelled;
                     return -1;
                 }
-            }
-            else
-            {
-                // 事件添加失败，取消定时器并记录日志
-                if (timer)
-                {
-                    timer->cancel();
-                }
-                CIM_LOG_ERROR(g_logger) << "connect addEvent(" << fd << ", WRITE) error";
             }
 
             // 检查socket错误状态

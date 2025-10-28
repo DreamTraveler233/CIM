@@ -14,7 +14,11 @@ namespace CIM
     static auto g_logger = CIM_LOG_NAME("system");
 
     Module::Module(const std::string &name, const std::string &version, const std::string &filename, uint32_t type)
-        : m_name(name), m_version(version), m_filename(filename), m_id(name + "/" + version), m_type(type)
+        : m_name(name),
+          m_version(version),
+          m_filename(filename),
+          m_id(name + "/" + version),
+          m_type(type)
     {
     }
 
@@ -269,6 +273,36 @@ namespace CIM
         {
             add(m);
         }
+    }
+
+    const std::string &Module::getName() const
+    {
+        return m_name;
+    }
+
+    const std::string &Module::getVersion() const
+    {
+        return m_version;
+    }
+
+    const std::string &Module::getFilename() const
+    {
+        return m_filename;
+    }
+
+    const std::string &Module::getId() const
+    {
+        return m_id;
+    }
+
+    void Module::setFilename(const std::string &v)
+    {
+        m_filename = v;
+    }
+
+    uint32_t Module::getType() const
+    {
+        return m_type;
     }
 
 }

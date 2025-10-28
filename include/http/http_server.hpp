@@ -14,7 +14,7 @@ namespace CIM::http
     {
     public:
         /// 智能指针类型
-        typedef std::shared_ptr<HttpServer> ptr;
+        using ptr = std::shared_ptr<HttpServer>;
 
         /**
          * @brief 构造函数

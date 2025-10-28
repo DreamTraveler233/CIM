@@ -13,7 +13,8 @@ namespace CIM
     LogFile::LogFile(const std::string &filePath)
         : m_fd(-1),
           m_filePath(filePath),
-          m_rotateType(RotateType::NONE)
+          m_rotateType(RotateType::NONE),
+          m_maxFileSize(0)
     {
         CIM_ASSERT(!filePath.empty());
     }
@@ -93,6 +94,16 @@ namespace CIM
         return m_rotateType;
     }
 
+    void LogFile::setMaxFileSize(uint64_t size)
+    {
+        m_maxFileSize = size;
+    }
+
+    uint64_t LogFile::getMaxFileSize() const
+    {
+        return m_maxFileSize;
+    }
+
     RotateType LogFile::rotateTypeFromString(const std::string &str)
     {
         CIM_ASSERT(!str.empty());
@@ -103,12 +114,15 @@ namespace CIM
         XX(minute, MINUTE);
         XX(hour, HOUR);
         XX(day, DAY);
+        XX(size, SIZE);
         XX(Minute, MINUTE);
         XX(Hour, HOUR);
         XX(Day, DAY);
+        XX(Size, SIZE);
         XX(MINUTE, MINUTE);
         XX(HOUR, HOUR);
         XX(DAY, DAY);
+        XX(SIZE, SIZE);
 #undef XX
         return RotateType::NONE;
     }
@@ -124,6 +138,7 @@ namespace CIM
             XX(MINUTE);
             XX(HOUR);
             XX(DAY);
+            XX(SIZE);
 #undef XX
         default:
             return "None";

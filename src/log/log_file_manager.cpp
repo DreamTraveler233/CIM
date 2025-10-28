@@ -7,6 +7,8 @@
 #include <chrono>
 #include <iomanip>
 #include <ctime>
+#include <algorithm>
+#include <cstdio>
 
 namespace CIM
 {
@@ -132,6 +134,49 @@ namespace CIM
         LogFile::ptr log = std::make_shared<LogFile>(fileName);
         m_logs[fileName] = log;
         return log;
+    }
+
+    void LogFileManager::rotateBySize(const LogFile::ptr &file)
+    {
+        const uint64_t threshold = file->getMaxFileSize();
+        if (threshold == 0)
+        {
+            return;
+        }
+
+        auto currentSize = file->getFileSize();
+        if (static_cast<uint64_t>(std::max<int64_t>(0, currentSize)) < threshold)
+        {
+            return;
+        }
+
+        MutexType::Lock lock(m_mutex);
+        currentSize = file->getFileSize();
+        if (static_cast<uint64_t>(std::max<int64_t>(0, currentSize)) < threshold)
+        {
+            return;
+        }
+
+        int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
+        TimeUtil::Now(year, month, day, hour, minute, second);
+        const uint64_t micro = TimeUtil::NowToUS();
+
+        char buf[160] = {0};
+        snprintf(buf, sizeof(buf), "_%04d-%02d-%02dT%02d%02d%02d.%06lu",
+                 year, month, day, hour, minute, second,
+                 static_cast<unsigned long>(micro % 1000000));
+
+        const std::string file_path = file->getFilePath();
+        const std::string path = StringUtil::FilePath(file_path);
+        const std::string file_name = StringUtil::FileName(file_path);
+        const std::string file_ext = StringUtil::Extension(file_path);
+
+        std::ostringstream ss;
+        ss << path
+           << file_name
+           << buf
+           << file_ext;
+        file->rotate(ss.str());
     }
 
     void LogFileManager::rotateMinute(const LogFile::ptr &file)

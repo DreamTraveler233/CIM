@@ -9,7 +9,8 @@ namespace CIM::http
     static auto g_logger = CIM_LOG_NAME("system");
 
     HttpServer::HttpServer(bool keepalive, IOManager *worker, IOManager *io_worker, IOManager *accept_worker)
-        : TcpServer(worker, io_worker, accept_worker), m_isKeepalive(keepalive)
+        : TcpServer(worker, io_worker, accept_worker),
+          m_isKeepalive(keepalive)
     {
         m_dispatch.reset(new ServletDispatch);
 
@@ -34,8 +35,8 @@ namespace CIM::http
             if (!req)
             {
                 CIM_LOG_DEBUG(g_logger) << "recv http request fail, errno="
-                                          << errno << " errstr=" << strerror(errno)
-                                          << " cliet:" << *client << " keep_alive=" << m_isKeepalive;
+                                        << errno << " errstr=" << strerror(errno)
+                                        << " cliet:" << *client << " keep_alive=" << m_isKeepalive;
                 break;
             }
 

@@ -93,7 +93,7 @@ namespace CIM
     {
         CIM_ASSERT(fd >= 0)
         CIM_ASSERT(event == READ || event == WRITE);
-        CIM_ASSERT(cb);
+        CIM_ASSERT(cb || Coroutine::GetThis());
 
         FdContext *fd_ctx = nullptr;
 
@@ -119,8 +119,8 @@ namespace CIM
         {
             // 如果事件已经存在，则直接返回true，避免重复添加相同的事件类型
             CIM_LOG_DEBUG(g_logger) << "addEvent assert fd=" << fd
-                                      << " event=" << event
-                                      << " fd_ctx.event=" << fd_ctx->events;
+                                    << " event=" << event
+                                    << " fd_ctx.event=" << fd_ctx->events;
             return true;
         }
 
@@ -138,7 +138,7 @@ namespace CIM
             saved_errno = errno;
             // 如果 epoll_ctl 失败，记录错误日志并返回失败
             CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+                                    << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
 
@@ -173,7 +173,7 @@ namespace CIM
             CIM_ASSERT(event_ctx.coroutine->getState() == Coroutine::EXEC);
         }
 
-        return 0;
+        return true;
     }
 
     bool IOManager::delEvent(int fd, Event event)
@@ -190,7 +190,7 @@ namespace CIM
             if ((int)m_fdContexts.size() <= fd)
             {
                 CIM_LOG_ERROR(g_logger) << "delEvent: fd=" << fd
-                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                                        << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false; // 文件描述符超出范围，直接返回失败
             }
 
@@ -221,7 +221,7 @@ namespace CIM
             saved_errno = errno;
             // 如果 epoll_ctl 失败，记录错误日志并返回失败
             CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+                                    << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
 
@@ -247,7 +247,7 @@ namespace CIM
             if ((int)m_fdContexts.size() <= fd)
             {
                 CIM_LOG_ERROR(g_logger) << "cancelEvent: fd=" << fd
-                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                                        << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false; // 文件描述符超出范围，直接返回false
             }
 
@@ -275,7 +275,7 @@ namespace CIM
         {
             saved_errno = errno;
             CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+                                    << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false; // epoll_ctl调用失败时记录错误日志并返回false
         }
 
@@ -297,7 +297,7 @@ namespace CIM
             if ((int)m_fdContexts.size() <= fd)
             {
                 CIM_LOG_ERROR(g_logger) << "cancelAll: fd=" << fd
-                                          << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
+                                        << " out of range, m_fdContexts.size()=" << m_fdContexts.size();
                 return false;
             }
 
@@ -323,7 +323,7 @@ namespace CIM
         {
             saved_errno = errno;
             CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", " << fd << ", " << ev.events << "): "
-                                      << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+                                    << rt << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
             return false;
         }
 
@@ -481,8 +481,8 @@ namespace CIM
                 {
                     int saved_errno = errno;
                     CIM_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", " << op << ", "
-                                              << fd_ctx->fd << ", " << event.events << "): "
-                                              << rt2 << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
+                                            << fd_ctx->fd << ", " << event.events << "): "
+                                            << rt2 << " (" << saved_errno << ") (" << strerror(saved_errno) << ")";
                     continue;
                 }
 

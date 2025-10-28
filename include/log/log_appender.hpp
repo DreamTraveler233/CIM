@@ -135,6 +135,10 @@ namespace CIM
          */
         std::string toYamlString() override;
 
+        /**
+         * @brief 获取日志文件对象
+         * @return 日志文件智能指针
+         */
         LogFile::ptr getLogFile() const;
 
     private:

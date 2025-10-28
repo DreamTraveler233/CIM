@@ -18,6 +18,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cstdint>
 
 namespace CIM
 {
@@ -78,6 +79,7 @@ namespace CIM
         std::string formatter;                    ///< 日志格式化器
         std::string path;                         ///< 日志文件路径(仅FileLogAppender有效)
         RotateType rotateType = RotateType::NONE; ///< 日志轮转类型(仅FileLogAppender有效)
+        uint64_t maxFileSize = 0;                 ///< 文件大小轮转阈值(字节，文件追加器有效)
 
         /**
          * @brief 判断两个追加器配置是否相等
@@ -90,7 +92,8 @@ namespace CIM
                    level == other.level &&
                    formatter == other.formatter &&
                    path == other.path &&
-                   rotateType == other.rotateType;
+                   rotateType == other.rotateType &&
+                   maxFileSize == other.maxFileSize;
         }
     };
 

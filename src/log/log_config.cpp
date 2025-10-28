@@ -62,7 +62,7 @@ namespace CIM
                                         }
                                         else
                                         {
-                                            CIM_LOG_ERROR(CIM_LOG_ROOT()) << "type not FileLogAppender or StdoutLogAppender";
+                                            CIM_LOG_ERROR(g_logger) << "type not FileLogAppender or StdoutLogAppender";
                                         }
             
                                         // 设置输出器的日志级别
@@ -86,15 +86,16 @@ namespace CIM
                                         }
             
                                         // 如果配置了日志轮转类型，则设置文件日志输出器的轮转类型
-                                        if(j.rotateType != RotateType::NONE)
+                                        if (j.rotateType != RotateType::NONE)
                                         {
-                                            // 检查ap是否为FileLogAppender类型
                                             auto fileAppender = std::dynamic_pointer_cast<FileLogAppender>(ap);
-                                            if(fileAppender) {
+                                            if (fileAppender)
+                                            {
                                                 fileAppender->getLogFile()->setRotateType(j.rotateType);
+                                                fileAppender->getLogFile()->setMaxFileSize(j.maxFileSize);
                                             }
                                         }
-            
+
                                         // 将输出器添加到日志器中
                                         logger->addAppender(ap);
                                     }

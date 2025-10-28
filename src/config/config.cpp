@@ -89,13 +89,11 @@ namespace CIM
                 // 加载配置文件
                 YAML::Node root = YAML::LoadFile(i);
                 LoadFromYaml(root);
-                CIM_LOG_INFO(g_logger) << "LoadConfigFile file="
-                                       << i << " ok";
+                CIM_LOG_INFO(g_logger) << "LoadConfigFile file=" << i << " ok";
             }
             catch (...)
             {
-                CIM_LOG_ERROR(g_logger) << "LoadConfigFile file="
-                                        << i << " failed";
+                CIM_LOG_ERROR(g_logger) << "LoadConfigFile file=" << i << " failed";
             }
         }
     }

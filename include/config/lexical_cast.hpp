@@ -1,11 +1,14 @@
-#pragma once
+#ifndef __CIM_CONFIG_LEXICAL_CAST_HPP__
+#define __CIM_CONFIG_LEXICAL_CAST_HPP__
 
 #include "logger_manager.hpp"
+
 #include <boost/lexical_cast.hpp>
 #include <list>
 #include <map>
 #include <set>
 #include <unordered_set>
+#include <yaml-cpp/yaml.h>
 
 namespace CIM
 {
@@ -293,6 +296,10 @@ namespace CIM
                 appender_node["formatter"] = appender.formatter;
                 appender_node["path"] = appender.path;
                 appender_node["rotate_type"] = LogFile::rotateTypeToString(appender.rotateType);
+                if (appender.rotateType == RotateType::SIZE && appender.maxFileSize > 0)
+                {
+                    appender_node["max_size"] = appender.maxFileSize;
+                }
                 node["appenders"].push_back(appender_node);
             }
             std::stringstream ss;
@@ -353,6 +360,10 @@ namespace CIM
                     {
                         lad.rotateType = LogFile::rotateTypeFromString(appender_node["rotate_type"].as<std::string>());
                     }
+                    if (appender_node["max_size"].IsDefined())
+                    {
+                        lad.maxFileSize = appender_node["max_size"].as<uint64_t>();
+                    }
                     ld.appenders.push_back(lad);
                 }
             }
@@ -360,3 +371,5 @@ namespace CIM
         }
     };
 }
+
+#endif // __CIM_CONFIG_LEXICAL_CAST_HPP__

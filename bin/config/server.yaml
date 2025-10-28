@@ -1,16 +1,21 @@
 servers:
-    - address: ["0.0.0.0:8090", "127.0.0.1:8091", "/tmp/test.sock"]
+    # HTTP 资源服务器配置
+    - address: ["0.0.0.0:9503"]
+      type: http
+      name: CIM-http/1.1
       keepalive: 1
       timeout: 1000
-      name: CIM/1.1
+      # 分配工作池：
       accept_worker: accept
-      io_worker: http_io
-      process_worker:  http_io
-      type: http
-    - address: ["0.0.0.0:8062", "0.0.0.0:8061"]
+      io_worker: http_worker
+      process_worker:  http_worker
+
+    # WebSocket 通讯服务器配置
+    - address: ["0.0.0.0:9504"]
+      type: ws
+      name: CIM-ws/1.0
       timeout: 1000
-      name: CIM-rock/1.0
+      # 分配工作池：
       accept_worker: accept
-      io_worker: io
-      process_worker:  io
-      type: rock
+      io_worker: ws_worker
+      process_worker:  ws_worker

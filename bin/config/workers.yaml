@@ -1,0 +1,23 @@
+workers:
+    # 1. 连接接收池 (accept_worker)
+    # 职责：专门用于接收所有服务器（HTTP和WS）的新TCP连接。
+    # 配置：这是个轻量级任务，但需要快速响应。2个线程足以应对高并发连接请求。
+    accept:
+        worker_num: 1
+        thread_num: 2
+
+    # 2. HTTP服务池 (http_worker)
+    # 职责：处理HTTP服务器的所有IO和业务逻辑（资源读取、API处理）。
+    # 配置：由于可能存在文件读写等阻塞操作，建议分配较多线程。
+    #       假设服务器有8核，分配8个线程可以较好地处理并发请求。
+    http_worker:
+        worker_num: 1
+        thread_num: 8
+
+    # 3. WebSocket服务池 (ws_worker)
+    # 职责：处理WebSocket服务器的所有IO和消息收发。
+    # 配置：这是IM核心，需要管理大量长连接。线程数建议与CPU核心数相近，
+    #       以最大化IO多路复用的效率。8个线程是很好的选择。
+    ws_worker:
+        worker_num: 1
+        thread_num: 8

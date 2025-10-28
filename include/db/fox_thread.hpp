@@ -19,8 +19,8 @@ namespace CIM
     class IFoxThread
     {
     public:
-        typedef std::shared_ptr<IFoxThread> ptr;
-        typedef std::function<void()> callback;
+        using ptr = std::shared_ptr<IFoxThread>;
+        using callback = std::function<void()>;
 
         virtual ~IFoxThread() {};
         virtual bool dispatch(callback cb) = 0;
@@ -38,7 +38,7 @@ namespace CIM
     class FoxThread : public IFoxThread
     {
     public:
-        typedef std::shared_ptr<FoxThread> ptr;
+        using ptr = std::shared_ptr<FoxThread>;
         typedef IFoxThread::callback callback;
         typedef std::function<void(FoxThread *)> init_cb;
         FoxThread(const std::string &name = "", struct event_base *base = NULL);
@@ -104,8 +104,8 @@ namespace CIM
     class FoxThreadPool : public IFoxThread
     {
     public:
-        typedef std::shared_ptr<FoxThreadPool> ptr;
-        typedef IFoxThread::callback callback;
+        using ptr = std::shared_ptr<FoxThreadPool>;
+        using callback = IFoxThread::callback;
 
         FoxThreadPool(uint32_t size, const std::string &name = "", bool advance = false);
         ~FoxThreadPool();
@@ -170,7 +170,7 @@ namespace CIM
         std::map<std::string, IFoxThread::ptr> m_threads;
     };
 
-    typedef Singleton<FoxThreadManager> FoxThreadMgr;
+    using FoxThreadMgr = Singleton<FoxThreadManager>;
 
 }
 #endif

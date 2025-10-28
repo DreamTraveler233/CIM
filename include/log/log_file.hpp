@@ -8,10 +8,12 @@
  * 获取大小等操作。支持多种轮转类型，包括不轮转、按分钟、小时和天轮转。
  */
 
-#pragma once
+#ifndef __CIM_LOG_LOG_FILE_HPP__
+#define __CIM_LOG_LOG_FILE_HPP__
 
 #include <string>
 #include <memory>
+#include <cstdint>
 
 namespace CIM
 {
@@ -23,7 +25,8 @@ namespace CIM
         NONE,   ///< 不轮转
         MINUTE, ///< 按分钟轮转
         HOUR,   ///< 按小时轮转
-        DAY     ///< 按天轮转
+        DAY,    ///< 按天轮转
+        SIZE    ///< 按文件大小轮转
     };
 
     /**
@@ -107,6 +110,20 @@ namespace CIM
         RotateType getRotateType() const;
 
         /**
+         * @brief 设置触发大小轮转的阈值（字节）。
+         *
+         * @param size 阈值，0 表示关闭大小轮转
+         */
+        void setMaxFileSize(uint64_t size);
+
+        /**
+         * @brief 获取大小轮转阈值（字节）。
+         *
+         * @return uint64_t 大小阈值
+         */
+        uint64_t getMaxFileSize() const;
+
+        /**
          * @brief 从字符串转换轮转类型
          * @param rotateType 轮转类型字符串
          * @return RotateType 轮转类型枚举值
@@ -124,5 +141,8 @@ namespace CIM
         int m_fd;                ///< 文件描述符
         std::string m_filePath;  ///< 日志文件路径
         RotateType m_rotateType; ///< 日志轮转类型
+        uint64_t m_maxFileSize;  ///< 大小轮转阈值
     };
 }
+
+#endif // __CIM_LOG_LOG_FILE_HPP__

@@ -13,10 +13,10 @@ void test()
     // file_ap->getLogFile()->setRotateType(CIM::RotateType::Minute);
     // g_logger->addAppender(file_ap);
 
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 1000000; ++i)
     {
         CIM_LOG_INFO(g_logger) << "第 " << i << " 条日志";
-        sleep(1);
+        //sleep(0.1);
     }
 
     // // 加载日志配置文件
