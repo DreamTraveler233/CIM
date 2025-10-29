@@ -9,6 +9,8 @@ find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(yaml-cpp REQUIRED)
+find_package(jwt-cpp REQUIRED)
 
 # 对于可能没有标准 CMake 配置的包，使用备用查找方式
 find_package(PkgConfig REQUIRED)  # 启用 pkg-config 支持
@@ -20,9 +22,6 @@ pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 pkg_check_modules(LIBEVENT REQUIRED libevent)
 pkg_check_modules(HIREDIS_VIP REQUIRED hiredis_vip)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
-
-# 查找 yaml-cpp 库
-find_package(yaml-cpp REQUIRED)
 
 # 查找 Ragel 状态机编译器
 find_program(RAGEL_EXECUTABLE ragel)
@@ -44,6 +43,9 @@ endif()
 
 # 添加通用编译选项
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+
+# ==================== 可选第三方(优先系统, 其次拉取) ====================
+option(CIM_WITH_GTEST "Enable GoogleTest unit tests" OFF)
 
 # ==================== 代码生成 ====================
 # 处理 .rl 文件，生成对应的 .cpp 文件
@@ -128,7 +130,6 @@ target_include_directories(CIM
         ${LIBEVENT_INCLUDE_DIRS}
         ${HIREDIS_INCLUDE_DIRS}
         ${TINYXML2_INCLUDE_DIRS}
-        /usr/include/zookeeper
 )
 
 # ==================== 依赖链接 ====================
@@ -141,6 +142,7 @@ target_link_libraries(CIM
         ZLIB::ZLIB
         protobuf::libprotobuf
         yaml-cpp::yaml-cpp
+        $<$<TARGET_EXISTS:jwt-cpp::jwt-cpp>:jwt-cpp::jwt-cpp>
     PRIVATE
         ${SQLITE3_LIBRARIES}
         ${MYSQL_LIBRARIES}
@@ -198,6 +200,39 @@ foreach(EXAMPLE ${EXAMPLES_LIST})
     add_dependencies(${EXAMPLE} CIM)
     target_link_libraries(${EXAMPLE} PRIVATE CIM)
 endforeach()
+
+# ==================== 可选：GTest 单元测试 ====================
+if(CIM_WITH_GTEST)
+    include(FetchContent)
+    message(STATUS "CIM_WITH_GTEST=ON -> Fetching GoogleTest...")
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+
+    # 单元测试源文件
+    set(UNIT_TEST_SOURCES
+        tests/unit/test_healthz.cpp
+        tests/unit/test_config_summary.cpp
+    )
+
+    add_executable(unit_tests ${UNIT_TEST_SOURCES})
+    add_dependencies(unit_tests CIM)
+    target_link_libraries(unit_tests PRIVATE CIM gtest_main)
+
+    # 发现并注册测试
+    include(GoogleTest)
+    # 有些环境下 gtest_discover_tests 未注册到 CTest，退化为直接 add_test
+    if(COMMAND gtest_discover_tests)
+        gtest_discover_tests(unit_tests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+    endif()
+    add_test(NAME unit_tests COMMAND unit_tests)
+endif()
 
 # ==================== 输出目录 ====================
 # 指定可执行文件输出目录
