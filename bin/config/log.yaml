@@ -1,10 +1,10 @@
 logs:
   - name: root
-    level: info
+    level: debug
     appenders:
       - type: FileLogAppender
         path: /home/szy/code/CIM/bin/log/root/root.log
-        rotate_type: minute
+        rotate_type: hour
       - type: StdoutLogAppender
         
   - name: system

@@ -1,3 +1,26 @@
 server:
     work_path: apps/work/CIM
     pid_file: CIM.pid
+
+# 认证与安全配置
+auth:
+    jwt:
+        secret: "dev-secret-change-me"
+        issuer: "auth-service"
+        expires_in: 3600
+
+# RSA 密钥配置
+crypto:
+    rsa_private_key_path: "keys/rsa_private_2048.pem"
+    rsa_public_key_path: "keys/rsa_public_rsa_2048.pem"
+    padding: "PKCS1"
+
+# MySQL 数据源配置
+mysql.dbs:
+    default:
+        host: "localhost"
+        port: 3306
+        user: "cim"
+        passwd: "Cim@642157"
+        dbname: "cim_db"
+        pool: 10

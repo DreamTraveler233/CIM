@@ -1,6 +1,6 @@
 servers:
     # HTTP 资源服务器配置
-    - address: ["0.0.0.0:9503"]
+    - address: ["0.0.0.0:8080"]
       type: http
       name: CIM-http/1.1
       keepalive: 1
@@ -11,7 +11,7 @@ servers:
       process_worker:  http_worker
 
     # WebSocket 通讯服务器配置
-    - address: ["0.0.0.0:9504"]
+    - address: ["0.0.0.0:8081"]
       type: ws
       name: CIM-ws/1.0
       timeout: 1000
