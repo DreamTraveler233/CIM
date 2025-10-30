@@ -1,0 +1,65 @@
+name: DB Migration Health Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  migration-check:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: cim_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1" \
+          --health-interval 3s \
+          --health-timeout 5s \
+          --health-retries 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Wait for MySQL ready
+        run: |
+          for i in {1..60}; do
+            if mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "SELECT 1" >/dev/null 2>&1; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo "waiting MySQL...($i)"
+            sleep 2
+          done
+
+      - name: Make migrate.sh executable
+        run: chmod +x scripts/sql/migrate.sh
+
+      - name: List migrations
+        run: scripts/sql/migrate.sh list --host 127.0.0.1 --port 3306 --user root --pass root --name cim_db
+
+      - name: Status before apply
+        run: scripts/sql/migrate.sh status --host 127.0.0.1 --port 3306 --user root --pass root --name cim_db
+
+      - name: Apply migrations
+        run: scripts/sql/migrate.sh apply --host 127.0.0.1 --port 3306 --user root --pass root --name cim_db
+
+      - name: Status after apply
+        run: scripts/sql/migrate.sh status --host 127.0.0.1 --port 3306 --user root --pass root --name cim_db
+
+      - name: Idempotency check (apply again)
+        run: scripts/sql/migrate.sh apply --host 127.0.0.1 --port 3306 --user root --pass root --name cim_db
+
+      - name: Show tables (debug)
+        run: mysql -h 127.0.0.1 -P 3306 -uroot -proot -D cim_db -e "SHOW TABLES;"
