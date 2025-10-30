@@ -82,7 +82,7 @@ namespace CIM::http
     class IServletCreator
     {
     public:
-        typedef std::shared_ptr<IServletCreator> ptr;
+        using ptr = std::shared_ptr<IServletCreator>;
         virtual ~IServletCreator() {}
         virtual Servlet::ptr get() const = 0;
         virtual std::string getName() const = 0;
@@ -91,7 +91,7 @@ namespace CIM::http
     class HoldServletCreator : public IServletCreator
     {
     public:
-        typedef std::shared_ptr<HoldServletCreator> ptr;
+        using ptr = std::shared_ptr<HoldServletCreator>;
         HoldServletCreator(Servlet::ptr slt)
             : m_servlet(slt)
         {
@@ -115,7 +115,7 @@ namespace CIM::http
     class ServletCreator : public IServletCreator
     {
     public:
-        typedef std::shared_ptr<ServletCreator> ptr;
+        using ptr = std::shared_ptr<ServletCreator>;
 
         ServletCreator()
         {
@@ -139,9 +139,9 @@ namespace CIM::http
     {
     public:
         /// 智能指针类型定义
-        typedef std::shared_ptr<ServletDispatch> ptr;
+        using ptr = std::shared_ptr<ServletDispatch>;
         /// 读写锁类型定义
-        typedef RWMutex RWMutexType;
+        using RWMutexType = RWMutex;
 
         /**
          * @brief 构造函数

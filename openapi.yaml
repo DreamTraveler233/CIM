@@ -1,0 +1,3381 @@
+openapi: 3.0.3
+info:
+  title: CelerIM API
+  version: 1.0.0
+  description: |
+    CelerIM 服务端接口定义（OpenAPI 3.0）。
+
+    说明：
+    - 绝大多数接口使用 Bearer Token 鉴权（Authorization: Bearer <token>）。
+    - 默认请求方法为 POST（除明确说明的 GET/文件上传场景）。
+    - 本文档中的请求/响应示例基于前端类型定义推断，可能与服务端存在细节差异，请以实际返回为准。
+servers:
+  - url: "{scheme}://{host}"
+    description: 可配置服务地址（对应前端环境变量 VITE_BASE_API）
+    variables:
+      scheme:
+        enum: [http, https]
+        default: https
+      host:
+        default: api.example.com
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Common
+  - name: User
+  - name: Contact
+  - name: Group
+  - name: Message
+  - name: Talk
+  - name: Emoticon
+  - name: Article
+  - name: Organize
+  - name: Upload
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: 登录接口
+      operationId: AuthLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+            example:
+              mobile: '13800000000'
+              password: 'Passw0rd!'
+              platform: 'web'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginResponse'
+              example:
+                type: 'Bearer'
+                access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+                expires_in: 7200
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: 注册接口
+      operationId: AuthRegister
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+            example:
+              nickname: 'Jack'
+              mobile: '13800000000'
+              password: 'Passw0rd!'
+              platform: 'web'
+              sms_code: '123456'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRegisterResponse'
+              example:
+                type: 'Bearer'
+                access_token: 'xxx.yyy.zzz'
+                expires_in: 7200
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/forget:
+    post:
+      tags: [Auth]
+      summary: 找回密码接口
+      operationId: AuthForget
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthForgetRequest'
+            example:
+              mobile: '13800000000'
+              password: 'NewPassw0rd!'
+              sms_code: '654321'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/oauth:
+    post:
+      tags: [Auth]
+      summary: 获取 OAuth2.0 跳转地址
+      operationId: AuthOauth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthOauthRequest'
+            example:
+              oauth_type: 'github'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthOauthResponse'
+              example:
+                uri: 'https://github.com/login/oauth/authorize?...'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/oauth/login:
+    post:
+      tags: [Auth]
+      summary: 第三方登录
+      operationId: AuthOauthLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthOauthLoginRequest'
+            example:
+              oauth_type: 'github'
+              code: 'abc123'
+              state: 'xyz'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthOauthLoginResponse'
+              example:
+                is_authorize: 'Y'
+                authorize:
+                  type: 'Bearer'
+                  access_token: 'xxx.yyy.zzz'
+                  expires_in: 7200
+                bind_token: ''
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/oauth/bind:
+    post:
+      tags: [Auth]
+      summary: 绑定第三方登录
+      operationId: AuthOAuthBind
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthOAuthBindRequest'
+            example:
+              bind_token: 'bind-123'
+              mobile: '13800000000'
+              sms_code: '123456'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthOAuthBindResponse'
+              example:
+                authorize:
+                  type: 'Bearer'
+                  access_token: 'xxx.yyy.zzz'
+                  expires_in: 7200
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/common/send-email:
+    post:
+      tags: [Common]
+      summary: 发送邮件验证码
+      operationId: CommonSendEmail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommonSendEmailRequest'
+            example:
+              email: 'user@example.com'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/common/send-sms:
+    post:
+      tags: [Common]
+      summary: 发送短信验证码
+      operationId: CommonSendSms
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommonSendSmsRequest'
+            example:
+              mobile: '13800000000'
+              channel: 'login'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonSendSmsResponse'
+              example:
+                sms_code: '123456'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/detail:
+    post:
+      tags: [User]
+      summary: 获取登录用户详情
+      operationId: UserDetail
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetailRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+              example:
+                id: 1
+                mobile: '13800000000'
+                nickname: 'Jack'
+                avatar: 'https://cdn.example.com/avatar/1.png'
+                gender: 1
+                motto: 'Keep it simple.'
+                email: 'user@example.com'
+                birthday: '1990-01-01'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/detail-update:
+    post:
+      tags: [User]
+      summary: 更新用户信息
+      operationId: UserDetailUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetailUpdateRequest'
+            example:
+              avatar: 'https://cdn.example.com/a.png'
+              nickname: 'Ada'
+              gender: 2
+              motto: 'Hello World'
+              birthday: '1995-05-20'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/email-update:
+    post:
+      tags: [User]
+      summary: 更新用户邮箱
+      operationId: UserEmailUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserEmailUpdateRequest'
+            example:
+              email: 'user@new.com'
+              password: 'Passw0rd!'
+              code: '123456'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/mobile-update:
+    post:
+      tags: [User]
+      summary: 更新用户手机号
+      operationId: UserMobileUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserMobileUpdateRequest'
+            example:
+              mobile: '13900000001'
+              password: 'Passw0rd!'
+              sms_code: '888888'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/password-update:
+    post:
+      tags: [User]
+      summary: 更新用户密码
+      operationId: UserPasswordUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswordUpdateRequest'
+            example:
+              old_password: 'Passw0rd!'
+              new_password: 'NewPassw0rd!'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/user/setting:
+    post:
+      tags: [User]
+      summary: 获取用户配置信息
+      operationId: UserSetting
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettingRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingResponse'
+              example:
+                user_info:
+                  uid: 1
+                  nickname: 'Jack'
+                  avatar: 'https://cdn.example.com/a.png'
+                  motto: 'Keep it simple.'
+                  gender: 1
+                  is_qiye: false
+                  mobile: '13800000000'
+                  email: 'user@example.com'
+                setting:
+                  theme_mode: 'light'
+                  theme_bag_img: ''
+                  theme_color: '#409EFF'
+                  notify_cue_tone: 'default'
+                  keyboard_event_notify: 'Y'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/list:
+    post:
+      tags: [Contact]
+      summary: 联系人列表
+      operationId: ContactList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactListResponse'
+              example:
+                items:
+                  - user_id: 2
+                    nickname: 'Alice'
+                    gender: 2
+                    motto: 'Hi'
+                    avatar: 'https://cdn.example.com/u2.png'
+                    remark: '同事'
+                    group_id: 1
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/detail:
+    post:
+      tags: [Contact]
+      summary: 联系人详情
+      operationId: ContactDetail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactDetailRequest'
+            example:
+              user_id: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDetailResponse'
+              example:
+                user_id: 2
+                mobile: '13800000002'
+                nickname: 'Alice'
+                avatar: 'https://cdn.example.com/u2.png'
+                gender: 2
+                motto: 'Hi'
+                email: 'alice@example.com'
+                relation: 1
+                contact_remark: ''
+                contact_group_id: 1
+                online_status: 'Y'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/create:
+    post:
+      tags: [Group]
+      summary: 创建群聊
+      operationId: GroupCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreateRequest'
+            example:
+              name: '前端讨论组'
+              user_ids: [2, 3, 4]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCreateResponse'
+              example:
+                group_id: 1001
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/detail:
+    post:
+      tags: [Group]
+      summary: 群聊详情
+      operationId: GroupDetail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDetailRequest'
+            example:
+              group_id: 1001
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetailResponse'
+              example:
+                group_id: 1001
+                group_name: '前端讨论组'
+                profile: '关于前端的日常交流'
+                avatar: 'https://cdn.example.com/g1001.png'
+                created_at: '2025-01-01 12:00:00'
+                is_manager: true
+                is_disturb: 0
+                visit_card: ''
+                is_mute: 0
+                is_overt: 1
+                notice:
+                  content: '周五晚8点讨论会'
+                  created_at: '2025-02-01 10:00:00'
+                  updated_at: '2025-02-02 10:00:00'
+                  modify_user_name: 'Jack'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/list:
+    post:
+      tags: [Group]
+      summary: 群列表
+      operationId: GroupList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupListResponse'
+              example:
+                items:
+                  - group_id: 1001
+                    group_name: '前端讨论组'
+                    avatar: 'https://cdn.example.com/g1.png'
+                    profile: '关于前端'
+                    leader: 1
+                    creator_id: 1
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/member-list:
+    post:
+      tags: [Group]
+      summary: 群成员列表
+      operationId: GroupMemberList
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMemberListRequest'
+            example:
+              group_id: 1001
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberListResponse'
+              example:
+                items:
+                  - user_id: 1
+                    nickname: 'Jack'
+                    avatar: 'https://cdn.example.com/u1.png'
+                    gender: 1
+                    leader: 1
+                    is_mute: 0
+                    remark: ''
+                    motto: 'Keep it simple.'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-vote/create:
+    post:
+      tags: [Group]
+      summary: 创建群组投票
+      operationId: GroupVoteCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupVoteCreateRequest'
+            example:
+              group_id: 1001
+              title: '本周技术分享主题'
+              mode: 1
+              is_anonymous: 0
+              options: ['Vue3 新特性', 'TS 最佳实践']
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-vote/detail:
+    post:
+      tags: [Group]
+      summary: 获取群组投票详情
+      operationId: GroupVoteDetail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupVoteDetailRequest'
+            example:
+              vote_id: 500
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupVoteDetailResponse'
+              example:
+                vote_id: 500
+                title: '本周技术分享主题'
+                answer_mode: 1
+                answer_options:
+                  - key: 'A'
+                    value: 'Vue3 新特性'
+                answer_num: 10
+                answered_num: 6
+                is_anonymous: 0
+                answered_users: []
+                is_submit: false
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-vote/submit:
+    post:
+      tags: [Group]
+      summary: 提交群组投票
+      operationId: GroupVoteSubmit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupVoteSubmitRequest'
+            example:
+              vote_id: 500
+              options: ['A']
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/records:
+    post:
+      tags: [Message]
+      summary: 获取会话消息记录
+      operationId: MessageRecords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRecordsRequest'
+            example:
+              talk_mode: 1
+              to_from_id: 2
+              cursor: 0
+              limit: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageRecordsResponse'
+              example:
+                cursor: 20
+                items:
+                  - msg_id: 'm1'
+                    sequence: 1
+                    msg_type: 1
+                    from_id: 1
+                    nickname: 'Jack'
+                    avatar: 'https://cdn.example.com/u1.png'
+                    is_revoked: 0
+                    send_time: '2025-01-01 10:00:00'
+                    extra: ''
+                    quote: ''
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/history-records:
+    post:
+      tags: [Message]
+      summary: 获取会话历史消息记录
+      operationId: MessageHistoryRecords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageHistoryRecordsRequest'
+            example:
+              talk_mode: 1
+              to_from_id: 2
+              cursor: 0
+              limit: 20
+              msg_type: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageHistoryRecordsResponse'
+              example:
+                cursor: 0
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/send:
+    post:
+      tags: [Message]
+      summary: 发送消息（文本/图片/视频/代码/文件）
+      operationId: MessageSend
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServTalkMessageSendRequest'
+            example:
+              type: 'text'
+              talk_mode: 1
+              to_from_id: 2
+              quote_id: 'q1'
+              body:
+                content: 'hello'
+                text: 'hello'
+                mentions: []
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/delete:
+    post:
+      tags: [Message]
+      summary: 删除消息
+      operationId: MessageDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageDeleteRequest'
+            example:
+              talk_mode: 1
+              to_from_id: 2
+              msg_ids: ['m1', 'm2']
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/revoke:
+    post:
+      tags: [Message]
+      summary: 撤回消息
+      operationId: MessageRevoke
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRevokeRequest'
+            example:
+              talk_mode: 1
+              to_from_id: 2
+              msg_id: 'm1'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-list:
+    post:
+      tags: [Talk]
+      summary: 会话列表
+      operationId: TalkSessionList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TalkSessionListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TalkSessionListResponse'
+              example:
+                items:
+                  - id: 1
+                    talk_mode: 1
+                    to_from_id: 2
+                    is_top: 0
+                    is_disturb: 0
+                    is_robot: 0
+                    name: 'Alice'
+                    avatar: 'https://cdn.example.com/u2.png'
+                    remark: ''
+                    unread_num: 3
+                    msg_text: 'Hi'
+                    updated_at: '2025-01-01 12:00:00'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-create:
+    post:
+      tags: [Talk]
+      summary: 会话创建
+      operationId: TalkSessionCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TalkSessionCreateRequest'
+            example:
+              talk_mode: 1
+              to_from_id: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TalkSessionCreateResponse'
+              example:
+                id: 1
+                talk_mode: 1
+                to_from_id: 2
+                is_top: 0
+                is_disturb: 0
+                is_online: 1
+                is_robot: 0
+                name: 'Alice'
+                avatar: 'https://cdn.example.com/u2.png'
+                remark: ''
+                unread_num: 0
+                msg_text: ''
+                updated_at: '2025-01-01 12:00:00'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/emoticon/customize/list:
+    post:
+      tags: [Emoticon]
+      summary: 用户表情包列表
+      operationId: EmoticonList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmoticonListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmoticonListResponse'
+              example:
+                items:
+                  - emoticon_id: 1
+                    url: 'https://cdn.example.com/e1.png'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/emoticon/customize/create:
+    post:
+      tags: [Emoticon]
+      summary: 创建表情包
+      operationId: EmoticonCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmoticonCreateRequest'
+            example:
+              url: 'https://cdn.example.com/e1.png'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmoticonCreateResponse'
+              example:
+                emoticon_id: 1
+                url: 'https://cdn.example.com/e1.png'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/detail:
+    post:
+      tags: [Article]
+      summary: 获取文章详情
+      operationId: ArticleDetail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleDetailRequest'
+            example:
+              article_id: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleDetailResponse'
+              example:
+                article_id: 10
+                classify_id: 1
+                title: '示例标题'
+                md_content: '# 内容'
+                is_asterisk: 0
+                created_at: '2025-01-01 10:00:00'
+                updated_at: '2025-01-02 10:00:00'
+                tag_ids: [{ id: 1 }]
+                annex_list:
+                  - annex_id: 1
+                    annex_name: '文件.pdf'
+                    annex_size: 10240
+                    created_at: '2025-01-01 11:00:00'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/list:
+    post:
+      tags: [Article]
+      summary: 获取文章列表
+      operationId: ArticleList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleListRequest'
+            example:
+              keyword: '笔记'
+              find_type: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleListResponse'
+              example:
+                items:
+                  - article_id: 10
+                    classify_id: 1
+                    tags_id: '1,2'
+                    title: '示例标题'
+                    class_name: '默认分类'
+                    image: ''
+                    is_asterisk: 0
+                    status: 1
+                    created_at: '2025-01-01 10:00:00'
+                    updated_at: '2025-01-02 10:00:00'
+                    abstract: '摘要'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/upload:
+    post:
+      tags: [Article]
+      summary: 文章附件上传
+      operationId: ArticleAnnexUpload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                annex:
+                  type: string
+                  format: binary
+                article_id:
+                  type: integer
+            example:
+              article_id: 10
+      responses:
+        '200':
+          description: 返回新附件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleDetailResponse_AnnexFile'
+              example:
+                annex_id: 2
+                annex_name: '附件.docx'
+                annex_size: 20480
+                created_at: '2025-01-03 12:00:00'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/download:
+    get:
+      tags: [Article]
+      summary: 下载文章附件
+      operationId: ArticleAnnexDownload
+      parameters:
+        - in: query
+          name: annex_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: token
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 二进制文件流
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/upload/media-file:
+    post:
+      tags: [Upload]
+      summary: 上传媒体文件（图片/视频封面等）
+      operationId: UploadMediaFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+            example: {}
+      responses:
+        '200':
+          description: 返回文件地址
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      src:
+                        type: string
+              example:
+                data:
+                  src: 'https://cdn.example.com/upload/xxx.png'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/upload/init-multipart:
+    post:
+      tags: [Upload]
+      summary: 初始化分片上传
+      operationId: UploadInitMultipart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_name: { type: string }
+                file_size: { type: integer }
+            example:
+              file_name: 'large.zip'
+              file_size: 104857600
+      responses:
+        '200':
+          description: 返回上传ID与分片大小
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upload_id: { type: string }
+                  shard_size: { type: integer }
+              example:
+                upload_id: 'up-123'
+                shard_size: 5242880
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/upload/multipart:
+    post:
+      tags: [Upload]
+      summary: 分片上传
+      operationId: UploadMultipart
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+                upload_id: { type: string }
+                split_index: { type: integer }
+                split_num: { type: integer }
+            example:
+              upload_id: 'up-123'
+              split_index: 1
+              split_num: 20
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-apply/list:
+    post:
+      tags: [Contact]
+      summary: 联系人申请列表
+      operationId: ContactApplyList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactApplyListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactApplyListResponse'
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/list:
+    post:
+      tags: [Group]
+      summary: 群组申请列表
+      operationId: GroupApplyList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupApplyListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupApplyListResponse'
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/organize/department-list:
+    post:
+      tags: [Organize]
+      summary: 组织部门列表
+      operationId: OrganizeDepartmentList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizeDepartmentListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizeDepartmentListResponse'
+              example:
+                items:
+                  - dept_id: 1
+                    parent_id: 0
+                    dept_name: '总部'
+                    ancestors: '0'
+                    count: 10
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/organize/personnel-list:
+    post:
+      tags: [Organize]
+      summary: 组织人员列表
+      operationId: OrganizePersonnelList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizePersonnelListRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizePersonnelListResponse'
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/asterisk:
+    post:
+      tags: [Article]
+      summary: 收藏/取消收藏文章
+      operationId: ArticleAsterisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleAsteriskRequest' }
+            example:
+              article_id: 10
+              action: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/classify/delete:
+    post:
+      tags: [Article]
+      summary: 文章分类删除
+      operationId: ArticleClassDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleClassDeleteRequest' }
+            example:
+              classify_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/classify/edit:
+    post:
+      tags: [Article]
+      summary: 文章分类编辑
+      operationId: ArticleClassEdit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleClassEditRequest' }
+            example:
+              name: '随笔'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArticleClassEditResponse' }
+              example:
+                classify_id: 2
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/classify/list:
+    post:
+      tags: [Article]
+      summary: 获取文章分类列表
+      operationId: ArticleClassList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleClassListRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArticleClassListResponse' }
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/classify/sort:
+    post:
+      tags: [Article]
+      summary: 文章分类排序
+      operationId: ArticleClassSort
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleClassSortRequest' }
+            example:
+              classify_ids: [3, 1, 2]
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/agree:
+    post:
+      tags: [Group]
+      summary: 同意群组申请
+      operationId: GroupApplyAgree
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyAgreeRequest' }
+            example:
+              apply_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/all:
+    post:
+      tags: [Group]
+      summary: 所有群组申请列表
+      operationId: GroupApplyAll
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyAllRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupApplyAllResponse' }
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/create:
+    post:
+      tags: [Group]
+      summary: 创建群组申请
+      operationId: GroupApplyCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyCreateRequest' }
+            example:
+              group_id: 1001
+              remark: '申请加入'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/decline:
+    post:
+      tags: [Group]
+      summary: 拒绝群组申请
+      operationId: GroupApplyDecline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyDeclineRequest' }
+            example:
+              apply_id: 1
+              remark: '抱歉'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/delete:
+    post:
+      tags: [Group]
+      summary: 删除群组申请
+      operationId: GroupApplyDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyDeleteRequest' }
+            example:
+              apply_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-apply/unread-num:
+    post:
+      tags: [Group]
+      summary: 群组申请未读数
+      operationId: GroupApplyUnreadNum
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupApplyUnreadNumRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupApplyUnreadNumResponse' }
+              example:
+                num: 1
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/assign-admin:
+    post:
+      tags: [Group]
+      summary: 分配管理员
+      operationId: GroupAssignAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupAssignAdminRequest' }
+            example:
+              group_id: 1001
+              user_id: 2
+              action: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group-notice/edit:
+    post:
+      tags: [Group]
+      summary: 编辑群组公告
+      operationId: GroupNoticeEdit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupNoticeEditRequest' }
+            example:
+              group_id: 1001
+              content: '周五晚8点会议'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/dismiss:
+    post:
+      tags: [Group]
+      summary: 解散群聊
+      operationId: GroupDismiss
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupDismissRequest' }
+            example:
+              group_id: 1001
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/get-invite-friends:
+    post:
+      tags: [Group]
+      summary: 获取可邀请好友列表
+      operationId: GroupGetInviteFriends
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GetInviteFriendsRequest' }
+            example:
+              group_id: 1001
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GetInviteFriendsResponse' }
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/handover:
+    post:
+      tags: [Group]
+      summary: 群主更换
+      operationId: GroupHandover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupHandoverRequest' }
+            example:
+              group_id: 1001
+              user_id: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/invite:
+    post:
+      tags: [Group]
+      summary: 邀请加入群聊
+      operationId: GroupInvite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupInviteRequest' }
+            example:
+              group_id: 1001
+              user_ids: [5, 6]
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/mute:
+    post:
+      tags: [Group]
+      summary: 群禁言
+      operationId: GroupMute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupMuteRequest' }
+            example:
+              group_id: 1001
+              action: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/no-speak:
+    post:
+      tags: [Group]
+      summary: 群成员禁言
+      operationId: GroupNoSpeak
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupNoSpeakRequest' }
+            example:
+              group_id: 1001
+              user_id: 5
+              action: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/overt:
+    post:
+      tags: [Group]
+      summary: 群公开修改
+      operationId: GroupOvert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupOvertRequest' }
+            example:
+              group_id: 1001
+              action: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/overt-list:
+    post:
+      tags: [Group]
+      summary: 公开群聊列表
+      operationId: GroupOvertList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupOvertListRequest' }
+            example:
+              page: 1
+              name: ''
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupOvertListResponse' }
+              example:
+                items: []
+                next: false
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/remark-update:
+    post:
+      tags: [Group]
+      summary: 群聊名片更新
+      operationId: GroupRemarkUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupRemarkUpdateRequest' }
+            example:
+              group_id: 1001
+              remark: '学习小组'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/remove-member:
+    post:
+      tags: [Group]
+      summary: 移出群成员
+      operationId: GroupRemoveMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupRemoveMemberRequest' }
+            example:
+              group_id: 1001
+              user_ids: [6]
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/secede:
+    post:
+      tags: [Group]
+      summary: 退出群聊
+      operationId: GroupSecede
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupSecedeRequest' }
+            example:
+              group_id: 1001
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/group/setting:
+    post:
+      tags: [Group]
+      summary: 设置群聊
+      operationId: GroupSetting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupSettingRequest' }
+            example:
+              group_id: 1001
+              group_name: '新名称'
+              avatar: ''
+              profile: ''
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/emoticon/customize/upload:
+    post:
+      tags: [Emoticon]
+      summary: 表情包上传
+      operationId: EmoticonCustomizeUpload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 返回上传表情资源地址
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+              example:
+                url: 'https://cdn.example.com/emoticon/e1.png'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/emoticon/customize/delete:
+    post:
+      tags: [Emoticon]
+      summary: 删除表情包
+      operationId: EmoticonDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmoticonDeleteRequest' }
+            example:
+              emoticon_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-apply/accept:
+    post:
+      tags: [Contact]
+      summary: 同意联系人申请
+      operationId: ContactApplyAccept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactApplyAcceptRequest' }
+            example:
+              apply_id: 1
+              remark: '同意'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-apply/create:
+    post:
+      tags: [Contact]
+      summary: 添加联系人申请
+      operationId: ContactApplyCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactApplyCreateRequest' }
+            example:
+              user_id: 2
+              remark: '加个好友'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-apply/decline:
+    post:
+      tags: [Contact]
+      summary: 拒绝联系人申请
+      operationId: ContactApplyDecline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactApplyDeclineRequest' }
+            example:
+              apply_id: 1
+              remark: '抱歉'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-apply/unread-num:
+    post:
+      tags: [Contact]
+      summary: 申请未读数
+      operationId: ContactApplyUnreadNum
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactApplyUnreadNumRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactApplyUnreadNumResponse' }
+              example:
+                num: 3
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-group/list:
+    post:
+      tags: [Contact]
+      summary: 联系人分组列表
+      operationId: ContactGroupList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactGroupListRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactGroupListResponse' }
+              example:
+                items: []
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact-group/save:
+    post:
+      tags: [Contact]
+      summary: 保存联系人分组
+      operationId: ContactGroupSave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactGroupSaveRequest' }
+            example:
+              items:
+                - id: 1
+                  sort: 1
+                  name: '朋友'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/change-group:
+    post:
+      tags: [Contact]
+      summary: 修改联系人分组
+      operationId: ContactChangeGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactChangeGroupRequest' }
+            example:
+              user_id: 2
+              group_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/delete:
+    post:
+      tags: [Contact]
+      summary: 联系人删除
+      operationId: ContactDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactDeleteRequest' }
+            example:
+              user_id: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/edit-remark:
+    post:
+      tags: [Contact]
+      summary: 联系人备注修改
+      operationId: ContactEditRemark
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactEditRemarkRequest' }
+            example:
+              user_id: 2
+              remark: '研发-前端'
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/online-status:
+    post:
+      tags: [Contact]
+      summary: 获取联系人在线状态
+      operationId: ContactOnlineStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactOnlineStatusRequest' }
+            example:
+              user_id: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactOnlineStatusResponse' }
+              example:
+                online_status: 'Y'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/contact/search:
+    post:
+      tags: [Contact]
+      summary: 联系人搜索
+      operationId: ContactSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactSearchRequest' }
+            example:
+              mobile: '13800000006'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactSearchResponse' }
+              example:
+                user_id: 6
+                mobile: '13800000006'
+                nickname: '新朋友'
+                avatar: ''
+                gender: 0
+                motto: ''
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/common/send-test:
+    post:
+      tags: [Common]
+      summary: 俺们就开始的那（测试接口）
+      operationId: CommonSendTest
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommonSendTestRequest' }
+            example:
+              name: 'hello'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommonSendTestResponse' }
+              example:
+                message: 'pong'
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/delete:
+    post:
+      tags: [Article]
+      summary: 删除文章
+      operationId: ArticleDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleDeleteRequest' }
+            example:
+              article_id: 1001
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/editor:
+    post:
+      tags: [Article]
+      summary: 文章编辑
+      operationId: ArticleEdit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleEditRequest' }
+            example:
+              article_id: 1001
+              title: '更新后的标题'
+              content: '<p>正文</p>'
+              class_id: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/forever-delete:
+    post:
+      tags: [Article]
+      summary: 永久删除文章
+      operationId: ArticleForeverDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleForeverDeleteRequest' }
+            example:
+              article_id: 1001
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/move:
+    post:
+      tags: [Article]
+      summary: 移动文章分类
+      operationId: ArticleMove
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleMoveRequest' }
+            example:
+              article_id: 1001
+              class_id: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/recover:
+    post:
+      tags: [Article]
+      summary: 恢复文章
+      operationId: ArticleRecover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleRecoverRequest' }
+            example:
+              article_id: 1001
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/recover-list:
+    post:
+      tags: [Article]
+      summary: 回收站文章列表
+      operationId: ArticleRecoverList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleRecoverListRequest' }
+            example:
+              page: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArticleRecoverListResponse' }
+              example:
+                items: []
+                next: false
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article/tags:
+    post:
+      tags: [Article]
+      summary: 设置文章标签
+      operationId: ArticleSetTags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleTagsRequest' }
+            example:
+              article_id: 1001
+              tags: ['tech', 'note']
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/delete:
+    post:
+      tags: [Article]
+      summary: 删除文章附件
+      operationId: ArticleAnnexDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleAnnexDeleteRequest' }
+            example:
+              annex_id: 11
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/forever-delete:
+    post:
+      tags: [Article]
+      summary: 永久删除文章附件
+      operationId: ArticleAnnexForeverDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleAnnexForeverDeleteRequest' }
+            example:
+              annex_id: 11
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/recover:
+    post:
+      tags: [Article]
+      summary: 恢复文章附件
+      operationId: ArticleAnnexRecover
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleAnnexRecoverRequest' }
+            example:
+              annex_id: 11
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/article-annex/recover-list:
+    post:
+      tags: [Article]
+      summary: 文章附件回收站列表
+      operationId: ArticleAnnexRecoverList
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArticleAnnexRecoverListRequest' }
+            example:
+              page: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArticleAnnexRecoverListResponse' }
+              example:
+                items: []
+                next: false
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/message/forward-records:
+    post:
+      tags: [Message]
+      summary: 转发消息记录
+      operationId: MessageForwardRecords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MessageForwardRecordsRequest' }
+            example:
+              talk_type: 1
+              records_ids: [100, 101]
+              receiver_ids: [2, 3]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageRecordsClearResponse' }
+              example:
+                clear_num: 2
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-clear-unread-num:
+    post:
+      tags: [Talk]
+      summary: 会话未读数清除
+      operationId: TalkSessionClearUnreadNum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TalkSessionClearUnreadNumRequest' }
+            example:
+              talk_mode: 1
+              receiver_id: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-delete:
+    post:
+      tags: [Talk]
+      summary: 会话删除
+      operationId: TalkSessionDelete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TalkSessionDeleteRequest' }
+            example:
+              talk_mode: 1
+              receiver_id: 2
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-disturb:
+    post:
+      tags: [Talk]
+      summary: 会话免打扰
+      operationId: TalkSessionDisturb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TalkSessionDisturbRequest' }
+            example:
+              talk_mode: 1
+              receiver_id: 2
+              disturb: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/v1/talk/session-top:
+    post:
+      tags: [Talk]
+      summary: 会话置顶
+      operationId: TalkSessionTop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TalkSessionTopRequest' }
+            example:
+              talk_mode: 1
+              receiver_id: 2
+              is_top: 1
+      responses:
+        '200': { description: OK }
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: 未授权或登录已过期
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 401
+            message: '未授权'
+    Error:
+      description: 业务或系统错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            BusinessError:
+              value:
+                code: 400
+                message: '参数错误'
+            NetworkError:
+              value:
+                code: -1
+                message: '网络连接失败，请重试'
+            Timeout:
+              value:
+                code: -2
+                message: '请求超时'
+            Unknown:
+              value:
+                code: -3
+                message: '未知错误'
+            RequestFailed:
+              value:
+                code: -4
+                message: '请求失败'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 错误码（-1 网络失败，-2 超时，-3 未知，-4 请求失败，或业务错误码）
+        message:
+          type: string
+          description: 错误消息
+      required: [code, message]
+      description: 通用错误返回结构
+
+    # ========== Auth ==========
+    AuthLoginRequest:
+      type: object
+      properties:
+        mobile: { type: string, description: 登录手机号 }
+        password: { type: string, description: 登录密码 }
+        platform: { type: string, description: 登录平台 }
+      required: [mobile, password, platform]
+    AuthLoginResponse:
+      type: object
+      properties:
+        type: { type: string, description: Token 类型，如 Bearer }
+        access_token: { type: string, description: token 值 }
+        expires_in: { type: integer, description: 过期时间（秒） }
+      required: [type, access_token, expires_in]
+    AuthRegisterRequest:
+      type: object
+      properties:
+        nickname: { type: string }
+        mobile: { type: string }
+        password: { type: string }
+        platform: { type: string }
+        sms_code: { type: string }
+    AuthRegisterResponse:
+      $ref: '#/components/schemas/AuthLoginResponse'
+    AuthForgetRequest:
+      type: object
+      properties:
+        mobile: { type: string }
+        password: { type: string }
+        sms_code: { type: string }
+      required: [mobile, password, sms_code]
+    AuthOauthRequest:
+      type: object
+      properties:
+        oauth_type: { type: string }
+      required: [oauth_type]
+    AuthOauthResponse:
+      type: object
+      properties:
+        uri: { type: string }
+      required: [uri]
+    AuthOauthLoginRequest:
+      type: object
+      properties:
+        oauth_type: { type: string }
+        code: { type: string }
+        state: { type: string }
+      required: [oauth_type, code, state]
+    Authorize:
+      type: object
+      properties:
+        access_token: { type: string }
+        expires_in: { type: integer }
+        type: { type: string }
+    AuthOauthLoginResponse:
+      type: object
+      properties:
+        is_authorize: { type: string }
+        authorize: { $ref: '#/components/schemas/Authorize' }
+        bind_token: { type: string }
+    AuthOAuthBindRequest:
+      type: object
+      properties:
+        bind_token: { type: string }
+        mobile: { type: string }
+        sms_code: { type: string }
+      required: [bind_token, mobile, sms_code]
+    AuthOAuthBindResponse:
+      type: object
+      properties:
+        authorize: { $ref: '#/components/schemas/Authorize' }
+
+    # ========== Common ==========
+    CommonSendEmailRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+    CommonSendEmailResponse:
+      type: object
+      properties: {}
+    CommonSendSmsRequest:
+      type: object
+      properties:
+        mobile: { type: string }
+        channel: { type: string }
+    CommonSendSmsResponse:
+      type: object
+      properties:
+        sms_code: { type: string }
+
+    # ========== User ==========
+    UserDetailRequest:
+      type: object
+      properties: {}
+    UserDetailResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        mobile: { type: string }
+        nickname: { type: string }
+        avatar: { type: string }
+        gender: { type: integer }
+        motto: { type: string }
+        email: { type: string }
+        birthday: { type: string }
+      required: [id, mobile, nickname, avatar, gender, motto, email, birthday]
+    UserDetailUpdateRequest:
+      type: object
+      properties:
+        avatar: { type: string }
+        nickname: { type: string }
+        gender: { type: integer }
+        motto: { type: string }
+        birthday: { type: string }
+    UserEmailUpdateRequest:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+        code: { type: string }
+    UserMobileUpdateRequest:
+      type: object
+      properties:
+        mobile: { type: string }
+        password: { type: string }
+        sms_code: { type: string }
+    UserPasswordUpdateRequest:
+      type: object
+      properties:
+        old_password: { type: string }
+        new_password: { type: string }
+    UserSettingRequest:
+      type: object
+      properties: {}
+    UserSettingResponse_UserInfo:
+      type: object
+      properties:
+        uid: { type: integer }
+        nickname: { type: string }
+        avatar: { type: string }
+        motto: { type: string }
+        gender: { type: integer }
+        is_qiye: { type: boolean }
+        mobile: { type: string }
+        email: { type: string }
+    UserSettingResponse_ConfigInfo:
+      type: object
+      properties:
+        theme_mode: { type: string }
+        theme_bag_img: { type: string }
+        theme_color: { type: string }
+        notify_cue_tone: { type: string }
+        keyboard_event_notify: { type: string }
+    UserSettingResponse:
+      type: object
+      properties:
+        user_info: { $ref: '#/components/schemas/UserSettingResponse_UserInfo' }
+        setting: { $ref: '#/components/schemas/UserSettingResponse_ConfigInfo' }
+
+    # ========== Contact ==========
+    ContactListRequest:
+      type: object
+      properties: {}
+    ContactListResponse_Item:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        gender: { type: integer }
+        motto: { type: string }
+        avatar: { type: string }
+        remark: { type: string }
+        group_id: { type: integer }
+    ContactListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactListResponse_Item'
+    ContactDetailRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+      required: [user_id]
+    ContactDetailResponse:
+      type: object
+      properties:
+        user_id: { type: integer }
+        mobile: { type: string }
+        nickname: { type: string }
+        avatar: { type: string }
+        gender: { type: integer }
+        motto: { type: string }
+        email: { type: string }
+        relation: { type: integer }
+        contact_remark: { type: string }
+        contact_group_id: { type: integer }
+        online_status: { type: string }
+
+    # ---- Contact (more) ----
+    ContactApplyAcceptRequest:
+      type: object
+      properties:
+        apply_id: { type: integer }
+        remark: { type: string }
+      required: [apply_id]
+    ContactApplyCreateRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+        remark: { type: string }
+      required: [user_id]
+    ContactApplyDeclineRequest:
+      type: object
+      properties:
+        apply_id: { type: integer }
+        remark: { type: string }
+      required: [apply_id]
+    ContactApplyListRequest:
+      type: object
+      properties: {}
+    ContactApplyListResponse_Item:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: integer }
+        friend_id: { type: integer }
+        remark: { type: string }
+        nickname: { type: string }
+        avatar: { type: string }
+        created_at: { type: string }
+    ContactApplyListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ContactApplyListResponse_Item' }
+    ContactApplyUnreadNumRequest:
+      type: object
+      properties: {}
+    ContactApplyUnreadNumResponse:
+      type: object
+      properties:
+        num: { type: integer }
+    ContactGroupListRequest:
+      type: object
+      properties: {}
+    ContactGroupListResponse_Item:
+      type: object
+      properties:
+        id: { type: integer, description: 分组ID }
+        name: { type: string, description: 分组名称 }
+        count: { type: integer, description: 联系人数 }
+        sort: { type: integer, description: 分组排序 }
+    ContactGroupListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ContactGroupListResponse_Item' }
+    ContactGroupSaveRequest_Item:
+      type: object
+      properties:
+        id: { type: integer }
+        sort: { type: integer }
+        name: { type: string }
+    ContactGroupSaveRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ContactGroupSaveRequest_Item' }
+    ContactChangeGroupRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+        group_id: { type: integer }
+      required: [user_id]
+    ContactDeleteRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+      required: [user_id]
+    ContactEditRemarkRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+        remark: { type: string }
+      required: [user_id]
+    ContactOnlineStatusRequest:
+      type: object
+      properties:
+        user_id: { type: integer }
+      required: [user_id]
+    ContactOnlineStatusResponse:
+      type: object
+      properties:
+        online_status: { type: string, description: '在线状态 [N:离线;Y:在线;]' }
+    ContactSearchRequest:
+      type: object
+      properties:
+        mobile: { type: string }
+      required: [mobile]
+    ContactSearchResponse:
+      type: object
+      properties:
+        user_id: { type: integer }
+        mobile: { type: string }
+        nickname: { type: string }
+        avatar: { type: string }
+        gender: { type: integer }
+        motto: { type: string }
+
+    # ========== Group ==========
+    GroupCreateRequest:
+      type: object
+      properties:
+        name: { type: string }
+        user_ids:
+          type: array
+          items: { type: integer }
+    GroupCreateResponse:
+      type: object
+      properties:
+        group_id: { type: integer }
+      required: [group_id]
+    GroupDetailRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+      required: [group_id]
+    GroupDetailResponse_Notice:
+      type: object
+      properties:
+        content: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+        modify_user_name: { type: string }
+    GroupDetailResponse:
+      type: object
+      properties:
+        group_id: { type: integer }
+        group_name: { type: string }
+        profile: { type: string }
+        avatar: { type: string }
+        created_at: { type: string }
+        is_manager: { type: boolean }
+        is_disturb: { type: integer }
+        visit_card: { type: string }
+        is_mute: { type: integer }
+        is_overt: { type: integer }
+        notice: { $ref: '#/components/schemas/GroupDetailResponse_Notice' }
+    GroupListRequest:
+      type: object
+      properties: {}
+    GroupListResponse_Item:
+      type: object
+      properties:
+        group_id: { type: integer }
+        group_name: { type: string }
+        avatar: { type: string }
+        profile: { type: string }
+        leader: { type: integer }
+        creator_id: { type: integer }
+    GroupListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupListResponse_Item' }
+    GroupMemberListRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+      required: [group_id]
+    GroupMemberListResponse_Item:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        avatar: { type: string }
+        gender: { type: integer }
+        leader: { type: integer }
+        is_mute: { type: integer }
+        remark: { type: string }
+        motto: { type: string }
+    GroupMemberListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupMemberListResponse_Item' }
+    GroupVoteCreateRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        title: { type: string }
+        mode: { type: integer }
+        is_anonymous: { type: integer }
+        options:
+          type: array
+          items: { type: string }
+    GroupVoteDetailRequest:
+      type: object
+      properties:
+        vote_id: { type: integer }
+      required: [vote_id]
+    GroupVoteDetailResponse_AnswerOption:
+      type: object
+      properties:
+        key: { type: string }
+        value: { type: string }
+    GroupVoteDetailResponse_AnsweredUser:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        options:
+          type: array
+          items: { type: string }
+        answer_time: { type: string }
+    GroupVoteDetailResponse:
+      type: object
+      properties:
+        vote_id: { type: integer }
+        title: { type: string }
+        answer_mode: { type: integer }
+        answer_options:
+          type: array
+          items: { $ref: '#/components/schemas/GroupVoteDetailResponse_AnswerOption' }
+        answer_num: { type: integer }
+        answered_num: { type: integer }
+        is_anonymous: { type: integer }
+        answered_users:
+          type: array
+          items: { $ref: '#/components/schemas/GroupVoteDetailResponse_AnsweredUser' }
+        is_submit: { type: boolean }
+    GroupVoteSubmitRequest:
+      type: object
+      properties:
+        vote_id: { type: integer }
+        options:
+          type: array
+          items: { type: string }
+
+    # ---- Group (more) ----
+    GroupApplyAgreeRequest:
+      type: object
+      properties:
+        apply_id: { type: integer }
+      required: [apply_id]
+    GroupApplyAllRequest:
+      type: object
+      properties: {}
+    GroupApplyAllResponse_Item:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: integer }
+        group_id: { type: integer }
+        group_name: { type: string }
+        remark: { type: string }
+        avatar: { type: string }
+        nickname: { type: string }
+        created_at: { type: string }
+    GroupApplyAllResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupApplyAllResponse_Item' }
+    GroupApplyCreateRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        remark: { type: string }
+    GroupApplyDeclineRequest:
+      type: object
+      properties:
+        apply_id: { type: integer }
+        remark: { type: string }
+      required: [apply_id]
+    GroupApplyDeleteRequest:
+      type: object
+      properties:
+        apply_id: { type: integer }
+      required: [apply_id]
+    GroupApplyListRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+    GroupApplyListResponse_Item:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: integer }
+        group_id: { type: integer }
+        remark: { type: string }
+        avatar: { type: string }
+        nickname: { type: string }
+        created_at: { type: string }
+    GroupApplyListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupApplyListResponse_Item' }
+    GroupApplyUnreadNumRequest:
+      type: object
+      properties: {}
+    GroupApplyUnreadNumResponse:
+      type: object
+      properties:
+        num: { type: integer }
+    GroupAssignAdminRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        user_id: { type: integer }
+        action: { type: integer }
+    GroupNoticeEditRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        content: { type: string }
+    GroupDismissRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+      required: [group_id]
+    GetInviteFriendsRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+    GetInviteFriendsResponse_Item:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        avatar: { type: string }
+        gender: { type: integer }
+        remark: { type: string }
+    GetInviteFriendsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GetInviteFriendsResponse_Item' }
+    GroupHandoverRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        user_id: { type: integer }
+    GroupInviteRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        user_ids:
+          type: array
+          items: { type: integer }
+    GroupMuteRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        action: { type: integer, description: '1:开启全员禁言 2:解除全员禁言' }
+    GroupNoSpeakRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        user_id: { type: integer }
+        action: { type: integer }
+    GroupOvertRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        action: { type: integer, description: '1:关闭 2:开启' }
+    GroupOvertListRequest:
+      type: object
+      properties:
+        page: { type: integer }
+        name: { type: string }
+    GroupOvertListResponse_Item:
+      type: object
+      properties:
+        group_id: { type: integer }
+        type: { type: integer }
+        name: { type: string }
+        avatar: { type: string }
+        profile: { type: string }
+        count: { type: integer }
+        max_num: { type: integer }
+        is_member: { type: boolean }
+        created_at: { type: string }
+    GroupOvertListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/GroupOvertListResponse_Item' }
+        next: { type: boolean }
+    GroupRemarkUpdateRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        remark: { type: string }
+    GroupRemoveMemberRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        user_ids:
+          type: array
+          items: { type: integer }
+    GroupSecedeRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+    GroupSettingRequest:
+      type: object
+      properties:
+        group_id: { type: integer }
+        group_name: { type: string }
+        avatar: { type: string }
+        profile: { type: string }
+
+    # ========== Message ==========
+    MessageRecord:
+      type: object
+      properties:
+        msg_id: { type: string }
+        sequence: { type: integer }
+        msg_type: { type: integer }
+        from_id: { type: integer }
+        nickname: { type: string }
+        avatar: { type: string }
+        is_revoked: { type: integer }
+        send_time: { type: string }
+        extra: { type: string }
+        quote: { type: string }
+    MessageRecordsRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        cursor: { type: integer }
+        limit: { type: integer }
+      required: [talk_mode, to_from_id, cursor, limit]
+    MessageRecordsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MessageRecord' }
+        cursor: { type: integer }
+    MessageHistoryRecordsRequest:
+      allOf:
+        - $ref: '#/components/schemas/MessageRecordsRequest'
+        - type: object
+          properties:
+            msg_type: { type: integer }
+          required: [msg_type]
+    MessageHistoryRecordsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MessageRecord' }
+        cursor: { type: integer }
+    MessageForwardRecordsRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        msg_ids:
+          type: array
+          items: { type: string }
+    MessageRecordsClearResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MessageRecord' }
+    MessageDeleteRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        msg_ids:
+          type: array
+          items: { type: string }
+      required: [talk_mode, to_from_id, msg_ids]
+    MessageRevokeRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        msg_id: { type: string }
+      required: [talk_mode, to_from_id, msg_id]
+    ServTalkMessageSendRequest:
+      type: object
+      properties:
+        type: { type: string }
+        quote_id: { type: string }
+        body: { type: object }
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        msg_id: { type: string }
+      required: [type, body, talk_mode, to_from_id]
+
+    # ========== Talk ==========
+    TalkSessionListRequest:
+      type: object
+      properties: {}
+    TalkSessionItem:
+      type: object
+      properties:
+        id: { type: integer }
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        is_top: { type: integer }
+        is_disturb: { type: integer }
+        is_robot: { type: integer }
+        name: { type: string }
+        avatar: { type: string }
+        remark: { type: string }
+        unread_num: { type: integer }
+        msg_text: { type: string }
+        updated_at: { type: string }
+    TalkSessionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/TalkSessionItem' }
+    TalkSessionCreateRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer, description: '1:私聊 2:群聊' }
+        to_from_id: { type: integer, description: 对方ID }
+      required: [talk_mode, to_from_id]
+    TalkSessionCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/TalkSessionItem'
+        - type: object
+          properties:
+            is_online: { type: integer }
+    TalkSessionClearUnreadNumRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+    TalkSessionDeleteRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+    TalkSessionDisturbRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        action: { type: integer }
+    TalkSessionTopRequest:
+      type: object
+      properties:
+        talk_mode: { type: integer }
+        to_from_id: { type: integer }
+        action: { type: integer }
+
+    # ========== Emoticon ==========
+    EmoticonListRequest:
+      type: object
+      properties: {}
+    EmoticonItem:
+      type: object
+      properties:
+        emoticon_id: { type: integer }
+        url: { type: string }
+    EmoticonListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/EmoticonItem' }
+    EmoticonCreateRequest:
+      type: object
+      properties:
+        url: { type: string }
+    EmoticonCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/EmoticonItem'
+    EmoticonDeleteRequest:
+      type: object
+      properties:
+        emoticon_id: { type: integer }
+      required: [emoticon_id]
+
+    # ========== Article ==========
+    ArticleDetailRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+      required: [article_id]
+    ArticleDetailResponse_Tag:
+      type: object
+      properties:
+        id: { type: integer }
+    ArticleDetailResponse_AnnexFile:
+      type: object
+      properties:
+        annex_id: { type: integer }
+        annex_name: { type: string }
+        annex_size: { type: integer }
+        created_at: { type: string }
+    ArticleDetailResponse:
+      type: object
+      properties:
+        article_id: { type: integer }
+        classify_id: { type: integer }
+        title: { type: string }
+        md_content: { type: string }
+        is_asterisk: { type: integer }
+        created_at: { type: string }
+        updated_at: { type: string }
+        tag_ids:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleDetailResponse_Tag' }
+        annex_list:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleDetailResponse_AnnexFile' }
+    ArticleListRequest:
+      type: object
+      properties:
+        keyword: { type: string }
+        find_type: { type: integer, description: '1:关键字 2:分类 3:标签 4:最近修改' }
+        classify_id: { type: integer }
+        tag_id: { type: integer }
+    ArticleListResponse_Item:
+      type: object
+      properties:
+        article_id: { type: integer }
+        classify_id: { type: integer }
+        tags_id: { type: string }
+        title: { type: string }
+        class_name: { type: string }
+        image: { type: string }
+        is_asterisk: { type: integer }
+        status: { type: integer }
+        created_at: { type: string }
+        updated_at: { type: string }
+        abstract: { type: string }
+    ArticleListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleListResponse_Item' }
+
+    # ---- Article (more) ----
+    ArticleDeleteRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+      required: [article_id]
+    ArticleEditRequest:
+      type: object
+      properties:
+        article_id: { type: integer, nullable: true, description: 文章ID }
+        classify_id: { type: integer, nullable: true, description: 分类ID }
+        title: { type: string, nullable: true, description: 标题 }
+        abstract: { type: string, nullable: true, description: 摘要 }
+        md_content: { type: string, nullable: true, description: 内容 }
+    ArticleEditResponse:
+      type: object
+      properties:
+        article_id: { type: integer }
+        title: { type: string }
+        abstract: { type: string }
+        image: { type: string }
+    ArticleForeverDeleteRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+      required: [article_id]
+    ArticleMoveRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+        classify_id: { type: integer }
+      required: [article_id, classify_id]
+    ArticleRecoverRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+      required: [article_id]
+    ArticleRecoverListRequest:
+      type: object
+      properties:
+        page: { type: integer }
+    ArticleRecoverListResponse_Item:
+      type: object
+      properties:
+        article_id: { type: integer }
+        classify_id: { type: integer }
+        classify_name: { type: string }
+        title: { type: string }
+        abstract: { type: string }
+        image: { type: string }
+        created_at: { type: string }
+        deleted_at: { type: string }
+        day: { type: integer }
+    ArticleRecoverListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleRecoverListResponse_Item' }
+    ArticleTagsRequest:
+      type: object
+      properties:
+        article_id: { type: integer }
+        tag_ids:
+          type: array
+          items: { type: integer }
+      required: [article_id]
+    ArticleAsteriskRequest:
+      type: object
+      properties:
+        article_id: { type: integer, description: 文章ID }
+        action: { type: integer, description: '操作方式 1:收藏 2:取消收藏' }
+      required: [article_id, action]
+    ArticleClassDeleteRequest:
+      type: object
+      properties:
+        classify_id: { type: integer }
+      required: [classify_id]
+    ArticleClassEditRequest:
+      type: object
+      properties:
+        classify_id: { type: integer }
+        name: { type: string }
+      required: [name]
+    ArticleClassEditResponse:
+      type: object
+      properties:
+        classify_id: { type: integer }
+      required: [classify_id]
+    ArticleClassListRequest:
+      type: object
+      properties: {}
+    ArticleClassListResponse_Item:
+      type: object
+      properties:
+        id: { type: integer }
+        class_name: { type: string }
+        is_default: { type: integer }
+        count: { type: integer }
+    ArticleClassListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleClassListResponse_Item' }
+    ArticleClassSortRequest:
+      type: object
+      properties:
+        classify_ids:
+          type: array
+          description: 排序后的分类ID列表
+          items: { type: integer }
+      required: [classify_ids]
+
+    # ---- Article Annex ----
+    ArticleAnnexDeleteRequest:
+      type: object
+      properties:
+        annex_id: { type: integer }
+      required: [annex_id]
+    ArticleAnnexForeverDeleteRequest:
+      type: object
+      properties:
+        annex_id: { type: integer }
+      required: [annex_id]
+    ArticleAnnexRecoverRequest:
+      type: object
+      properties:
+        annex_id: { type: integer }
+      required: [annex_id]
+    ArticleAnnexRecoverListRequest:
+      type: object
+      properties:
+        page: { type: integer }
+    ArticleAnnexRecoverListResponse_Item:
+      type: object
+      properties:
+        annex_id: { type: integer }
+        annex_name: { type: string }
+        article_id: { type: integer }
+        article_title: { type: string }
+        created_at: { type: string }
+        deleted_at: { type: string }
+        day: { type: integer }
+    ArticleAnnexRecoverListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ArticleAnnexRecoverListResponse_Item' }
+        paginate:
+          type: object
+          properties:
+            page: { type: integer }
+            size: { type: integer }
+            total: { type: integer }
+
+  # ========== Organize ==========
+    OrganizeDepartmentListRequest:
+      type: object
+      properties: {}
+    OrganizeDepartmentListResponse_Item:
+      type: object
+      properties:
+        dept_id: { type: integer }
+        parent_id: { type: integer }
+        dept_name: { type: string }
+        ancestors: { type: string }
+        count: { type: integer }
+    OrganizeDepartmentListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrganizeDepartmentListResponse_Item' }
+    OrganizePersonnelListRequest:
+      type: object
+      properties: {}
+    OrganizePersonnelListResponse_Position:
+      type: object
+      properties:
+        code: { type: string }
+        name: { type: string }
+        sort: { type: integer }
+    OrganizePersonnelListResponse_Dept:
+      type: object
+      properties:
+        dept_id: { type: integer }
+        dept_name: { type: string }
+        ancestors: { type: string }
+    OrganizePersonnelListResponse_Item:
+      type: object
+      properties:
+        user_id: { type: integer }
+        nickname: { type: string }
+        gender: { type: integer }
+        position_items:
+          type: array
+          items: { $ref: '#/components/schemas/OrganizePersonnelListResponse_Position' }
+        dept_item: { $ref: '#/components/schemas/OrganizePersonnelListResponse_Dept' }
+        avatar: { type: string }
+    OrganizePersonnelListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrganizePersonnelListResponse_Item' }
+
+    # ========== Common (extra) ==========
+    CommonSendTestRequest:
+      type: object
+      properties:
+        email: { type: string }
+    CommonSendTestResponse:
+      type: object
+      properties: {}
+
+  x-error-codes:
+    description: 通用错误码说明
+    items:
+      - code: -1
+        message: 网络连接失败，请重试
+      - code: -2
+        message: 请求超时
+      - code: -3
+        message: 未知错误
+      - code: -4
+        message: 请求失败
+      - code: 400
+        message: 业务错误（当返回体存在 code 且为数字时使用）
+      - code: 401
+        message: 未授权或登录过期
+      - code: 403
+        message: 无权限
+      - code: 404
+        message: 资源不存在
+      - code: 429
+        message: 请求过于频繁
+      - code: 500
+        message: 服务器内部错误

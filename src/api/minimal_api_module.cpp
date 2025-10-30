@@ -7,7 +7,7 @@
 
 namespace CIM::api
 {
-    static auto g_logger = CIM_LOG_NAME("api");
+    static auto g_logger = CIM_LOG_NAME("root");
 
     MinimalApiModule::MinimalApiModule()
         : Module("api.minimal", "0.1.0", "builtin")

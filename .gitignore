@@ -6,3 +6,4 @@ autobuild.sh
 *.tmp
 *.log
 *.rl.cpp
+*.pem

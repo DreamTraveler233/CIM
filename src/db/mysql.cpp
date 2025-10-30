@@ -76,8 +76,6 @@ namespace CIM
         {
             mysql_options(mysql, MYSQL_OPT_CONNECT_TIMEOUT, &timeout);
         }
-        bool close = false;
-        mysql_options(mysql, MYSQL_OPT_RECONNECT, &close);
         mysql_options(mysql, MYSQL_SET_CHARSET_NAME, "utf8mb4");
 
         int port = GetParamValue(params, "port", 0);
@@ -842,12 +840,36 @@ namespace CIM
 
     int32_t MySQLStmtRes::getInt32(int idx)
     {
-        XX(int32_t);
+        switch (m_datas[idx].type)
+        {
+        case MYSQL_TYPE_TINY:
+            return *(int8_t *)m_datas[idx].data;
+        case MYSQL_TYPE_SHORT:
+            return *(int16_t *)m_datas[idx].data;
+        case MYSQL_TYPE_LONG:
+            return *(int32_t *)m_datas[idx].data;
+        case MYSQL_TYPE_LONGLONG:
+            return (int32_t)*(int64_t *)m_datas[idx].data;
+        default:
+            return TypeUtil::Atoi(std::string(m_datas[idx].data, m_datas[idx].length));
+        }
     }
 
     uint32_t MySQLStmtRes::getUint32(int idx)
     {
-        XX(uint32_t);
+        switch (m_datas[idx].type)
+        {
+        case MYSQL_TYPE_TINY:
+            return *(uint8_t *)m_datas[idx].data;
+        case MYSQL_TYPE_SHORT:
+            return *(uint16_t *)m_datas[idx].data;
+        case MYSQL_TYPE_LONG:
+            return *(uint32_t *)m_datas[idx].data;
+        case MYSQL_TYPE_LONGLONG:
+            return (uint32_t)*(uint64_t *)m_datas[idx].data;
+        default:
+            return (uint32_t)TypeUtil::Atoi(std::string(m_datas[idx].data, m_datas[idx].length));
+        }
     }
 
     int64_t MySQLStmtRes::getInt64(int idx)
