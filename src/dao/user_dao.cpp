@@ -20,8 +20,8 @@ bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err)
     }
 
     const char* sql =
-        "INSERT INTO users (mobile, email, password_hash, nickname, avatar, gender, motto, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO users (mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     auto stmt = db->prepare(sql);
     if (!stmt)
     {
@@ -34,11 +34,13 @@ bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err)
     else
         stmt->bindNull(2);
     stmt->bindString(3, u.password_hash);
-    stmt->bindString(4, u.nickname);
-    stmt->bindString(5, u.avatar);
-    stmt->bindInt32(6, u.gender);
-    stmt->bindString(7, u.motto);
-    stmt->bindInt32(8, u.status);
+    // password_salt为兼容DB必填字段，若业务哈希已包含盐，这里可存空串
+    stmt->bindString(4, u.password_salt);
+    stmt->bindString(5, u.nickname);
+    stmt->bindString(6, u.avatar);
+    stmt->bindInt32(7, u.gender);
+    stmt->bindString(8, u.motto);
+    stmt->bindInt32(9, u.status);
 
     if (stmt->execute() != 0)
     {
@@ -54,7 +56,7 @@ bool UserDAO::GetByMobile(const std::string& mobile, User& out)
     auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
     if (!db) return false;
     const char* sql =
-        "SELECT id, mobile, email, password_hash, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
+        "SELECT id, mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
         "users WHERE mobile = ? LIMIT 1";
     auto stmt = db->prepare(sql);
     if (!stmt) return false;
@@ -66,13 +68,14 @@ bool UserDAO::GetByMobile(const std::string& mobile, User& out)
     out.mobile = res->getString(1);
     out.email = res->isNull(2) ? std::string() : res->getString(2);
     out.password_hash = res->getString(3);
-    out.nickname = res->getString(4);
-    out.avatar = res->getString(5);
-    out.gender = static_cast<int32_t>(res->getInt32(6));
-    out.motto = res->getString(7);
-    out.status = static_cast<int32_t>(res->getInt32(8));
-    out.created_at = res->getTime(9);
-    out.updated_at = res->getTime(10);
+    out.password_salt = res->getString(4);
+    out.nickname = res->getString(5);
+    out.avatar = res->getString(6);
+    out.gender = static_cast<int32_t>(res->getInt32(7));
+    out.motto = res->getString(8);
+    out.status = static_cast<int32_t>(res->getInt32(9));
+    out.created_at = res->getTime(10);
+    out.updated_at = res->getTime(11);
     return true;
 }
 
@@ -81,7 +84,7 @@ bool UserDAO::GetById(uint64_t id, User& out)
     auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
     if (!db) return false;
     const char* sql =
-        "SELECT id, mobile, email, password_hash, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
+        "SELECT id, mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
         "users WHERE id = ? LIMIT 1";
     auto stmt = db->prepare(sql);
     if (!stmt) return false;
@@ -93,13 +96,14 @@ bool UserDAO::GetById(uint64_t id, User& out)
     out.mobile = res->getString(1);
     out.email = res->isNull(2) ? std::string() : res->getString(2);
     out.password_hash = res->getString(3);
-    out.nickname = res->getString(4);
-    out.avatar = res->getString(5);
-    out.gender = static_cast<int32_t>(res->getInt32(6));
-    out.motto = res->getString(7);
-    out.status = static_cast<int32_t>(res->getInt32(8));
-    out.created_at = res->getTime(9);
-    out.updated_at = res->getTime(10);
+    out.password_salt = res->getString(4);
+    out.nickname = res->getString(5);
+    out.avatar = res->getString(6);
+    out.gender = static_cast<int32_t>(res->getInt32(7));
+    out.motto = res->getString(8);
+    out.status = static_cast<int32_t>(res->getInt32(9));
+    out.created_at = res->getTime(10);
+    out.updated_at = res->getTime(11);
     return true;
 }
 

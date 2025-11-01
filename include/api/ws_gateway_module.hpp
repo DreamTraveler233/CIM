@@ -4,10 +4,10 @@
 
 namespace CIM::api {
 
-class CommonApiModule : public CIM::Module {
+class WsGatewayModule : public CIM::Module {
    public:
-    CommonApiModule();
-    ~CommonApiModule() override = default;
+    WsGatewayModule();
+    ~WsGatewayModule() override = default;
 
     bool onServerReady() override;
 };

@@ -17,21 +17,23 @@ namespace CIM::api {
 static auto g_logger = CIM_LOG_NAME("root");
 
 // JWT签名密钥
-static auto g_jwt_secret =
-    CIM::Config::Lookup<std::string>("auth.jwt.secret", std::string("dev-secret"), "jwt hmac secret");
+static auto g_jwt_secret = CIM::Config::Lookup<std::string>(
+    "auth.jwt.secret", std::string("dev-secret"), "jwt hmac secret");
 // JWT签发者
 static auto g_jwt_issuer =
     CIM::Config::Lookup<std::string>("auth.jwt.issuer", std::string("auth-service"), "jwt issuer");
 // JWT过期时间(秒)
-static auto g_jwt_expires_in = CIM::Config::Lookup<uint32_t>("auth.jwt.expires_in", 3600, "jwt expires in seconds");
+static auto g_jwt_expires_in =
+    CIM::Config::Lookup<uint32_t>("auth.jwt.expires_in", 3600, "jwt expires in seconds");
 
-AuthApiModule::AuthApiModule() : Module("auth", "0.1.0", "builtin") {}
+AuthApiModule::AuthApiModule() : Module("api.auth", "0.1.0", "builtin") {}
 
 /* 构造错误响应的JSON字符串 */
 static std::string MakeErrorJson(int code, const std::string& msg) {
     Json::Value root;
     root["code"] = code;
-    root["msg"] = msg;
+    // 为了兼容前端ApiClient错误处理，统一使用`message`字段
+    root["message"] = msg;
     return CIM::JsonUtil::ToString(root);
 }
 
@@ -63,8 +65,9 @@ static bool ParseJsonBody(const std::string& body, Json::Value& out) {
 }
 
 // 从请求中提取认证相关字段
-static void ExtractAuthFields(CIM::http::HttpRequest::ptr req, std::string& mobile, std::string& password,
-                              std::string& platform, std::string& email, std::string& nickname) {
+static void ExtractAuthFields(CIM::http::HttpRequest::ptr req, std::string& mobile,
+                              std::string& password, std::string& platform, std::string& email,
+                              std::string& nickname) {
     Json::Value body;
     if (ParseJsonBody(req->getBody(), body)) {
         mobile = CIM::JsonUtil::GetString(body, "mobile", "");
@@ -76,7 +79,8 @@ static void ExtractAuthFields(CIM::http::HttpRequest::ptr req, std::string& mobi
     }
 }
 
-static void ExtractPasswordUpdateFields(CIM::http::HttpRequest::ptr req, std::string& old_pwd, std::string& new_pwd) {
+static void ExtractPasswordUpdateFields(CIM::http::HttpRequest::ptr req, std::string& old_pwd,
+                                        std::string& new_pwd) {
     Json::Value body;
     if (ParseJsonBody(req->getBody(), body)) {
         old_pwd = CIM::JsonUtil::GetString(body, "old_password", "");
@@ -156,7 +160,8 @@ bool AuthApiModule::onServerReady() {
         auto dispatch = http->getServletDispatch();
 
         // 登录：读取 JSON/FORM 体，校验基础字段并签发HS256 JWT
-        dispatch->addServlet("/api/v1/auth/login", [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
+        dispatch->addServlet("/api/v1/auth/login", [](CIM::http::HttpRequest::ptr req,
+                                                      CIM::http::HttpResponse::ptr res,
                                                       CIM::http::HttpSession::ptr /*session*/) {
             CIM_LOG_DEBUG(g_logger) << "register request body: " << std::endl << req->getBody();
 
@@ -200,151 +205,50 @@ bool AuthApiModule::onServerReady() {
         });
 
         // 注册：写入DB并回传已登录的 token
-        dispatch->addServlet("/api/v1/auth/register",
-                             [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
-                                CIM::http::HttpSession::ptr /*session*/) {
-                                 /* 设置响应头 */
-                                 res->setHeader("Content-Type", "application/json");
+        dispatch->addServlet("/api/v1/auth/register", [](CIM::http::HttpRequest::ptr req,
+                                                         CIM::http::HttpResponse::ptr res,
+                                                         CIM::http::HttpSession::ptr /*session*/) {
+            /* 设置响应头 */
+            res->setHeader("Content-Type", "application/json");
 
-                                 /* 提取请求字段 */
-                                 std::string mobile, password, platform, email, nickname;
-                                 ExtractAuthFields(req, mobile, password, platform, email, nickname);
-                                 if (mobile.empty() || password.empty()) {
-                                     res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                                     res->setBody(MakeErrorJson(422, "mobile/password required"));
-                                     return 0;
-                                 }
-
-                                 /* 注册用户 */
-                                 auto authResult = CIM::app::AuthService::Register(mobile, password, email, nickname);
-                                 if (!authResult.ok) {
-                                     res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                                     res->setBody(MakeErrorJson(400, authResult.err));
-                                     return 0;
-                                 }
-
-                                 /* 签发JWT */
-                                 std::string token;
-                                 try {
-                                     token = SignJwt(std::to_string(authResult.user.id), g_jwt_expires_in->getValue());
-                                 } catch (const std::exception& e) {
-                                     res->setStatus(CIM::http::HttpStatus::INTERNAL_SERVER_ERROR);
-                                     res->setBody(MakeErrorJson(500, "token sign failed"));
-                                     return 0;
-                                 }
-
-                                 /* 设置响应体 */
-                                 Json::Value data;
-                                 data["type"] = "Bearer";
-                                 data["access_token"] = token;
-                                 data["expires_in"] = static_cast<Json::UInt>(g_jwt_expires_in->getValue());
-                                 res->setBody(CIM::JsonUtil::ToString(data));
-                                 return 0;
-                             });
-
-        // 用户详情：校验 Authorization: Bearer <token>
-        dispatch->addServlet("/api/v1/user/detail",
-                             [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
-                                CIM::http::HttpSession::ptr /*session*/) {
-                                 CIM_LOG_DEBUG(g_logger) << "register request body: " << std::endl << req->getBody();
-                                 res->setHeader("Content-Type", "application/json");
-                                 const auto auth = req->getHeader("Authorization");
-                                 if (auth.size() < 8 || auth.rfind("Bearer ", 0) != 0) {
-                                     res->setStatus(CIM::http::HttpStatus::UNAUTHORIZED);
-                                     res->setBody(MakeErrorJson(401, "unauthorized"));
-                                     return 0;
-                                 }
-                                 const std::string token = auth.substr(7);
-                                 std::string uid;
-                                 if (!VerifyJwt(token, &uid)) {
-                                     res->setStatus(CIM::http::HttpStatus::UNAUTHORIZED);
-                                     res->setBody(MakeErrorJson(401, "invalid token"));
-                                     return 0;
-                                 }
-                                 // fetch real profile
-                                 CIM::dao::User u;
-                                 uint64_t id = 0;
-                                 try {
-                                     id = static_cast<uint64_t>(std::stoull(uid));
-                                 } catch (...) {
-                                     id = 0;
-                                 }
-                                 if (id == 0 || !CIM::dao::UserDAO::GetById(id, u)) {
-                                     res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                                     res->setBody(MakeErrorJson(400, "user not found"));
-                                     return 0;
-                                 }
-
-                                 Json::Value data;
-                                 data["id"] = static_cast<Json::Int64>(u.id);
-                                 data["mobile"] = u.mobile;
-                                 data["nickname"] = u.nickname;
-                                 data["avatar"] = u.avatar;
-                                 data["gender"] = u.gender;
-                                 data["motto"] = u.motto;
-                                 data["email"] = u.email;
-
-                                 Json::Value root;
-                                 root["code"] = 0;
-                                 root["msg"] = "ok";
-                                 root["data"] = data;
-                                 res->setBody(CIM::JsonUtil::ToString(root));
-                                 return 0;
-                             });
-
-        // 修改密码（最小实现）：需要登录，校验参数
-        dispatch->addServlet(
-            "/api/v1/user/password-update", [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
-                                               CIM::http::HttpSession::ptr /*session*/) {
-                res->setHeader("Content-Type", "application/json");
-                const auto auth = req->getHeader("Authorization");
-                if (auth.size() < 8 || auth.rfind("Bearer ", 0) != 0) {
-                    res->setStatus(CIM::http::HttpStatus::UNAUTHORIZED);
-                    res->setBody(MakeErrorJson(401, "unauthorized"));
-                    return 0;
-                }
-                std::string uid;
-                if (!VerifyJwt(auth.substr(7), &uid)) {
-                    res->setStatus(CIM::http::HttpStatus::UNAUTHORIZED);
-                    res->setBody(MakeErrorJson(401, "invalid token"));
-                    return 0;
-                }
-                std::string old_pwd, new_pwd;
-                ExtractPasswordUpdateFields(req, old_pwd, new_pwd);
-                if (new_pwd.size() < 6) {
-                    res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                    res->setBody(MakeErrorJson(422, "new_password too short"));
-                    return 0;
-                }
-                uint64_t id = 0;
-                try {
-                    id = static_cast<uint64_t>(std::stoull(uid));
-                } catch (...) {
-                    id = 0;
-                }
-                if (id == 0) {
-                    res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                    res->setBody(MakeErrorJson(400, "invalid uid"));
-                    return 0;
-                }
-                auto cr = CIM::app::AuthService::ChangePassword(id, old_pwd, new_pwd);
-                if (!cr.ok) {
-                    res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
-                    res->setBody(MakeErrorJson(400, cr.err));
-                    return 0;
-                }
-                Json::Value root;
-                root["code"] = 0;
-                root["msg"] = "ok";
-                root["data"] = Json::Value(Json::objectValue);
-                res->setBody(CIM::JsonUtil::ToString(root));
+            /* 提取请求字段 */
+            std::string mobile, password, platform, email, nickname;
+            ExtractAuthFields(req, mobile, password, platform, email, nickname);
+            if (mobile.empty() || password.empty()) {
+                res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
+                res->setBody(MakeErrorJson(422, "mobile/password required"));
                 return 0;
-            });
-    }
+            }
+
+            /* 注册用户 */
+            auto authResult = CIM::app::AuthService::Register(mobile, password, email, nickname);
+            if (!authResult.ok) {
+                res->setStatus(CIM::http::HttpStatus::BAD_REQUEST);
+                res->setBody(MakeErrorJson(400, authResult.err));
+                return 0;
+            }
+
+            /* 签发JWT */
+            std::string token;
+            try {
+                token = SignJwt(std::to_string(authResult.user.id), g_jwt_expires_in->getValue());
+            } catch (const std::exception& e) {
+                res->setStatus(CIM::http::HttpStatus::INTERNAL_SERVER_ERROR);
+                res->setBody(MakeErrorJson(500, "token sign failed"));
+                return 0;
+            }
+
+            /* 设置响应体 */
+            Json::Value data;
+            data["type"] = "Bearer";
+            data["access_token"] = token;
+            data["expires_in"] = static_cast<Json::UInt>(g_jwt_expires_in->getValue());
+            res->setBody(CIM::JsonUtil::ToString(data));
+            return 0;
+        });
 
     CIM_LOG_INFO(g_logger) << "auth routes registered: /api/v1/auth/login, "
-                              "/api/v1/auth/register, /api/v1/user/detail, "
-                              "/api/v1/user/password-update";
+                              "/api/v1/auth/register";
     return true;
 }
 

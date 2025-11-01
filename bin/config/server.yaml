@@ -14,7 +14,8 @@ servers:
     - address: ["0.0.0.0:8081"]
       type: ws
       name: CIM-ws/1.0
-      timeout: 1000
+      # WS 链路是长连接，请设置更长的读超时，避免握手后无应用帧即被关闭
+      timeout: 120000  # 120s
       # 分配工作池：
       accept_worker: accept
       io_worker: ws_worker

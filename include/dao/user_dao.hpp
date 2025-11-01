@@ -15,6 +15,7 @@ struct User
     std::string email;           // 邮箱
     std::string nickname;        // 昵称
     std::string password_hash;   // 密码哈希
+    std::string password_salt;   // 密码盐（兼容旧表结构，实际哈希可能已包含盐）
     std::string avatar;          // 头像
     int32_t gender = 0;          // 性别
     std::string motto;           // 个性签名

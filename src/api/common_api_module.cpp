@@ -1,17 +1,17 @@
 #include "api/common_api_module.hpp"
 
+#include "app/common_service.hpp"
 #include "base/macro.hpp"
 #include "db/mysql.hpp"
 #include "http/http_server.hpp"
 #include "http/http_servlet.hpp"
 #include "system/application.hpp"
 #include "util/util.hpp"
-#include "app/common_service.hpp"
 
 namespace CIM::api {
 static auto g_logger = CIM_LOG_NAME("root");
 
-CommonApiModule::CommonApiModule() : Module("common", "0.1.0", "builtin") {}
+CommonApiModule::CommonApiModule() : Module("api.common", "0.1.0", "builtin") {}
 
 static std::string MakeResponseJson(const Json::Value& data) {
     return CIM::JsonUtil::ToString(data);
@@ -34,7 +34,8 @@ static bool ParseJsonBody(const std::string& body, Json::Value& out) {
 }
 
 // 提取短信请求字段：mobile, channel
-static void ExtractSmsFields(CIM::http::HttpRequest::ptr req, std::string& mobile, std::string& channel) {
+static void ExtractSmsFields(CIM::http::HttpRequest::ptr req, std::string& mobile,
+                             std::string& channel) {
     Json::Value body;
     if (ParseJsonBody(req->getBody(), body)) {
         mobile = CIM::JsonUtil::GetString(body, "mobile", mobile);
@@ -61,7 +62,8 @@ bool CommonApiModule::onServerReady() {
         dispatch->addServlet("/api/v1/common/send-sms",
                              [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr /*session*/) {
-                                 CIM_LOG_DEBUG(g_logger) << "send-sms request body: " << std::endl << req->getBody();
+                                 CIM_LOG_DEBUG(g_logger) << "send-sms request body: " << std::endl
+                                                         << req->getBody();
 
                                  res->setHeader("Content-Type", "application/json");
 
@@ -74,8 +76,8 @@ bool CommonApiModule::onServerReady() {
                                      return 0;
                                  }
 
-                                // 生成验证码
-                                std::string sms_code = CIM::app::CommonService::SendSmsCode();
+                                 // 生成验证码
+                                 std::string sms_code = CIM::app::CommonService::SendSmsCode();
 
                                  // TODO: 集成实际短信网关（阿里云/腾讯云/云片等），当前返回验证码用于开发联调
 
@@ -87,13 +89,26 @@ bool CommonApiModule::onServerReady() {
                              });
 
         // 注册邮箱服务（占位实现）
-        dispatch->addServlet("/api/v1/common/send-email",
-                             [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
-                                CIM::http::HttpSession::ptr /*session*/) {
-                                 res->setHeader("Content-Type", "application/json");
-                                 res->setBody("{\"code\":0,\"msg\":\"ok\",\"data\":{\"status\":\"running\"}} ");
-                                 return 0;
-                             });
+        dispatch->addServlet(
+            "/api/v1/common/send-email",
+            [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
+               CIM::http::HttpSession::ptr /*session*/) {
+                res->setHeader("Content-Type", "application/json");
+                res->setBody("{\"code\":0,\"msg\":\"ok\",\"data\":{\"status\":\"running\"}} ");
+                return 0;
+            });
+
+        // 测试接口（占位）
+        dispatch->addServlet(
+            "/api/v1/common/send-test",
+            [](CIM::http::HttpRequest::ptr /*req*/, CIM::http::HttpResponse::ptr res,
+               CIM::http::HttpSession::ptr /*session*/) {
+                res->setHeader("Content-Type", "application/json");
+                Json::Value data;
+                data["echo"] = true;
+                res->setBody(CIM::JsonUtil::ToString(data));
+                return 0;
+            });
     }
 
     CIM_LOG_INFO(g_logger) << "common routes registered: /api/v1/common/send-sms, "

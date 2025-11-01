@@ -2,7 +2,7 @@ BasedOnStyle: Google                # 以 Google C++ 风格为基础
 IndentWidth: 4                      # 缩进宽度为4个空格
 TabWidth: 4                         # Tab字符宽度为4（但实际不使用Tab）
 UseTab: Never                       # 禁止使用Tab，统一用空格缩进
-ColumnLimit: 120                    # 每行最大字符数120，超出则自动换行
+ColumnLimit: 100                    # 每行最大字符数120，超出则自动换行
 SortIncludes: true                  # 自动排序头文件include语句
 DerivePointerAlignment: false       # 不自动推导指针对齐方式，使用PointerAlignment指定
 PointerAlignment: Left              # 指针*靠左，如 int* ptr;

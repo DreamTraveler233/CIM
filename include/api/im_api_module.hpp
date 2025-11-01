@@ -4,10 +4,10 @@
 
 namespace CIM::api {
 
-class CommonApiModule : public CIM::Module {
+class ImApiModule : public CIM::Module {
    public:
-    CommonApiModule();
-    ~CommonApiModule() override = default;
+    ImApiModule();
+    ~ImApiModule() override = default;
 
     bool onServerReady() override;
 };

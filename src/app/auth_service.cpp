@@ -15,10 +15,10 @@ namespace CIM::app
                                      const std::string &nickname)
     {
         AuthResult r;
-        /*参数校验*/
-        if (mobile.empty() || password.empty() || email.empty() || nickname.empty())
+        /*参数校验：email允许为空*/
+        if (mobile.empty() || password.empty() || nickname.empty())
         {
-            r.err = "invalid mobile or password";
+            r.err = "invalid parameters";
             return r;
         }
 
@@ -60,11 +60,12 @@ namespace CIM::app
             return r;
         }
 
-        /*创建用户*/
+    /*创建用户*/
         CIM::dao::User u;
         u.mobile = mobile;
         u.email = email;
         u.password_hash = ph;
+    u.password_salt = ""; // 兼容DB必填字段；如果哈希实现已包含盐，可留空
         u.nickname = nickname;
         u.gender = 0;
         u.status = 1;
