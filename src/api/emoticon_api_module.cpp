@@ -1,23 +1,17 @@
 #include "api/emoticon_api_module.hpp"
 
 #include "base/macro.hpp"
+#include "common/common.hpp"
 #include "http/http_server.hpp"
 #include "http/http_servlet.hpp"
 #include "system/application.hpp"
-#include "util/json_util.hpp"
+#include "util/util.hpp"
 
 namespace CIM::api {
+
 static auto g_logger = CIM_LOG_NAME("root");
 
 EmoticonApiModule::EmoticonApiModule() : Module("api.emoticon", "0.1.0", "builtin") {}
-
-static std::string Ok(const Json::Value& data = Json::Value(Json::objectValue)) {
-    Json::Value root;
-    root["code"] = 0;
-    root["msg"] = "ok";
-    root["data"] = data;
-    return CIM::JsonUtil::ToString(root);
-}
 
 bool EmoticonApiModule::onServerReady() {
     std::vector<CIM::TcpServer::ptr> httpServers;

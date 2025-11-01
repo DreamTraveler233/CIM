@@ -3,28 +3,25 @@
 #include "db/mysql.hpp"
 #include "macro.hpp"
 
-namespace CIM::dao
-{
+namespace CIM::dao {
 
 static auto g_logger = CIM_LOG_NAME("db");
 
 static const char* kDBName = "default";
 
-bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err)
-{
+bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err) {
     auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
-    if (!db)
-    {
+    if (!db) {
         if (err) *err = "no mysql connection";
         return false;
     }
 
     const char* sql =
-        "INSERT INTO users (mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO users (mobile, email, password_hash, nickname, avatar, gender, "
+        "motto, is_robot, is_qiye, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     auto stmt = db->prepare(sql);
-    if (!stmt)
-    {
+    if (!stmt) {
         if (err) *err = "prepare failed";
         return false;
     }
@@ -34,16 +31,15 @@ bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err)
     else
         stmt->bindNull(2);
     stmt->bindString(3, u.password_hash);
-    // password_salt为兼容DB必填字段，若业务哈希已包含盐，这里可存空串
-    stmt->bindString(4, u.password_salt);
-    stmt->bindString(5, u.nickname);
-    stmt->bindString(6, u.avatar);
-    stmt->bindInt32(7, u.gender);
-    stmt->bindString(8, u.motto);
-    stmt->bindInt32(9, u.status);
+    stmt->bindString(4, u.nickname);
+    stmt->bindString(5, u.avatar);
+    stmt->bindInt32(6, u.gender);
+    stmt->bindString(7, u.motto);
+    stmt->bindInt32(8, u.is_robot);
+    stmt->bindInt32(9, u.is_qiye);
+    stmt->bindInt32(10, u.status);
 
-    if (stmt->execute() != 0)
-    {
+    if (stmt->execute() != 0) {
         if (err) *err = stmt->getErrStr();
         return false;
     }
@@ -51,12 +47,12 @@ bool UserDAO::Create(const User& u, uint64_t& out_id, std::string* err)
     return true;
 }
 
-bool UserDAO::GetByMobile(const std::string& mobile, User& out)
-{
+bool UserDAO::GetByMobile(const std::string& mobile, User& out) {
     auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
     if (!db) return false;
     const char* sql =
-        "SELECT id, mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
+        "SELECT id, mobile, email, password_hash, nickname, avatar, gender, motto, "
+        "is_robot, is_qiye, status, last_login_at, created_at, updated_at FROM "
         "users WHERE mobile = ? LIMIT 1";
     auto stmt = db->prepare(sql);
     if (!stmt) return false;
@@ -68,23 +64,25 @@ bool UserDAO::GetByMobile(const std::string& mobile, User& out)
     out.mobile = res->getString(1);
     out.email = res->isNull(2) ? std::string() : res->getString(2);
     out.password_hash = res->getString(3);
-    out.password_salt = res->getString(4);
-    out.nickname = res->getString(5);
-    out.avatar = res->getString(6);
-    out.gender = static_cast<int32_t>(res->getInt32(7));
-    out.motto = res->getString(8);
-    out.status = static_cast<int32_t>(res->getInt32(9));
-    out.created_at = res->getTime(10);
-    out.updated_at = res->getTime(11);
+    out.nickname = res->getString(4);
+    out.avatar = res->getString(5);
+    out.gender = static_cast<int32_t>(res->getInt32(6));
+    out.motto = res->getString(7);
+    out.is_robot = static_cast<int32_t>(res->getInt32(8));
+    out.is_qiye = static_cast<int32_t>(res->getInt32(9));
+    out.status = static_cast<int32_t>(res->getInt32(10));
+    out.last_login_at = res->isNull(11) ? 0 : res->getTime(11);
+    out.created_at = res->getTime(12);
+    out.updated_at = res->getTime(13);
     return true;
 }
 
-bool UserDAO::GetById(uint64_t id, User& out)
-{
+bool UserDAO::GetById(uint64_t id, User& out) {
     auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
     if (!db) return false;
     const char* sql =
-        "SELECT id, mobile, email, password_hash, password_salt, nickname, avatar, gender, motto, status, created_at, updated_at FROM "
+        "SELECT id, mobile, email, password_hash, nickname, avatar, gender, motto, "
+        "is_robot, is_qiye, status, last_login_at, created_at, updated_at FROM "
         "users WHERE id = ? LIMIT 1";
     auto stmt = db->prepare(sql);
     if (!stmt) return false;
@@ -96,14 +94,16 @@ bool UserDAO::GetById(uint64_t id, User& out)
     out.mobile = res->getString(1);
     out.email = res->isNull(2) ? std::string() : res->getString(2);
     out.password_hash = res->getString(3);
-    out.password_salt = res->getString(4);
-    out.nickname = res->getString(5);
-    out.avatar = res->getString(6);
-    out.gender = static_cast<int32_t>(res->getInt32(7));
-    out.motto = res->getString(8);
-    out.status = static_cast<int32_t>(res->getInt32(9));
-    out.created_at = res->getTime(10);
-    out.updated_at = res->getTime(11);
+    out.nickname = res->getString(4);
+    out.avatar = res->getString(5);
+    out.gender = static_cast<int32_t>(res->getInt32(6));
+    out.motto = res->getString(7);
+    out.is_robot = static_cast<int32_t>(res->getInt32(8));
+    out.is_qiye = static_cast<int32_t>(res->getInt32(9));
+    out.status = static_cast<int32_t>(res->getInt32(10));
+    out.last_login_at = res->isNull(11) ? 0 : res->getTime(11);
+    out.created_at = res->getTime(12);
+    out.updated_at = res->getTime(13);
     return true;
 }
 
@@ -126,6 +126,73 @@ bool UserDAO::UpdatePassword(uint64_t id, const std::string& new_password_hash, 
     stmt->bindUint64(2, id);
     if (stmt->execute() != 0)
     {
+        if (err) *err = stmt->getErrStr();
+        return false;
+    }
+    return true;
+}
+
+bool UserDAO::UpdateLastLoginAt(uint64_t id, std::time_t last_login_at, std::string* err) {
+    auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
+    if (!db) {
+        if (err) *err = "no mysql connection";
+        return false;
+    }
+    const char* sql = "UPDATE users SET last_login_at = ?, updated_at = NOW() WHERE id = ?";
+    auto stmt = db->prepare(sql);
+    if (!stmt) {
+        if (err) *err = "prepare failed";
+        return false;
+    }
+    stmt->bindTime(1, last_login_at);
+    stmt->bindUint64(2, id);
+    if (stmt->execute() != 0) {
+        if (err) *err = stmt->getErrStr();
+        return false;
+    }
+    return true;
+}
+
+bool UserDAO::UpdateStatus(uint64_t id, int32_t status, std::string* err) {
+    auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
+    if (!db) {
+        if (err) *err = "no mysql connection";
+        return false;
+    }
+    const char* sql = "UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?";
+    auto stmt = db->prepare(sql);
+    if (!stmt) {
+        if (err) *err = "prepare failed";
+        return false;
+    }
+    stmt->bindInt32(1, status);
+    stmt->bindUint64(2, id);
+    if (stmt->execute() != 0) {
+        if (err) *err = stmt->getErrStr();
+        return false;
+    }
+    return true;
+}
+
+bool UserDAO::UpdateProfile(uint64_t id, const std::string& nickname, const std::string& avatar,
+                            const std::string& motto, std::string* err) {
+    auto db = CIM::MySQLMgr::GetInstance()->get(kDBName);
+    if (!db) {
+        if (err) *err = "no mysql connection";
+        return false;
+    }
+    const char* sql =
+        "UPDATE users SET nickname = ?, avatar = ?, motto = ?, updated_at = NOW() WHERE id = ?";
+    auto stmt = db->prepare(sql);
+    if (!stmt) {
+        if (err) *err = "prepare failed";
+        return false;
+    }
+    stmt->bindString(1, nickname);
+    stmt->bindString(2, avatar);
+    stmt->bindString(3, motto);
+    stmt->bindUint64(4, id);
+    if (stmt->execute() != 0) {
         if (err) *err = stmt->getErrStr();
         return false;
     }

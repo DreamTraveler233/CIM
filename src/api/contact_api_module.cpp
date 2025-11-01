@@ -4,20 +4,14 @@
 #include "http/http_server.hpp"
 #include "http/http_servlet.hpp"
 #include "system/application.hpp"
-#include "util/json_util.hpp"
+#include "util/util.hpp"
+#include "common/common.hpp"
 
 namespace CIM::api {
+
 static auto g_logger = CIM_LOG_NAME("root");
 
 ContactApiModule::ContactApiModule() : Module("api.contact", "0.1.0", "builtin") {}
-
-static std::string Ok(const Json::Value& data = Json::Value(Json::objectValue)) {
-    Json::Value root;
-    root["code"] = 0;
-    root["msg"] = "ok";
-    root["data"] = data;
-    return CIM::JsonUtil::ToString(root);
-}
 
 bool ContactApiModule::onServerReady() {
     std::vector<CIM::TcpServer::ptr> httpServers;
@@ -129,7 +123,6 @@ bool ContactApiModule::onServerReady() {
                 res->setBody(Ok());
                 return 0;
             });
-        // 注意：/api/v1/contact/list 已由 ImApiModule 提供占位；如需迁移，请移除Im中的重复注册
         dispatch->addServlet(
             "/api/v1/contact/online-status",
             [](CIM::http::HttpRequest::ptr /*req*/, CIM::http::HttpResponse::ptr res,

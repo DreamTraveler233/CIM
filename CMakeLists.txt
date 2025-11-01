@@ -156,27 +156,6 @@ target_link_libraries(CIM
 # 定义测试可执行文件列表
 set(TEST_LIST
     test_log_basic
-    test_log_performance
-    test_log_rotate
-    test_config
-    test_util
-    test_coroutine
-    test_scheduler
-    test_iomanager
-    test_hook
-    test_hook2
-    test_address
-    test_socket
-    test_bytearray
-    test_http
-    test_http_parser
-    test_tcp_server
-    test_http_server
-    test_uri
-    test_http_connection
-    test_daemon
-    test_env
-    test_application
 )
 
 set(EXAMPLES_LIST

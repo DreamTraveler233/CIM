@@ -1,23 +1,17 @@
 #include "api/user_api_module.hpp"
 
 #include "base/macro.hpp"
+#include "common/common.hpp"
 #include "http/http_server.hpp"
 #include "http/http_servlet.hpp"
 #include "system/application.hpp"
-#include "util/json_util.hpp"
+#include "util/util.hpp"
 
 namespace CIM::api {
+
 static auto g_logger = CIM_LOG_NAME("root");
 
 UserApiModule::UserApiModule() : Module("api.user", "0.1.0", "builtin") {}
-
-static std::string Ok(const Json::Value& data = Json::Value(Json::objectValue)) {
-    Json::Value root;
-    root["code"] = 0;
-    root["msg"] = "ok";
-    root["data"] = data;
-    return CIM::JsonUtil::ToString(root);
-}
 
 bool UserApiModule::onServerReady() {
     std::vector<CIM::TcpServer::ptr> httpServers;
@@ -30,28 +24,57 @@ bool UserApiModule::onServerReady() {
         auto http = std::dynamic_pointer_cast<CIM::http::HttpServer>(s);
         if (!http) continue;
         auto dispatch = http->getServletDispatch();
-        dispatch->addServlet("/api/v1/user/detail",
-                             [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
-                                CIM::http::HttpSession::ptr) {
-                                 res->setHeader("Content-Type", "application/json");
-                                 res->setBody(Ok());
-                                 return 0;
-                             });
+
+        /*用户相关接口*/
+        dispatch->addServlet("/api/v1/user/detail", [](CIM::http::HttpRequest::ptr req,
+                                                       CIM::http::HttpResponse::ptr res,
+                                                       CIM::http::HttpSession::ptr) {
+            CIM_LOG_DEBUG(g_logger) << "/api/v1/user/detail";
+            res->setHeader("Content-Type", "application/json");
+            std::string nickname, mobile, email, gender, motto, avatar, birthday;
+            Json::Value body;
+            if (CIM::ParseBody(req->getBody(), body)) {
+                nickname = CIM::JsonUtil::GetString(body, "nickname", "");
+                mobile = CIM::JsonUtil::GetString(body, "mobile", "");
+                email = CIM::JsonUtil::GetString(body, "email", "");
+                gender = CIM::JsonUtil::GetString(body, "gender", "");
+                motto = CIM::JsonUtil::GetString(body, "motto", "");
+                avatar = CIM::JsonUtil::GetString(body, "avatar", "");
+                birthday = CIM::JsonUtil::GetString(body, "birthday", "");
+            }
+            res->setBody(Ok());
+            return 0;
+        });
+
+        /*用户信息更新接口*/
         dispatch->addServlet("/api/v1/user/detail-update",
-                             [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
+                             [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr) {
+                                 CIM_LOG_DEBUG(g_logger) << "/api/v1/user/detail-update";
                                  res->setHeader("Content-Type", "application/json");
+                                 std::string nickname, avatar, motto, gender, birthday;
+                                 Json::Value body;
+                                 if (CIM::ParseBody(req->getBody(), body)) {
+                                     nickname = CIM::JsonUtil::GetString(body, "nickname", "");
+                                     avatar = CIM::JsonUtil::GetString(body, "avatar", "");
+                                     motto = CIM::JsonUtil::GetString(body, "motto", "");
+                                     gender = CIM::JsonUtil::GetString(body, "gender", "");
+                                     birthday = CIM::JsonUtil::GetString(body, "birthday", "");
+                                 }
                                  res->setBody(Ok());
                                  return 0;
                              });
+
+        /*用户邮箱更新接口*/
         dispatch->addServlet("/api/v1/user/email-update",
-                             [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
+                             [](CIM::http::HttpRequest::ptr req, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr) {
                                  res->setHeader("Content-Type", "application/json");
                                  res->setBody(Ok());
                                  return 0;
                              });
 
+        /*用户手机更新接口*/
         dispatch->addServlet("/api/v1/user/mobile-update",
                              [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr) {
@@ -59,6 +82,8 @@ bool UserApiModule::onServerReady() {
                                  res->setBody(Ok());
                                  return 0;
                              });
+
+        /*用户密码更新接口*/
         dispatch->addServlet("/api/v1/user/password-update",
                              [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr) {
@@ -66,6 +91,8 @@ bool UserApiModule::onServerReady() {
                                  res->setBody(Ok());
                                  return 0;
                              });
+
+        /*用户设置接口*/
         dispatch->addServlet("/api/v1/user/setting",
                              [](CIM::http::HttpRequest::ptr, CIM::http::HttpResponse::ptr res,
                                 CIM::http::HttpSession::ptr) {

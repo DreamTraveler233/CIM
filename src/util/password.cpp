@@ -68,7 +68,6 @@ std::string Password::Hash(const std::string& password, uint32_t iterations)
     unsigned char salt[salt_len];
     if (RAND_bytes(salt, static_cast<int>(salt_len)) != 1)
     {
-        // Fallback: deterministic but unsafe; better to throw; here return empty string
         return std::string();
     }
 

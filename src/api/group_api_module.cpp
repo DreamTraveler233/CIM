@@ -1,24 +1,17 @@
 #include "api/group_api_module.hpp"
 
 #include "base/macro.hpp"
+#include "common/common.hpp"
 #include "http/http_server.hpp"
 #include "http/http_servlet.hpp"
 #include "system/application.hpp"
-#include "util/json_util.hpp"
+#include "util/util.hpp"
 
 namespace CIM::api {
+
 static auto g_logger = CIM_LOG_NAME("root");
 
 GroupApiModule::GroupApiModule() : Module("api.group", "0.1.0", "builtin") {}
-
-// 统一成功响应
-static std::string Ok(const Json::Value& data = Json::Value(Json::objectValue)) {
-    Json::Value root;
-    root["code"] = 0;
-    root["msg"] = "ok";
-    root["data"] = data;
-    return CIM::JsonUtil::ToString(root);
-}
 
 bool GroupApiModule::onServerReady() {
     std::vector<CIM::TcpServer::ptr> httpServers;

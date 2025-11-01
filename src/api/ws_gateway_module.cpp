@@ -6,21 +6,17 @@
 #include <unordered_map>
 
 #include "base/macro.hpp"
+#include "common/common.hpp"
 #include "http/ws_server.hpp"
 #include "http/ws_servlet.hpp"
 #include "http/ws_session.hpp"
 #include "system/application.hpp"
-#include "util/json_util.hpp"
 #include "util/util.hpp"
 
 namespace CIM::api {
+
 static auto g_logger = CIM_LOG_NAME("root");
 
-// 复用 HTTP 模块的 JWT 配置键
-static auto g_jwt_secret = CIM::Config::Lookup<std::string>(
-    "auth.jwt.secret", std::string("dev-secret"), "jwt hmac secret");
-static auto g_jwt_issuer =
-    CIM::Config::Lookup<std::string>("auth.jwt.issuer", std::string("auth-service"), "jwt issuer");
 WsGatewayModule::WsGatewayModule() : Module("ws.gateway", "0.1.0", "builtin") {}
 
 // 简易查询串解析（假设无需URL解码，前端传递 token 直接可用）
@@ -44,28 +40,6 @@ static std::unordered_map<std::string, std::string> ParseQueryKV(const std::stri
         start = amp + 1;
     }
     return kv;
-}
-
-// JWT 校验：有效则返回 true 并输出 uid（字符串）
-static bool VerifyJwt(const std::string& token, std::string* out_uid = nullptr) {
-    try {
-        auto dec = jwt::decode(token);
-        auto verifier = jwt::verify()
-                            .allow_algorithm(jwt::algorithm::hs256{g_jwt_secret->getValue()})
-                            .with_issuer(g_jwt_issuer->getValue());
-        verifier.verify(dec);
-        if (out_uid) {
-            if (dec.has_payload_claim("uid")) {
-                *out_uid = dec.get_payload_claim("uid").as_string();
-            } else {
-                *out_uid = "";
-            }
-        }
-        return true;
-    } catch (const std::exception& e) {
-        CIM_LOG_WARN(g_logger) << "jwt verify failed: " << e.what();
-        return false;
-    }
 }
 
 // 连接上下文与会话表（首版进程内，支持多连接）
@@ -214,8 +188,7 @@ bool WsGatewayModule::onServerReady() {
     }
 
     // 3. 日志记录路由注册完成
-    CIM_LOG_INFO(g_logger)
-        << "ws routes registered: /wss/default.io, /wss/* (event/payload, ping/pong)";
+    CIM_LOG_INFO(g_logger) << "ws routes registered";
     return true;
 }
 
